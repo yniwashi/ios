@@ -1,21 +1,302 @@
 {
   "Ambulance": {
-    "version": "3.3",
+    "version": "3.2",
     "icloud": "https://shortcuts.niwashibase.com/s/ambulance",
-    "notes": "Added dosage calculator and bug fixes",
-    "updated": "2025-09-11T20:30:00Z"
+    "notes": "",
+    "updated": ""
   },
   "APGAR Score": {
     "version": "1.2",
     "icloud": "https://shortcuts.niwashibase.com/s/apgar-score",
-    "notes": "Minor improvements in scoring logic",
-    "updated": "2025-08-30T18:00:00Z"
+    "notes": "",
+    "updated": ""
   },
   "AP Pediatrics": {
     "version": "2.7",
     "icloud": "https://shortcuts.niwashibase.com/s/ap-pediatrics",
-    "notes": "Expanded pediatric drug library",
-    "updated": "2025-07-15T10:00:00Z"
+    "notes": "",
+    "updated": ""
+  },
+  "AS Address Book": {
+    "version": "1.4",
+    "icloud": "https://shortcuts.niwashibase.com/s/as-address-book",
+    "notes": "",
+    "updated": ""
+  },
+  "Case Review": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/case-review",
+    "notes": "",
+    "updated": ""
+  },
+  "CCP Pediatric": {
+    "version": "2.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/ccp-pediatric",
+    "notes": "",
+    "updated": ""
+  },
+  "CCS Address Book": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/ccs-address-book",
+    "notes": "",
+    "updated": ""
+  },
+  "Certificates": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/certificates",
+    "notes": "",
+    "updated": ""
+  },
+  "Convert Date": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/convert-date",
+    "notes": "",
+    "updated": ""
+  },
+  "CPD Certificates": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/cpd-certificates",
+    "notes": "",
+    "updated": ""
+  },
+  "Equipments": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/equipments",
+    "notes": "",
+    "updated": ""
+  },
+  "Equipments Blue": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/equipments-blue",
+    "notes": "",
+    "updated": ""
+  },
+  "OQ Rent A Car": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/oq-rent-a-car",
+    "notes": "",
+    "updated": ""
+  },
+  "CH RET Checklist": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/ch-ret-checklist",
+    "notes": "",
+    "updated": ""
+  },
+  "COVID19 Pathways": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/covid19-pathways",
+    "notes": "",
+    "updated": ""
+  },
+  "Daily Checklist": {
+    "version": "1.5",
+    "icloud": "https://shortcuts.niwashibase.com/s/daily-checklist",
+    "notes": "",
+    "updated": ""
+  },
+  "Estimated Weight": {
+    "version": "1.4",
+    "icloud": "https://shortcuts.niwashibase.com/s/estimated-weight",
+    "notes": "",
+    "updated": ""
+  },
+  "Flowcharts": {
+    "version": "1.6",
+    "icloud": "https://shortcuts.niwashibase.com/s/flowcharts",
+    "notes": "",
+    "updated": ""
+  },
+  "Free Apps": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/free-apps",
+    "notes": "",
+    "updated": ""
+  },
+  "GCS Score": {
+    "version": "1.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/gcs-score",
+    "notes": "",
+    "updated": ""
+  },
+  "HMC Address Book": {
+    "version": "1.4",
+    "icloud": "https://shortcuts.niwashibase.com/s/hmc-address-book",
+    "notes": "",
+    "updated": ""
+  },
+  "HOS": {
+    "version": "1.6",
+    "icloud": "https://shortcuts.niwashibase.com/s/hos",
+    "notes": "",
+    "updated": ""
+  },
+  "Imist Ambo": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/imist-ambo",
+    "notes": "",
+    "updated": ""
+  },
+  "Hub Rotation": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/hub-rotation",
+    "notes": "",
+    "updated": ""
+  },
+  "Major Incident Level": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/major-incident-level",
+    "notes": "",
+    "updated": ""
+  },
+  "Meds Calculator": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/meds-calculator",
+    "notes": "",
+    "updated": ""
+  },
+  "Meds Finder": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/meds-finder",
+    "notes": "",
+    "updated": ""
+  },
+  "Open CPG": {
+    "version": "1.7",
+    "icloud": "https://shortcuts.niwashibase.com/s/open-cpg",
+    "notes": "",
+    "updated": ""
+  },
+  "Open SOP": {
+    "version": "1.4",
+    "icloud": "https://shortcuts.niwashibase.com/s/open-sop",
+    "notes": "",
+    "updated": ""
+  },
+  "Open PAT": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/open-pat",
+    "notes": "",
+    "updated": ""
+  },
+  "Open CPM": {
+    "version": "1.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/open-cpm",
+    "notes": "",
+    "updated": ""
+  },
+  "Open MIR": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/open-mir",
+    "notes": "",
+    "updated": ""
+  },
+  "Overtime Logger": {
+    "version": "1.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/overtime-logger",
+    "notes": "",
+    "updated": ""
+  },
+  "Overtime Calculator": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/overtime-calculator",
+    "notes": "",
+    "updated": ""
+  },
+  "Purple Family": {
+    "version": "1.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/purple-family",
+    "notes": "",
+    "updated": ""
+  },
+  "RBS Converter": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/rbs-converter",
+    "notes": "",
+    "updated": ""
+  },
+  "RSI 60": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/rsi-60",
+    "notes": "",
+    "updated": ""
+  },
+  "SAT Score": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/sat-score",
+    "notes": "",
+    "updated": ""
+  },
+  "Shifts": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/shifts",
+    "notes": "",
+    "updated": ""
+  },
+  "SOAP-ME Checklist": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/soap-me-checklist",
+    "notes": "",
+    "updated": ""
+  },
+  "SOAPME": {
+    "version": "1.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/soapme",
+    "notes": "",
+    "updated": ""
+  },
+  "Ventilator Settings": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/ventilator-settings",
+    "notes": "",
+    "updated": ""
+  },
+  "WAAFLES": {
+    "version": "1.5",
+    "icloud": "https://shortcuts.niwashibase.com/s/waafles",
+    "notes": "",
+    "updated": ""
+  },
+  "Watch AP Pediatrics": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/watch-ap-pediatrics",
+    "notes": "",
+    "updated": ""
+  },
+  "Watch CCP Pediatric": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/watch-ccp-pediatric",
+    "notes": "",
+    "updated": ""
+  },
+  "Watch Estimated Weight": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/watch-estimated-weight",
+    "notes": "",
+    "updated": ""
+  },
+  "Watch RBS Converter": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/watch-rbs-converter",
+    "notes": "",
+    "updated": ""
+  },
+  "Watch WAAFLES": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/watch-waafles",
+    "notes": "",
+    "updated": ""
+  },
+  "Westley Score": {
+    "version": "1.1",
+    "icloud": "https://shortcuts.niwashibase.com/s/westley-score",
+    "notes": "",
+    "updated": ""
+  },
+  "What's New": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/whats-new",
+    "notes": "",
+    "updated": ""
   }
 }
-
