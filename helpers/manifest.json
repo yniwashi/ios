@@ -69,6 +69,13 @@
     "notes": "",
     "updated": ""
   },
+  "CPG": {
+    "version": "1.0",
+    "icloud": "https://shortcuts.niwashibase.com/s/cpg-wizard",
+    "target": "",
+    "notes": "Initial release",
+    "updated": ""
+  },
   "Equipments": {
     "version": "1.1",
     "icloud": "https://shortcuts.niwashibase.com/s/equipments",
