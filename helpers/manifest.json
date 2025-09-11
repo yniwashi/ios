@@ -1,1 +1,21 @@
+{
+  "Ambulance": {
+    "version": "3.3",
+    "icloud": "https://shortcuts.niwashibase.com/s/ambulance",
+    "notes": "Added dosage calculator and bug fixes",
+    "updated": "2025-09-11T20:30:00Z"
+  },
+  "APGAR Score": {
+    "version": "1.2",
+    "icloud": "https://shortcuts.niwashibase.com/s/apgar-score",
+    "notes": "Minor improvements in scoring logic",
+    "updated": "2025-08-30T18:00:00Z"
+  },
+  "AP Pediatrics": {
+    "version": "2.7",
+    "icloud": "https://shortcuts.niwashibase.com/s/ap-pediatrics",
+    "notes": "Expanded pediatric drug library",
+    "updated": "2025-07-15T10:00:00Z"
+  }
+}
 
