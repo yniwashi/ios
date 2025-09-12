@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SOAPPPME</title>
+
+<style>
+#soapmetable {
+  font-family: Tahoma, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#soapmetable td, #soapmetable th {
+  border: 1px solid #000000;
+  padding: 8px;
+}
+
+#soapmetable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#soapmetable th {
+  padding-top: 1px;
+  padding-bottom: 1px;
+
+  text-align: center;
+  background-color: #A1A1A1;
+  color: black;
+}
+
+input[type="checkbox"] {
+  transform: scale(1.5);
+}
+
+#soapmetable .right-align {
+  text-align: right;
+  font-size: 23px;
+  font-weight:bold;
+}
+
+#soapmetable .left-align {
+  text-align: left;
+  font-size: 23px;
+  font-weight:bold;
+}
+
+#soapmetable2 {
+  font-family: Tahoma, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 50px;
+}
+
+#soapmetable2 td, #soapmetable2 th {
+  border: 1px solid #000000;
+  padding: 8px;
+}
+
+#soapmetable2 tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#soapmetable2 th {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  font-size: 25px;
+  text-align: center;
+  background-color: #A1A1A1;
+  color: black;
+}
+
+#soapmetable2 .right-align {
+  text-align: right;
+  font-size: 18px;
+}
+
+#soapmetable2 .left-align {
+  text-align: left;
+  font-size: 18px;
+}
+</style>
+
+</head>
+<body>
+<h1 style="color: black; background-color: #FFFFFF; text-align: center; font-size: 30px; font-family: Tahoma, sans-serif; font-weight: bold;padding: 18px;">RSI Checklist</h1>
+
+<table id="soapmetable">
+ <tr>
+    <th colspan="4" style="font-size: 30px; text-align:center;background-color: #7CB3ED;  padding-top: 10px; padding-bottom: 10px;"> CHECKLIST 1: Pre RSI - SOAPPPME 
+</th>
+  </tr>
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> SUCTIONING ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Tubing attached</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Yankaeur placed under (R) shoulder</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">System tested</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Consider multiple suction units</td>
+</tr>
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> OXYGENATION ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Nasal Oxygen</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">BVM & OPA</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">NRM</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Inline EtCO2</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">CPAP</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">O2 Cylinders Open</td>
+</tr>
+
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> AIRWAY ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Standard Laryngoscope & Blades</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">LTA Sized</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Glidescope & Blades</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Quicktrach ll</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">McGrath & Blades</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Syringes attached</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Gliderite & Frova</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Tube holder</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Alternate ETT sizes</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Laryngoscopy Plans A,B & C</td>
+</tr>
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> POSITION ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Preoxygenation position optimized</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Intubation position optimized</td>
+</tr>
+
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> PHYSIOLOGY ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Preoxygenation optimized</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Saturation end point</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Hemodynamics optimized</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">MAP range</td>
+</tr>
+
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> PHARMACY ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Bilateral IVs</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Ketamine dose</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">IVs patent</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Rocuronium dose</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">IV fluid preload</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Phenylephrine dose</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Fentanyl dose</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Adrenaline dose IV & IM</td>
+</tr>
+
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> MONITORING ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">ETCO2</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Manual BP cuff</td>
+</tr>
+
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">SPO2</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">4/12 Leads</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">NIBP</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Pads</td>
+</tr>
+
+ <tr>
+    <th colspan="4" style="font-size: 24px; text-align:center;background-color: #93A9D7;"> EMERGENCY OTHER ✔ </th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #E7E6E6" class="right-align">Ventilator system tested</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E0EAF5" class="left-align">Ventilation parameters optimized</td>
+</tr>
+
+ <tr>
+    <th colspan="4" style="font-size: 30px; text-align:center;background-color: #7CB3ED;  padding-top: 10px; padding-bottom: 10px;"> CHECKLIST 2: Pre RSI - 60 SECONDS COUNTDOWN
+</th>
+  </tr>
+<tr>
+  <td style="width:45%;background-color: #CEEDAE" class="right-align">Nasal Canula @ 15L/min</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #CEEDAE" class="left-align">Commence progressive laryngoscopy & intubation</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #CEEDAE" class="right-align">Ensure pharyngeal patency</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #CEEDAE" class="left-align">Call out O2 Sats, HR, Pulse Character, MAP, ECG</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #CEEDAE" class="right-align">Acknowledge ETCO2 change & Apnea Alarm</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #CEEDAE" class="left-align">Cycle NIBP after 60 secs , call out SBP, DP & MAP</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #CEEDAE" class="right-align">Connect Inline ETCO2 once apnea is confirmed</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #CEEDAE" class="left-align">ETT placement: Direct visual, ETCO2 waveforms X 5, A/E</td>
+</tr>
+
+
+ <tr>
+    <th colspan="4" style="font-size: 30px; text-align:center;background-color: #7CB3ED;  padding-top: 10px; padding-bottom: 10px;"> CHECKLIST 3: POST INTUBATION
+</th>
+  </tr>
+
+<tr>
+  <td style="width:45%;background-color: #E8DEA4" class="right-align">20-30 degree head up stretcher position</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E8DEA4" class="left-align">Inline nebulizer attached if applicable</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E8DEA4" class="right-align">Continuous waveform capnography</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E8DEA4" class="left-align">Inline Suction catheter attached</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E8DEA4" class="right-align">ETT depth, secured well but not kinked</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E8DEA4" class="left-align">Naso/Orogastric tube inserted</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E8DEA4" class="right-align">ETT cuff pressure optimal</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E8DEA4" class="left-align">Plan for High & Low-pressure ventilator alarms</td>
+</tr>
+<tr>
+  <td style="width:45%;background-color: #E8DEA4" class="right-align">Post RSI sedation/Paralysis</td>
+  <td><input type="checkbox"></td>
+  <td><input type="checkbox"></td>
+  <td style="width:45%;background-color: #E8DEA4" class="left-align">Plan for ventilator failure</td>
+</tr>
+
+</table>
+
+<table id="soapmetable2">
+
+ <tr>
+    <th colspan="5" style="font-size: 20px; text-align:center;background-color: #7CB3ED;  padding-top: 10px; padding-bottom: 10px;"> Medication Dosing : Adjust doses according to hemodynamic stability, Shock Index, Age & Co-morbidities
+</th>
+  </tr>
+
+<tr>
+  <td rowspan="2" style="width:25%;background-color: #CADFB7; font-size:21px;font-weight:bold"> SHOCK INDEX (SI)</td>
+  <td rowspan="2" style="width:10%; font-size:21px;font-weight:bold">MEDICATION</td>
+  <td style="width:25%; font-size:21px;font-weight:bold"> PRIMARY DOSE REGIMEN</td>
+  <td colspan="2" style="width:40%; font-size:21px;font-weight:bold"> SECONDARY DOSE REGIMEN </td>
+</tr>
+
+<tr>
+  <td style="width:25%; font-size:16px;font-weight:bold"> Intravenous Push (IVP) </td>
+  <td style="width:20%; font-size:16px;font-weight:bold"> Intravenous Push (IVP) </td>
+ <td style="width:20%; font-size:16px;font-weight:bold">Intra-venous/osseous Infusion (IV/IO INF) </td>
+</tr>
+
+<tr>
+  <td rowspan="3" style="width:25%;background-color: #CADFB7;font-size:16px;font-weight:bold"> HR/SBP = SI <br>Normal SI = < 0.7 <br> SI > 0.8 Predicts Post RSI Crash <br> Optimize Resuscitation </td>
+  <td style="width:10%;background-color: #A7C6ED;font-size:18px;font-weight:bold">Fentanyl</td>
+  <td style="width:25%;background-color: #A7C6ED;font-size:18px;font-weight:bold"> IVP: 1 mcg/kg </td>
+  <td style="width:20%;background-color: #A7C6ED;font-size:18px;font-weight:bold"> IVP: 0.5mcg/kg </td>
+  <td style="width:20%;background-color: #A7C6ED;font-size:18px;font-weight:bold"> IV/IO INF: 1-10 mcg/kg/hr </td>
+</tr>
+
+<tr>
+  <td style="width:10%;background-color: #FFFF54;font-size:18px;font-weight:bold">Ketamine</td>
+  <td style="width:25%;background-color: #FFFF54;font-size:18px;font-weight:bold"> IVP: 1 to 2 mg/kg </td>
+  <td style="width:20%;background-color: #FFFF54;font-size:18px;font-weight:bold"> IVP: 0.5 mg/kg </td>
+  <td style="width:20%;background-color: #FFFF54;font-size:18px;font-weight:bold"> IV/O INF: 0.01-0.05mg/kg/min </td>
+</tr>
+
+<tr>
+  <td style="width:10%;background-color: #E5757B;font-size:18px;font-weight:bold">Rocuronium</td>
+  <td style="width:25%;background-color: #E5757B;font-size:18px;font-weight:bold"> IVP: 1.5 mg/kg </td>
+  <td style="width:20%;background-color: #E5757B;font-size:18px;font-weight:bold"> IVP: 0.25 mg/kg </td>
+  <td style="width:20%;background-color: #E5757B;font-size:18px;font-weight:bold"> NOT for continuous infusion </td>
+</tr>
+
+</table>
+
+<h6 style="color: black; text-align: right; font-size: 18px; font-family: Tahoma, sans-serif; font-weight: bold;margin-right:15px;margin-top:10px">Version 3.1</h6>
+
+
+</body>
+</html>
