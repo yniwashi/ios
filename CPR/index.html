@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CPR Mini-App — Minimal Test</title>
+<button id="start">Start CPR</button>
+<button id="mute" disabled>Mute</button>
+<button id="unmute">Unmute</button>
+<button id="print">Print Report</button>
+<input id="ageInput" type="number" placeholder="Age"/>
+<button id="months">Months</button>
+<pre id="out"></pre>
+<div id="elapsed">00:00</div>
+<div id="beats">0</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let audioCtx, nextNoteTime=0, lookahead=25, scheduleAhead=0.1, timer;
+  let metronomeOn=false, bpm=110, beats=0, running=false, startAudioTime=0, rafID;
+  async function ensureAudio(){ if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); } await audioCtx.resume(); }
+  function clickAt(t,accent=false){ const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.frequency.value=accent?1000:800; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+0.07); }
+  function scheduler(){ while(nextNoteTime < audioCtx.currentTime + scheduleAhead){ clickAt(nextNoteTime, beats%30===0); nextNoteTime += 60/bpm; $('beats').textContent=++beats; } timer=setTimeout(scheduler, lookahead); }
+  $('start').onclick = async () => { await ensureAudio(); running=true; startAudioTime=audioCtx.currentTime; if(!metronomeOn){ metronomeOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('mute').disabled=false; $('unmute').disabled=true; } loop(); };
+  $('mute').onclick = ()=>{ metronomeOn=false; clearTimeout(timer); $('mute').disabled=true; $('unmute').disabled=false; };
+  $('unmute').onclick = async ()=>{ await ensureAudio(); metronomeOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('unmute').disabled=true; $('mute').disabled=false; };
+  function loop(){ if(audioCtx&&running){ const el=Math.floor(audioCtx.currentTime - startAudioTime); $('elapsed').textContent = String(el/60|0).padStart(2,'0')+':'+String(el%60).padStart(2,'0'); } rafID=requestAnimationFrame(loop); }
+  $('print').onclick = ()=>{ const html='<!doctype html><title>Report</title><p>Beats: '+beats+'</p><script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>'; const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close(); };
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function wafflesMonths(age){ const weight=age*0.5+4; const ad=+(weight*0.01).toFixed(2); const am=+(weight*5).toFixed(1);
+    const minF=Math.round(weight*10), maxF=Math.round(weight*20); let j=Math.round(clamp(weight*4,0,360)); let d=+(clamp(weight*2.5,0,50)).toFixed(1);
+    const tube=(weight<=5)?'Size 1':'Size 1.5'; return `${age} MONTHS\n(W ${weight.toFixed(1)}kg) || (Ad ${ad}mg)\n(Am ${am}mg) || (F ${minF}-${maxF}ml)\n(SGA ${tube}) || (E ${j}J)\n(D10% ${d}ml)`; }
+  $('months').onclick = ()=>{ const n=+$('ageInput').value; if(isNaN(n)){ alert('Enter age'); return; } $('out').textContent=wafflesMonths(n); };
+})();
+</script>
+</html>
