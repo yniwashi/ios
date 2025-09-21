@@ -1,0 +1,105 @@
+/* ===== Portrait: Vars you can tweak ===== */
+:root{
+  color-scheme: light dark;
+  --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3; --card:#14181d; --border:#20262d;
+  --btn:#1a2027; --btn-fg:#e9eef3; --btn-border:#2b333b;
+  --primary:#0f2e39; --primary-border:#2e89a8; --primary-fg:#e6fbff;
+  --danger:#3a1212; --danger-border:#7a2626; --danger-fg:#ffecec;
+
+  --total-color:#f1f5f9;       /* total digits */
+  --cycle-color:#ff4d4d;       /* cycle digits */
+  --adr-color:#2ea0ff;         /* adrenaline digits */
+  --pulse-color:rgba(255,77,77,.30); /* pulse tint dark */
+  --pulse-color-outer:rgba(179,0,0,.10);
+
+  --title-size:26px;
+  --kpi-title:16px;
+  --total-size:78px;
+  --timer-size:76px;
+  --countdown-size:120px;
+  --icon-size:36px;
+  --log-size:16px;
+  --pulse-size:92vmin; /* fills card; big on phones */
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563; --card:#ffffff; --border:#e5e7eb;
+    --btn:#ffffff; --btn-fg:#111827; --btn-border:#d1d5db;
+    --primary:#0b6b82; --primary-border:#0b6b82; --primary-fg:#ffffff;
+    --danger:#b91c1c; --danger-border:#991b1b; --danger-fg:#ffffff;
+    --total-color:#111;
+    --pulse-color:rgba(255,77,77,.22);
+    --pulse-color-outer:rgba(255,0,0,.08);
+  }
+}
+[data-theme="dark"] :root, [data-theme="dark"]{
+  --total-color:#f1f5f9;
+  --pulse-color:rgba(255,77,77,.30);
+  --pulse-color-outer:rgba(179,0,0,.10);
+}
+[data-theme="light"] :root, [data-theme="light"]{
+  --total-color:#111;
+  --pulse-color:rgba(255,77,77,.22);
+  --pulse-color-outer:rgba(255,0,0,.08);
+}
+
+/* ===== Base ===== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+.hidden{display:none!important}
+
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.header{display:flex;flex-direction:column;align-items:center;gap:10px}
+.title{font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
+.trial{margin-left:6px;font-weight:800;font-size:12px;color:#8b5cf6}
+.ctrls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted)}
+.chip input{width:90px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--fg);text-align:center}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--fg)}
+.icon{width:var(--icon-size);height:var(--icon-size)}
+
+/* Timers stacked: Total → Cycle → Adrenaline */
+.timers{display:grid;gap:14px;margin-top:8px}
+.kpi{position:relative;border-radius:16px;border:1px solid var(--border);background:var(--card);padding:14px}
+.label{font-size:var(--kpi-title);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:900;text-align:center}
+.value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:var(--timer-size);font-weight:900;text-align:center}
+.value.total{font-size:var(--total-size);color:var(--total-color)}
+.value.adr{color:var(--adr-color)}
+#cycleVal{color:var(--cycle-color)}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button{padding:12px 18px;border-radius:12px;border:1px solid var(--btn-border);background:var(--btn);color:var(--btn-fg);cursor:pointer}
+button:hover{filter:brightness(1.05)} button:disabled{opacity:.5;cursor:not-allowed}
+.primary{background:var(--primary); border-color:var(--primary-border); color:var(--primary-fg)}
+.danger {background:var(--danger);  border-color:var(--danger-border);  color:var(--danger-fg)}
+.wide{min-width:44vw; max-width:520px}
+
+/* Pulse fills card */
+.pulse-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.pulse{width:var(--pulse-size);height:var(--pulse-size);border-radius:50%;
+  background:radial-gradient(circle,var(--pulse-color) 20%, var(--pulse-color-outer) 60%, transparent 70%);
+  opacity:.35; transform:scale(1); animation:beat .6s ease-in-out infinite}
+@keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* Countdown */
+.countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-weight:900;
+  color:var(--cycle-color);font-size:var(--countdown-size);pointer-events:none;background:transparent}
+
+/* Below (scrollables) */
+.below{margin-top:14px}
+.log{max-height:260px;overflow:auto;font-size:var(--log-size);line-height:1.35;margin:8px 0 0 0;padding-left:20px}
+.log li{margin:6px 0}
+
+/* WAAFELSS */
+.wa-title{text-align:center;font-weight:900;font-size:22px;margin:6px 0 8px}
+.wa-input{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:10px}
+.wa-input input{width:200px;font-size:22px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg);text-align:center}
+.wa-label{font-weight:800;color:var(--muted)}
+.wa-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.wa-grid{grid-template-columns:1fr}}
+.w-row{display:flex;gap:8px;align-items:center}
+.w-tag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+.w-val{font-weight:800}
+
+@media print{ .no-print{display:none!important} body{background:#fff;color:#000} .card{border:none} .value.total{color:#000} }
