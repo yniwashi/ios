@@ -1,38 +1,594 @@
 <!doctype html>
-<html>
+<html lang="en">
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CPR Mini-App — Minimal Test</title>
-<button id="start">Start CPR</button>
-<button id="mute" disabled>Mute</button>
-<button id="unmute">Unmute</button>
-<button id="print">Print Report</button>
-<input id="ageInput" type="number" placeholder="Age"/>
-<button id="months">Months</button>
-<pre id="out"></pre>
-<div id="elapsed">00:00</div>
-<div id="beats">0</div>
+<title>CPR Mini-App (Web)</title>
+<style>
+  :root { --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3; --card:#14181d; --accent:#4cc9f0; --good:#22c55e; --warn:#f59e0b; --danger:#ef4444; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .card{background:var(--card);border:1px solid #20262d;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 24px rgba(0,0,0,.25)}
+  button{padding:12px 16px;border-radius:12px;border:1px solid #2b333b;background:#1a2027;color:var(--fg);cursor:pointer}
+  button:hover{filter:brightness(1.05)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .primary{border-color:#2e89a8;background:#15313a}
+  .danger{border-color:#6b1d1d;background:#2a0f0f}
+  .pill{padding:4px 10px;border-radius:999px;background:#10161c;border:1px solid #1f2a33;color:var(--muted)}
+  .big{font-size:36px;font-weight:800;letter-spacing:.5px}
+  .mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace}
+  input[type=number],input[type=text]{width:100px;padding:8px 10px;border-radius:10px;border:1px solid #2b333b;background:#0e141a;color:var(--fg)}
+  ul{margin:0;padding-left:20px;max-height:260px;overflow:auto}
+  li{margin:6px 0}
+  .sp{flex:1}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .kpi{background:#0f141a;border:1px solid #1e2530;border-radius:14px;padding:12px}
+  .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+  .kpi .value{font-size:28px;font-weight:800;margin-top:2px}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .center{display:flex;justify-content:center;align-items:center}
+  .heart{width:80px;height:80px;border-radius:50%;background:radial-gradient(#ff4d4d,#b30000);transform-origin:center;animation:none}
+  .heart.beat{animation:beat .62s ease-in-out infinite}
+  @keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .banner{font-weight:700;padding:6px 12px;border-radius:10px;border:1px dashed #334; color:#ddd}
+  .banner.warn{border-color:#665000;color:#ffd54f;background:rgba(255,213,79,.08)}
+  .banner.info{border-color:#2f5b7a;color:#9bd0ff;background:rgba(155,208,255,.08)}
+  .stack{display:flex;gap:10px;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .hidden{display:none}
+  @media print{ .no-print{display:none !important} body{background:#fff;color:#000}}
+</style>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div class="pill">Metronome</div>
+      <div>BPM: <input id="bpm" type="number" min="60" max="160" step="1" value="110"></div>
+      <div class="pill">Cycle 2:00 + 10s interruption</div>
+      <div class="pill">Adrenaline: 4:00 cue</div>
+      <div class="sp"></div>
+      <button id="mute" class="no-print">Mute</button>
+      <button id="unmute" class="no-print" disabled>Unmute</button>
+      <button id="start" class="primary no-print">Start CPR</button>
+      <button id="pauseCycle" class="no-print" disabled>Pause Cycle</button>
+      <button id="stop" class="danger no-print" disabled>Stop & Save</button>
+    </div>
+
+    <div class="grid" style="margin-top:10px">
+      <div class="kpi"><div class="label">Elapsed (Main)</div><div id="elapsed" class="value mono">00:00</div></div>
+      <div class="kpi"><div class="label">Cycle</div><div id="cycleT" class="value mono">02:00</div></div>
+      <div class="kpi"><div class="label">Adrenaline</div><div id="adrT" class="value mono">00:00</div></div>
+      <div class="kpi"><div class="label">Beats</div><div id="beats" class="value mono">0</div></div>
+    </div>
+
+    <div id="twentyBanner" class="banner warn hidden" style="margin-top:8px">20:00 reached</div>
+    <div id="adrBanner" class="banner info hidden" style="margin-top:8px">Give Adrenaline</div>
+
+    <div class="row no-print" style="margin-top:12px">
+      <button id="shock">Shock</button>
+      <button id="amio">Amiodarone</button>
+      <button id="adrStart">Start/Resume Adrenaline</button>
+      <button id="adrPause" disabled>Pause Adrenaline</button>
+      <button id="rosc" class="danger">ROSC</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <strong>Event Log</strong>
+      <div class="sp"></div>
+      <button id="exportTxt" class="no-print">Export .txt</button>
+      <button id="printReport" class="no-print">Print Report (PDF)</button>
+      <button id="resetAll" class="no-print">Reset Timers</button>
+      <button id="startAgain" class="primary no-print" disabled>Start CPR Again</button>
+    </div>
+    <ul id="log"></ul>
+  </div>
+
+  <div class="card">
+    <div class="row"><strong>WAAFLES (Pedi calculator)</strong></div>
+    <div class="stack no-print" style="margin-top:6px">
+      <input id="ageInput" type="number" min="0" placeholder="Enter age" />
+      <button id="monthsBtn">Months</button>
+      <button id="yearsBtn">Years</button>
+    </div>
+    <pre id="wafflesOut" style="white-space:pre-wrap;margin-top:8px"></pre>
+  </div>
+</div>
 
 <script>
 (() => {
+  // ---------- Helpers ----------
   const $ = id => document.getElementById(id);
-  let audioCtx, nextNoteTime=0, lookahead=25, scheduleAhead=0.1, timer;
-  let metronomeOn=false, bpm=110, beats=0, running=false, startAudioTime=0, rafID;
-  async function ensureAudio(){ if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); } await audioCtx.resume(); }
-  function clickAt(t,accent=false){ const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-    o.frequency.value=accent?1000:800; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.001);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+0.07); }
-  function scheduler(){ while(nextNoteTime < audioCtx.currentTime + scheduleAhead){ clickAt(nextNoteTime, beats%30===0); nextNoteTime += 60/bpm; $('beats').textContent=++beats; } timer=setTimeout(scheduler, lookahead); }
-  $('start').onclick = async () => { await ensureAudio(); running=true; startAudioTime=audioCtx.currentTime; if(!metronomeOn){ metronomeOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('mute').disabled=false; $('unmute').disabled=true; } loop(); };
-  $('mute').onclick = ()=>{ metronomeOn=false; clearTimeout(timer); $('mute').disabled=true; $('unmute').disabled=false; };
-  $('unmute').onclick = async ()=>{ await ensureAudio(); metronomeOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('unmute').disabled=true; $('mute').disabled=false; };
-  function loop(){ if(audioCtx&&running){ const el=Math.floor(audioCtx.currentTime - startAudioTime); $('elapsed').textContent = String(el/60|0).padStart(2,'0')+':'+String(el%60).padStart(2,'0'); } rafID=requestAnimationFrame(loop); }
-  $('print').onclick = ()=>{ const html='<!doctype html><title>Report</title><p>Beats: '+beats+'</p><script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>'; const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close(); };
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  function wafflesMonths(age){ const weight=age*0.5+4; const ad=+(weight*0.01).toFixed(2); const am=+(weight*5).toFixed(1);
-    const minF=Math.round(weight*10), maxF=Math.round(weight*20); let j=Math.round(clamp(weight*4,0,360)); let d=+(clamp(weight*2.5,0,50)).toFixed(1);
-    const tube=(weight<=5)?'Size 1':'Size 1.5'; return `${age} MONTHS\n(W ${weight.toFixed(1)}kg) || (Ad ${ad}mg)\n(Am ${am}mg) || (F ${minF}-${maxF}ml)\n(SGA ${tube}) || (E ${j}J)\n(D10% ${d}ml)`; }
-  $('months').onclick = ()=>{ const n=+$('ageInput').value; if(isNaN(n)){ alert('Enter age'); return; } $('out').textContent=wafflesMonths(n); };
+  const fmtClock = secs => {
+    secs = Math.max(0, Math.floor(secs));
+    const m = String(Math.floor(secs/60)).padStart(2,'0');
+    const s = String(secs%60).padStart(2,'0');
+    return `${m}:${s}`;
+  };
+  const hhmm = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const logEl = $('log');
+  const pushLog = (text) => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    logEl.prepend(li);
+  };
+
+  // ---------- Config (mirrors your Kotlin behavior) ----------
+  const CONFIG = {
+    defaultBpm: 110,
+    cycleSeconds: 120,          // 2:00
+    interruptionSeconds: 10,    // post-cycle interruption window
+    adrenalineCueSeconds: 240,  // 4:00
+    adrenalinePreLog: 238,      // 3:58
+    metronomeAccentEvery: 30    // visual/audio accent cadence
+  };
+
+  // ---------- State ----------
+  let audioCtx, nextNoteTime = 0, lookahead = 25, scheduleAhead = 0.1, tickTimer;
+  let bpm = CONFIG.defaultBpm, beats = 0, metronomeOn = false;
+
+  let running = false;
+  let startAudioTime = 0;            // AudioContext time at CPR start
+  let startedAtWall = null, endedAtWall = null;
+
+  // Cycle timer
+  let cycleAnchor = 0;               // Audio time when current cycle started
+  let cyclePausedAt = null;          // Audio time when paused
+  let cycleInterrupted = false;      // during 10s interruption
+  let cycleCount = 0;
+
+  // Main
+  let rafID;
+  let twentyAlertFired = false;
+
+  // Adrenaline
+  let adrAnchor = null;
+  let adrPausedAt = null;
+  let adrRunning = false;
+  let adrCount = 0;
+  let adrBannerTimer = null;
+
+  // Counters
+  let amioCount = 0, shockCount = 0;
+
+  // Events array for printing/export
+  const events = []; // {ts:Date, label:string}
+
+  // ---------- Audio / Metronome ----------
+  function scheduleClick(time, accented=false){
+    const osc = audioCtx.createOscillator();
+    const env = audioCtx.createGain();
+    osc.frequency.value = accented ? 1000 : 800;
+    env.gain.setValueAtTime(0.0001, time);
+    env.gain.exponentialRampToValueAtTime(0.28, time+0.001);
+    env.gain.exponentialRampToValueAtTime(0.0001, time+0.06);
+    osc.connect(env).connect(audioCtx.destination);
+    osc.start(time); osc.stop(time+0.07);
+  }
+  function nextNote(){
+    nextNoteTime += 60.0 / bpm;
+    beats++;
+    $('beats').textContent = beats;
+  }
+  function scheduler(){
+    while (nextNoteTime < audioCtx.currentTime + scheduleAhead) {
+      const accented = CONFIG.metronomeAccentEvery>0 && (beats % CONFIG.metronomeAccentEvery === 0);
+      scheduleClick(nextNoteTime, accented);
+      nextNote();
+    }
+    tickTimer = setTimeout(scheduler, lookahead);
+  }
+  async function ensureAudio(){
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await audioCtx.resume();
+  }
+
+  // ---------- Logging ----------
+  function stamp(label){
+    const ts = new Date();
+    events.push({ts, label});
+    pushLog(`${hhmmss(ts)} | ${label}`);
+  }
+
+  // ---------- UI Actions ----------
+  $('bpm').addEventListener('change', e=> { bpm = +e.target.value; });
+
+  $('mute').onclick = async () => {
+    if (!audioCtx) await ensureAudio();
+    metronomeOn = false;
+    clearTimeout(tickTimer);
+    $('mute').disabled = true;
+    $('unmute').disabled = false;
+  };
+  $('unmute').onclick = async () => {
+    if (!audioCtx) await ensureAudio();
+    metronomeOn = true;
+    nextNoteTime = audioCtx.currentTime + 0.1;
+    scheduler();
+    $('unmute').disabled = true;
+    $('mute').disabled = false;
+  };
+
+  $('start').onclick = async () => {
+    await ensureAudio();
+    // start metronome if muted previously
+    if (!metronomeOn){
+      metronomeOn = true;
+      nextNoteTime = audioCtx.currentTime + 0.1;
+      scheduler();
+      $('mute').disabled = false;
+      $('unmute').disabled = true;
+    }
+
+    // CPR main & cycle start/resume
+    const now = audioCtx.currentTime;
+    if (!running){
+      running = true;
+      startAudioTime = now;
+      cycleAnchor = now;
+      cyclePausedAt = null;
+      startedAtWall = new Date();
+      beats = 0; $('beats').textContent = '0';
+      twentyAlertFired = false;
+      stamp('CPR Timer Started');
+    } else if (cyclePausedAt != null){
+      // resume cycle pause
+      const delta = now - cyclePausedAt;
+      cycleAnchor += delta; // shift anchor forward by pause duration
+      cyclePausedAt = null;
+      stamp('CPR Timer Resumed');
+    }
+
+    // enable buttons like your Kotlin
+    $('start').disabled = true;
+    $('pauseCycle').disabled = false;
+    $('stop').disabled = false;
+    ['shock','amio','rosc','adrStart'].forEach(id=>$(id).disabled=false);
+    $('adrPause').disabled = !adrRunning;
+
+    // visuals
+    heart.classList.add('beat');
+  };
+
+  $('pauseCycle').onclick = () => {
+    if (!running) return;
+    const now = audioCtx.currentTime;
+    cyclePausedAt = now;
+    stamp('CPR Timer Paused');
+    $('pauseCycle').disabled = true;
+    $('start').disabled = false;
+    heart.classList.remove('beat');
+  };
+
+  $('stop').onclick = () => {
+    if (!running) return;
+    running = false;
+    endedAtWall = new Date();
+
+    // reset timers to zeroed state (like Kotlin stop)
+    cycleAnchor = audioCtx.currentTime; cyclePausedAt = null;
+    adrAnchor = audioCtx.currentTime; adrPausedAt = null; adrRunning = false;
+    $('adrPause').disabled = true;
+    $('adrStart').disabled = true;
+
+    stamp('CPR Timer Stopped');
+
+    // disable active controls
+    $('stop').disabled = true;
+    $('pauseCycle').disabled = true;
+    ['shock','amio','rosc'].forEach(id=>$(id).disabled=true);
+    $('startAgain').disabled = false;
+
+    // hide banners
+    $('twentyBanner').classList.add('hidden');
+    $('adrBanner').classList.add('hidden');
+    clearTimeout(adrBannerTimer);
+
+    // optional: also stop metronome
+    metronomeOn = false;
+    clearTimeout(tickTimer);
+    $('mute').disabled = true;
+    $('unmute').disabled = false;
+
+    heart.classList.remove('beat');
+  };
+
+  $('resetAll').onclick = () => {
+    // Hard reset like your Reset Timers
+    cycleCount = 0; adrCount = 0; shockCount = 0; amioCount = 0;
+    running = false; adrRunning = false;
+    cycleAnchor = audioCtx?audioCtx.currentTime:0; cyclePausedAt = null;
+    adrAnchor = audioCtx?audioCtx.currentTime:0; adrPausedAt = null;
+    startedAtWall = null; endedAtWall = null; beats = 0;
+    $('beats').textContent = '0';
+    $('pauseCycle').disabled = true;
+    $('start').disabled = false;
+    $('stop').disabled = true;
+    $('adrPause').disabled = true;
+    $('adrStart').disabled = false;
+    $('startAgain').disabled = true;
+    $('twentyBanner').classList.add('hidden');
+    $('adrBanner').classList.add('hidden');
+    clearTimeout(adrBannerTimer);
+    stamp('Timers reset');
+    heart.classList.remove('beat');
+  };
+
+  $('startAgain').onclick = () => {
+    // Mirrors your Start Again flow
+    $('startAgain').disabled = true;
+    $('start').click();
+  };
+
+  $('shock').onclick = () => {
+    shockCount++;
+    const now = new Date();
+    stamp(`Shock no. ${shockCount} Delivered`);
+    // also add HH:mm line if you need a separate display; here log has HH:mm:ss
+  };
+
+  $('amio').onclick = () => {
+    amioCount++;
+    const now = new Date();
+    stamp(`Amiodarone no. ${amioCount} Administered`);
+  };
+
+  $('rosc').onclick = () => {
+    stamp('ROSC Achieved');
+
+    running = false; adrRunning = false;
+    endedAtWall = new Date();
+    cycleAnchor = audioCtx.currentTime; cyclePausedAt = null;
+    adrAnchor = audioCtx.currentTime; adrPausedAt = null;
+
+    ['pauseCycle','stop','adrPause'].forEach(id=>$(id).disabled=true);
+    ['start','adrStart','shock','amio'].forEach(id=>$(id).disabled=false);
+    $('startAgain').disabled = false;
+
+    // stop metronome like app behavior
+    metronomeOn = false; clearTimeout(tickTimer);
+    $('mute').disabled = true; $('unmute').disabled = false;
+
+    heart.classList.remove('beat');
+    alert('Make sure to Print/Export the report to save the data.');
+  };
+
+  // Adrenaline controls
+  $('adrStart').onclick = async () => {
+    await ensureAudio();
+
+    // If CPR not running, Kotlin starts CPR too:
+    if (!running) { $('start').click(); }
+
+    const now = audioCtx.currentTime;
+    if (!adrRunning){
+      if (adrPausedAt != null){
+        const delta = now - adrPausedAt;
+        adrAnchor += delta;
+        adrPausedAt = null;
+      } else {
+        adrAnchor = now;
+        adrCount++;
+        stamp(`Adrenaline no. ${adrCount} Administered`);
+      }
+      adrRunning = true;
+      $('adrPause').disabled = false;
+    }
+    stamp('Adrenaline Timer Started');
+  };
+
+  $('adrPause').onclick = () => {
+    if (!adrRunning) return;
+    adrPausedAt = audioCtx.currentTime;
+    adrRunning = false;
+    $('adrPause').disabled = true;
+    stamp('Adrenaline Timer Paused');
+  };
+
+  // ---------- Display loop & rule triggers ----------
+  const heart = (()=>{ const d=document.createElement('div'); d.className='heart'; document.querySelector('.card .row').appendChild(d); return d; })();
+
+  function loop(){
+    if (audioCtx){
+      const now = audioCtx.currentTime;
+
+      // Main elapsed
+      let el = 0;
+      if (running) el = now - startAudioTime;
+      else if (startedAtWall && endedAtWall) el = (endedAtWall - startedAtWall)/1000;
+      $('elapsed').textContent = fmtClock(el);
+
+      // 20-minute alert once
+      if (running && !twentyAlertFired && el >= 1200){
+        twentyAlertFired = true;
+        $('twentyBanner').classList.remove('hidden');
+        // short tone
+        scheduleClick(now+0.05,true);
+      }
+
+      // Cycle display + cycle rollover / interruption
+      let cycleLeft = 0;
+      if (running){
+        const base = (cyclePausedAt!=null?cyclePausedAt:now) - cycleAnchor;
+        const sec = Math.max(0, CONFIG.cycleSeconds - base);
+        cycleLeft = sec;
+        $('cycleT').textContent = fmtClock(sec);
+
+        // At 1:58 log "Cycle X Finished" (Kotlin logs at 01:58)
+        const since = base|0; // int seconds
+        if (since === 118 && !cycleInterrupted){
+          const t = new Date();
+          pushLog(`${hhmmss(t)} | Cycle ${cycleCount+1} Finished`);
+        }
+
+        // At 2:00 trigger interruption
+        if (sec === 0 && !cycleInterrupted){
+          cycleInterrupted = true;
+          cycleCount++;
+          // 10s interruption phase
+          stamp('Two minutes reached - 10s interruption');
+          const startInterruptionAt = now;
+          const interTick = setInterval(()=>{
+            const remain = CONFIG.interruptionSeconds - (audioCtx.currentTime - startInterruptionAt);
+            if (remain <= 0){
+              clearInterval(interTick);
+              // resume next cycle
+              cycleAnchor = audioCtx.currentTime;
+              cycleInterrupted = false;
+              stamp('CPR Timer Resumed (post interruption)');
+            }
+          }, 200);
+          // small audio cue
+          scheduleClick(now+0.05,true);
+        }
+      } else {
+        $('cycleT').textContent = fmtClock(120);
+      }
+
+      // Adrenaline timer
+      if (adrRunning && adrAnchor!=null){
+        const a = now - adrAnchor; // seconds since start
+        $('adrT').textContent = fmtClock(a);
+
+        // 3:58 pre-log (like Kotlin)
+        if (Math.floor(a) === CONFIG.adrenalinePreLog){
+          pushLog(`${hhmmss(new Date())} | Adrenaline no. ${adrCount} Administered`);
+        }
+        // 4:00 cue UI for 5s, reset anchor
+        if (Math.floor(a) === CONFIG.adrenalineCueSeconds){
+          // play cue + show banner for 5s, then continue counting next dose window
+          $('adrBanner').classList.remove('hidden');
+          scheduleClick(now+0.05,true);
+          adrRunning = false; // pause underlying count during banner
+          const savedNow = audioCtx.currentTime;
+          adrBannerTimer = setTimeout(()=>{
+            $('adrBanner').classList.add('hidden');
+            adrAnchor = audioCtx.currentTime; // restart from zero
+            adrRunning = true;
+          }, 5000);
+        }
+      } else {
+        // show current paused time or zero
+        if (adrAnchor && adrPausedAt) $('adrT').textContent = fmtClock(adrPausedAt - adrAnchor);
+        else if (!adrAnchor) $('adrT').textContent = '00:00';
+      }
+    }
+
+    rafID = requestAnimationFrame(loop);
+  }
+  rafID = requestAnimationFrame(loop);
+
+  // ---------- Export & Print ----------
+  $('exportTxt').onclick = () => {
+    const started = startedAtWall ? startedAtWall.toLocaleString() : 'N/A';
+    const ended   = endedAtWall ? endedAtWall.toLocaleString() : 'N/A';
+    const lines = [
+      `CPR SESSION REPORT`,
+      `Started: ${started}`,
+      `Ended:   ${ended}`,
+      `BPM:     ${bpm}`,
+      `Cycle Count: ${cycleCount}`,
+      `Adrenaline Doses: ${adrCount}`,
+      `Shocks: ${shockCount}`,
+      `Amiodarone: ${amioCount}`,
+      ``,
+      `Events:`
+    ];
+    for (const e of events) lines.push(`${hhmmss(e.ts)} | ${e.label}`);
+    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
+    a.click();
+  };
+
+  $('printReport').onclick = () => {
+    const started = startedAtWall ? startedAtWall.toLocaleString() : 'N/A';
+    const ended   = endedAtWall ? endedAtWall.toLocaleString() : 'N/A';
+    const html = `
+      <!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
+      <style>
+        body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111}
+        h2{margin:0 0 8px 0}
+        .meta div{margin:2px 0}
+        ol{margin-top:8px}
+      </style></head><body>
+      <h2>CPR Session Report</h2>
+      <div class="meta">
+        <div><b>Started:</b> ${started}</div>
+        <div><b>Ended:</b> ${ended}</div>
+        <div><b>BPM:</b> ${bpm}</div>
+        <div><b>Cycles:</b> ${cycleCount}; <b>Adr:</b> ${adrCount}; <b>Shocks:</b> ${shockCount}; <b>Amio:</b> ${amioCount}</div>
+      </div>
+      <h3>Events</h3>
+      <ol>${events.map(e=>`<li>${hhmmss(e.ts)} | ${e.label}</li>`).join('')}</ol>
+      <p style="margin-top:14px;color:#666">Note: Training/operational aid; not a medical device.</p>
+      <script>window.onload=()=>{window.print(); setTimeout(()=>window.close(), 300);}</script>
+      </body></html>`;
+    const w = window.open('', 'printwin'); w.document.open(); w.document.write(html); w.document.close();
+  };
+
+  // ---------- WAAFLES (Months/Years) ----------
+  function clamp(val, min, max){ return Math.max(min, Math.min(max, val)); }
+  function wafflesMonths(age){
+    // weight = age*0.5 + 4
+    const weight = age*0.5 + 4;
+    const adrenalineDose = +(weight*0.01).toFixed(2);   // mg
+    const amioDose = +(weight*5).toFixed(1);            // mg
+    const minFl = Math.round(weight*10);
+    const maxFl = Math.round(weight*20);
+    let joules = weight*4; joules = Math.round(clamp(joules, 0, 360));
+    let d10 = weight*2.5; d10 = +(clamp(d10, 0, 50)).toFixed(1); // mL, cap at 50
+    const tube = (weight<=5) ? 'Size 1' : 'Size 1.5';
+    return {age:`${age} MONTHS`, weight, adrenalineDose, amioDose, minFl, maxFl, tube, joules, d10};
+  }
+  function wafflesYears(age){
+    // same branching as your Kotlin
+    let weight, tube;
+    if (age <= 5){
+      weight = age*2 + 8;
+      if (weight>=10 && weight<=24) tube='Size 2';
+      else if (weight>=25 && weight<=35) tube='Size 2.5';
+      else tube='';
+    } else {
+      weight = age*3 + 7;
+      tube = (weight>=25 && weight<=35) ? 'Size 2.5' : 'Consider adult SGA sizes';
+    }
+    const adrenalineDose = +(weight*0.01).toFixed(2);
+    const amioDose = +(weight*5).toFixed(1);
+    const minFl = Math.round(weight*10);
+    const maxFl = Math.round(weight*20);
+    let joules = Math.round(clamp(weight*4, 0, 360));
+    let d10 = +(clamp(weight*2.5, 0, 50)).toFixed(1);
+    return {age:`${age} YEARS`, weight, adrenalineDose, amioDose, minFl, maxFl, tube, joules, d10};
+  }
+  function formatW(out){
+    return `${out.age}
+(W ${out.weight.toFixed(1)}kg) |||| (Ad ${out.adrenalineDose}mg)
+(Am ${out.amioDose}mg) |||| (F ${out.minFl}-${out.maxFl}ml)
+(SGA ${out.tube || '-'}) |||| (E ${out.joules}J)
+(D10% ${out.d10}ml)`;
+  }
+  $('monthsBtn').onclick = () => {
+    const n = +$('ageInput').value;
+    if (isNaN(n) || n<0){ alert('Please enter age.'); return; }
+    $('wafflesOut').textContent = formatW(wafflesMonths(n));
+  };
+  $('yearsBtn').onclick = () => {
+    const n = +$('ageInput').value;
+    if (isNaN(n) || n<0){ alert('Please enter age.'); return; }
+    $('wafflesOut').textContent = formatW(wafflesYears(n));
+  };
+
+  // ---------- Wake Lock best-effort ----------
+  let wl; document.addEventListener('visibilitychange', async () => {
+    try {
+      if (document.visibilityState==='visible' && 'wakeLock' in navigator) wl = await navigator.wakeLock.request('screen');
+      else if (wl) { await wl.release(); wl = null; }
+    } catch {}
+  });
 })();
 </script>
-</html>
