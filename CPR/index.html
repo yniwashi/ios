@@ -2,320 +2,490 @@
 <html lang="en">
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CPR Timer (Beta)</title>
+<title>CPR — Web Mini-App</title>
 <style>
-  :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--card:#14181d;--accent:#4cc9f0;--danger:#ef4444}
-  *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+  :root{
+    color-scheme: light dark;
+    --bg: #0b0d10;
+    --fg: #e9eef3;
+    --muted:#9aa7b3;
+    --card:#14181d;
+    --border:#20262d;
+    --accent:#4cc9f0;
+    --danger:#ef4444;
+    --ok:#22c55e;
+
+    --total-color: #111111;   /* Total CPR Time (light theme default) */
+    --cycle-color: #ff4d4d;   /* Cycle = Red */
+    --adr-color:   #2ea0ff;   /* Adrenaline = Blue */
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f6f8fc; --fg:#111827; --muted:#4b5563; --card:#ffffff; --border:#e5e7eb;
+      --total-color:#111111;
+    }
+  }
+  [data-theme="dark"]{
+    --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3; --card:#14181d; --border:#20262d; --total-color:#f1f5f9;
+  }
+  [data-theme="light"]{
+    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563; --card:#ffffff; --border:#e5e7eb; --total-color:#111111;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+
   .wrap{max-width:1000px;margin:0 auto;padding:16px}
-  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .card{background:var(--card);border:1px solid #20262d;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 24px rgba(0,0,0,.25)}
-  button{padding:12px 16px;border-radius:12px;border:1px solid #2b333b;background:#1a2027;color:var(--fg);cursor:pointer}
-  button:hover{filter:brightness(1.05)} button:disabled{opacity:.45;cursor:not-allowed}
-  .primary{background:#15313a;border-color:#2e89a8} .danger{background:#2a0f0f;border-color:#6b1d1d}
-  .pill{padding:4px 10px;border-radius:999px;background:#10161c;border:1px solid #1f2a33;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-  .kpi{background:#0f141a;border:1px solid #1e2530;border-radius:14px;padding:12px}
-  .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-  .kpi .value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:28px;font-weight:800}
-  @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  ul{margin:0;padding-left:20px;max-height:260px;overflow:auto} li{margin:6px 0}
-  .banner{font-weight:700;padding:6px 12px;border-radius:10px;border:1px dashed #334;color:#ddd;margin-top:8px;display:none}
-  .banner.warn{border-color:#665000;color:#ffd54f;background:rgba(255,213,79,.08)}
-  .banner.info{border-color:#2f5b7a;color:#9bd0ff;background:rgba(155,208,255,.08)}
-  .heart{width:18px;height:18px;border-radius:50%;background:radial-gradient(#ff4d4d,#b30000);box-shadow:0 0 12px rgba(255,77,77,.4);display:inline-block;transform-origin:center}
-  .beat{animation:beat .62s ease-in-out infinite}
-  @keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.16)}100%{transform:scale(1)}}
-  @media print{ .no-print{display:none !important} body{background:#fff;color:#000} .card{border:none;box-shadow:none}}
+
+  .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .sp{flex:1}
+  .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px}
+
+  button{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--fg);cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .primary{background:linear-gradient(180deg,#15313a,#101a1f);border-color:#2e89a8}
+  .danger{background:linear-gradient(180deg,#2a0f0f,#190909);border-color:#6b1d1d}
+
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .kpi{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;border:1px solid var(--border);padding:16px;min-height:120px}
+  .kpi .label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .kpi .value{font-variant-numeric:tabular-nums; font-family:ui-monospace,Consolas,monospace; font-size:42px; font-weight:800}
+
+  /* Colors */
+  #totalLabel{color:var(--muted)}
+  #totalVal{color:var(--total-color)}
+  #cycleLabel{color:var(--muted)}
+  #cycleVal{color:var(--cycle-color)}
+  #adrLabel{color:var(--muted)}
+  #adrVal{color:var(--adr-color)}
+
+  /* Heart overlay on Cycle */
+  .heart-overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+  }
+  .heart{
+    width:120px; height:120px; border-radius:50%;
+    background: radial-gradient(rgba(255,77,77,.18), rgba(179,0,0,.08));
+    opacity:.22;
+    transform:scale(1);
+    animation: beat 0.6s ease-in-out infinite;
+  }
+  @keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+  /* Controls row */
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row .grow{flex:1}
+
+  /* Icons */
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px}
+  .hidden{display:none !important}
+
+  /* Log */
+  ul.log{margin:0;padding-left:20px;max-height:260px;overflow:auto}
+  ul.log li{margin:6px 0}
+
+  /* WAAFELSS card */
+  .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media (max-width:600px){.waffles-grid{grid-template-columns:1fr}}
+  .w-row{display:flex;gap:8px;align-items:center}
+  .w-tag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+  .w-val{font-weight:700}
+
+  /* Big total time at very top */
+  .total-wrap{display:flex;justify-content:center;margin:10px 0}
+  .total-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .total-value{font-variant-numeric:tabular-nums; font-family:ui-monospace,Consolas,monospace; font-size:54px; font-weight:900; color:var(--total-color); text-align:center}
+
+  @media print{ .no-print{display:none !important} body{background:#fff;color:#000} .card{border:none} }
 </style>
 
-<div class="wrap">
-  <div class="card">
-    <div class="row">
-      <span class="pill">Metronome</span>
-      <span>BPM: <input id="bpm" type="number" min="60" max="160" step="1" value="110" style="width:90px;padding:8px;border-radius:10px;border:1px solid #2b333b;background:#0e141a;color:var(--fg)"></span>
-      <span class="pill">Cycle 2:00 + 10s interruption</span>
-      <span class="pill">Adrenaline cue: 4:00 (pre-log 3:58)</span>
-      <span class="pill"><span id="heart" class="heart"></span> status</span>
-      <span style="flex:1"></span>
-      <button id="start" class="primary no-print">Start CPR</button>
-      <button id="pauseCycle" class="no-print" disabled>Pause Cycle</button>
-      <button id="stop" class="danger no-print" disabled>Stop & Save</button>
-      <button id="mute" class="no-print" disabled>Mute</button>
-      <button id="unmute" class="no-print">Unmute</button>
-    </div>
+<body>
+<div id="root" class="wrap">
+  <div class="topbar">
+    <div class="chip">BPM <input id="bpm" type="number" min="60" max="160" step="1" value="110" style="width:80px;padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)"></div>
+    <div class="chip">Theme <button id="themeToggle" title="Toggle theme">Auto</button></div>
+    <div class="sp"></div>
 
-    <div class="grid" style="margin-top:10px">
-      <div class="kpi"><div class="label">Elapsed (Main)</div><div id="elapsed" class="value">00:00</div></div>
-      <div class="kpi"><div class="label">Cycle</div><div id="cycleT" class="value">02:00</div></div>
-      <div class="kpi"><div class="label">Adrenaline</div><div id="adrT" class="value">00:00</div></div>
-      <div class="kpi"><div class="label">Beats</div><div id="beats" class="value">0</div></div>
-    </div>
+    <!-- Icons: mute/unmute toggle -->
+    <button id="btnUnmute" class="icon-btn" title="Unmute" aria-label="Unmute">
+      <!-- speaker-on -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+    <button id="btnMute" class="icon-btn hidden" title="Mute" aria-label="Mute">
+      <!-- speaker-off -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </div>
 
-    <div id="twentyBanner" class="banner warn">20:00 reached</div>
-    <div id="adrBanner" class="banner info">Give Adrenaline</div>
-
-    <div class="row no-print" style="margin-top:12px">
-      <button id="shock">Shock</button>
-      <button id="amio">Amiodarone</button>
-      <button id="adrStart">Start/Resume Adrenaline</button>
-      <button id="adrPause" disabled>Pause Adrenaline</button>
-      <button id="rosc" class="danger">ROSC</button>
+  <!-- Total CPR Time centered -->
+  <div class="total-wrap">
+    <div>
+      <div id="totalLabel" class="total-title">Total CPR Time</div>
+      <div id="totalVal" class="total-value">00:00</div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="row">
-      <strong>Event Log</strong>
-      <span style="flex:1"></span>
-      <button id="exportTxt" class="no-print">Export .txt</button>
-      <button id="printReport" class="no-print">Print Report (PDF)</button>
-      <button id="resetAll" class="no-print">Reset Timers</button>
-      <button id="startAgain" class="primary no-print" disabled>Start CPR Again</button>
+  <div class="grid">
+    <!-- Cycle -->
+    <div class="kpi">
+      <div id="cycleLabel" class="label">Cycle</div>
+      <div id="cycleVal" class="value">02:00</div>
+      <div class="heart-overlay"><div id="heart" class="heart"></div></div>
+      <div class="row no-print" style="margin-top:10px">
+        <button id="btnStart" class="primary">Start CPR</button>
+        <button id="btnPause" disabled>Pause CPR</button>
+        <button id="btnStop" class="danger" disabled>Stop</button>
+      </div>
     </div>
-    <ul id="log"></ul>
+
+    <!-- Adrenaline -->
+    <div class="kpi">
+      <div id="adrLabel" class="label">Adrenaline</div>
+      <div id="adrVal" class="value">00:00</div>
+      <div class="row no-print" style="margin-top:10px">
+        <button id="btnAdrStart">Start Adrenaline</button>
+        <button id="btnAdrPause" disabled>Pause Adrenaline</button>
+      </div>
+    </div>
+
+    <!-- Actions & Log -->
+    <div class="kpi" style="align-items:stretch">
+      <div class="label">Actions</div>
+      <div class="row no-print" style="margin-top:10px">
+        <button id="btnShock">Shock</button>
+        <button id="btnAmio">Amiodarone</button>
+        <button id="btnROSC" class="danger">ROSC</button>
+      </div>
+      <div class="row no-print" style="margin-top:10px">
+        <div class="grow"></div>
+        <button id="btnExport">Export .txt</button>
+        <button id="btnPrint">Print (PDF)</button>
+      </div>
+      <ul id="log" class="log" style="margin-top:10px"></ul>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="row"><strong>WAAFLES (Pedi calculator)</strong></div>
-    <div class="row no-print" style="margin-top:6px">
-      <input id="ageInput" type="number" min="0" placeholder="Enter age" style="width:120px;padding:8px;border-radius:10px;border:1px solid #2b333b;background:#0e141a;color:var(--fg)"/>
+  <div class="card" style="margin-top:12px">
+    <div class="row" style="align-items:center; gap:12px">
+      <button id="btnWaffles" class="primary">WAAFELSS</button>
+      <input id="ageInput" type="number" min="0" placeholder="Enter age" style="width:140px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)"/>
       <button id="monthsBtn">Months</button>
       <button id="yearsBtn">Years</button>
+      <div class="sp"></div>
     </div>
-    <pre id="wafflesOut" style="white-space:pre-wrap;margin-top:8px"></pre>
+    <div id="wafflesCard" class="card" style="margin-top:12px">
+      <div class="waffles-grid">
+        <div class="w-row"><div class="w-tag">Age</div><div id="wAge" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">Weight</div><div id="wWeight" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">Adrenaline</div><div id="wAdr" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">Amiodarone</div><div id="wAmio" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">Fluids</div><div id="wFluids" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">SGA</div><div id="wSGA" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">Energy</div><div id="wJoules" class="w-val">—</div></div>
+        <div class="w-row"><div class="w-tag">D10%</div><div id="wD10" class="w-val">—</div></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 (() => {
-  // ----- Helpers -----
+  // ---------- Theme (auto + toggle) ----------
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeToggle');
+  let themeState = 'auto'; // 'auto' | 'light' | 'dark'
+  function applyTheme(){
+    root.removeAttribute('data-theme');
+    if (themeState === 'light') root.setAttribute('data-theme','light');
+    if (themeState === 'dark')  root.setAttribute('data-theme','dark');
+    themeBtn.textContent = themeState[0].toUpperCase()+themeState.slice(1);
+  }
+  themeBtn.onclick = () => {
+    themeState = themeState==='auto' ? 'light' : themeState==='light' ? 'dark' : 'auto';
+    applyTheme();
+  };
+  applyTheme();
+
+  // ---------- Helpers ----------
   const $ = id => document.getElementById(id);
   const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const hhmm = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const pushLog = t => { const li=document.createElement('li'); li.textContent=t; $('log').prepend(li); };
-  const show = el => el.style.display='block', hide = el => el.style.display='none';
+  const logEl = $('log');
+  function stamp(label){
+    const ts = new Date();
+    const li = document.createElement('li');
+    li.textContent = `${hhmmss(ts)} | ${label}`;
+    logEl.prepend(li);
+    events.push({ts,label});
+  }
 
-  // ----- Config mirroring your Kotlin rules -----
+  // ---------- Config ----------
   const CONFIG = {
     defaultBpm: 110,
-    cycleSeconds: 120,         // 2:00
-    interruptionSeconds: 10,   // post-cycle 10s
-    adrenalinePreLog: 238,     // 3:58
-    adrenalineCue: 240,        // 4:00
-    accentEvery: 30            // metronome accent cadence
+    cycleSeconds: 120, // display seed only (we're not doing enforced 2:00 windows anymore)
   };
 
-  // ----- State -----
-  let audioCtx, nextNoteTime=0, lookahead=25, ahead=0.1, tickTimer;
-  let bpm=CONFIG.defaultBpm, beats=0, metOn=false;
+  // ---------- State ----------
+  let bpm = CONFIG.defaultBpm;
+  $('bpm').value = bpm;
 
-  let running=false, startAudioTime=0, rafID;
-  let startedWall=null, endedWall=null, twentyBannerShown=false;
+  let running = false;
+  let startedWall = null, endedWall = null;
+  let startTime = 0; // ms epoch for total timer
+  let pauseAccum = 0; // total paused ms
+  let pausedAt = 0;   // ms when paused
 
-  // Cycle
-  let cycleAnchor=0, cyclePausedAt=null, cycleInterrupted=false, cycleCount=0;
+  // Cycle display uses elapsed since "cycle start". We’ll treat "cycle start" as same as CPR start for simplicity.
+  let cycleStart = 0; // ms
+  let cyclePausedAccum = 0;
+  let cyclePausedAt = 0;
 
-  // Adrenaline
-  let adrAnchor=null, adrPausedAt=null, adrRunning=false, adrCount=0, adrBannerTimer=null;
+  // Adrenaline timer
+  let adrRunning = false;
+  let adrStart = 0;
+  let adrPausedAccum = 0;
+  let adrPausedAt = 0;
+  let adrCount = 0;
+
+  let rafID;
 
   // Events (for export/print)
-  const events=[]; // {ts:Date,label:string}
+  const events = [];
 
-  // ----- Audio -----
-  async function ensureAudio(){ if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); } await audioCtx.resume(); }
-  function blip(t,accent=false){ const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-    o.frequency.value=accent?1000:800; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.001);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+0.07); }
-  function scheduler(){ while(nextNoteTime < audioCtx.currentTime + ahead){ const accented = CONFIG.accentEvery>0 && (beats % CONFIG.accentEvery === 0);
-      blip(nextNoteTime, accented); nextNoteTime += 60/bpm; $('beats').textContent = ++beats; }
-    tickTimer = setTimeout(scheduler, lookahead); }
+  // ---------- UI: dynamic button labels ----------
+  function updateButtons(){
+    $('btnPause').textContent = 'Pause CPR';
+    $('btnStart').textContent = running ? 'Start CPR' : (pausedAt? 'Resume CPR' : 'Start CPR');
+    $('btnStart').disabled = running; // when running, start is disabled until pause
+    $('btnPause').disabled = !running;
+    $('btnStop').disabled  = !running && !pausedAt;
 
-  // ----- Logging -----
-  function stamp(label){ const ts=new Date(); events.push({ts,label}); pushLog(`${hhmmss(ts)} | ${label}`); }
+    $('btnAdrStart').textContent = adrRunning ? 'Start Adrenaline' : (adrPausedAt ? 'Resume Adrenaline' : 'Start Adrenaline');
+    $('btnAdrStart').disabled = adrRunning;
+    $('btnAdrPause').disabled = !adrRunning;
+  }
 
-  // ----- Controls -----
-  $('bpm').addEventListener('change', e => bpm = +e.target.value);
+  // ---------- Heart beat sync (visual only) ----------
+  const heart = $('heart');
+  function setHeartBpm(b){
+    const dur = Math.max(0.25, 60/Math.max(1,b)); // seconds
+    heart.style.animationDuration = dur + 's';
+  }
+  setHeartBpm(bpm);
+  $('bpm').addEventListener('change', e => { bpm = +e.target.value || CONFIG.defaultBpm; setHeartBpm(bpm); });
 
-  $('unmute').onclick = async () => { await ensureAudio(); metOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('unmute').disabled=true; $('mute').disabled=false; };
-  $('mute').onclick   = () => { metOn=false; clearTimeout(tickTimer); $('mute').disabled=true; $('unmute').disabled=false; };
+  // ---------- Mute/Unmute icons (UI only for now) ----------
+  const btnUnmute = $('btnUnmute');
+  const btnMute = $('btnMute');
+  let muted = false;
+  btnUnmute.onclick = () => { muted = false; btnUnmute.classList.add('hidden'); btnMute.classList.remove('hidden'); /* reserve for future sounds */ };
+  btnMute.onclick   = () => { muted = true;  btnMute.classList.add('hidden');   btnUnmute.classList.remove('hidden'); };
 
-  $('start').onclick = async () => {
-    await ensureAudio();
-    if (!metOn){ metOn=true; nextNoteTime=audioCtx.currentTime+0.1; scheduler(); $('unmute').disabled=true; $('mute').disabled=false; }
-    const now = audioCtx.currentTime;
-    if (!running){
-      running=true; startAudioTime=now; cycleAnchor=now; cyclePausedAt=null; startedWall=new Date(); beats=0; $('beats').textContent='0'; twentyBannerShown=false;
-      stamp('CPR Timer Started');
-    } else if (cyclePausedAt!=null){
-      const delta = now - cyclePausedAt; cycleAnchor += delta; cyclePausedAt=null; stamp('CPR Timer Resumed');
-    }
-    $('start').disabled=true; $('pauseCycle').disabled=false; $('stop').disabled=false;
-    ['shock','amio','adrStart','rosc'].forEach(id=>$(id).disabled=false);
-    $('adrPause').disabled = !adrRunning;
-    $('heart').classList.add('beat');
-  };
-
-  $('pauseCycle').onclick = () => {
-    if(!running) return;
-    cyclePausedAt = audioCtx.currentTime; stamp('CPR Timer Paused');
-    $('pauseCycle').disabled=true; $('start').disabled=false; $('heart').classList.remove('beat');
-  };
-
-  $('stop').onclick = () => {
-    if(!running) return;
-    running=false; endedWall=new Date(); stamp('CPR Timer Stopped');
-    cycleAnchor = audioCtx.currentTime; cyclePausedAt=null; cycleInterrupted=false;
-    adrRunning=false; adrPausedAt=null; $('adrPause').disabled=true; $('adrStart').disabled=true;
-    $('stop').disabled=true; $('pauseCycle').disabled=true; ['shock','amio','rosc'].forEach(id=>$(id).disabled=true); $('startAgain').disabled=false;
-    hide($('twentyBanner')); hide($('adrBanner')); clearTimeout(adrBannerTimer);
-    metOn=false; clearTimeout(tickTimer); $('mute').disabled=true; $('unmute').disabled=false; $('heart').classList.remove('beat');
-  };
-
-  $('resetAll').onclick = () => {
-    cycleCount=0; adrCount=0; beats=0; $('beats').textContent='0'; startedWall=null; endedWall=null;
-    running=false; adrRunning=false; cycleAnchor=audioCtx?audioCtx.currentTime:0; cyclePausedAt=null; cycleInterrupted=false;
-    adrAnchor=null; adrPausedAt=null; showResetNote();
-    stamp('Timers reset');
-    $('pauseCycle').disabled=true; $('start').disabled=false; $('stop').disabled=true; $('adrPause').disabled=true; $('adrStart').disabled=false; $('startAgain').disabled=true;
-    hide($('twentyBanner')); hide($('adrBanner')); clearTimeout(adrBannerTimer); $('heart').classList.remove('beat');
-  };
-  function showResetNote(){ $('cycleT').textContent='02:00'; $('adrT').textContent='00:00'; $('elapsed').textContent='00:00'; }
-
-  $('startAgain').onclick = () => { $('startAgain').disabled=true; $('start').click(); };
-
-  $('shock').onclick = () => { const c = ++window.__shockCount || (window.__shockCount=1); stamp(`Shock no. ${c} Delivered`); };
-  $('amio').onclick  = () => { const c = ++window.__amioCount  || (window.__amioCount=1);  stamp(`Amiodarone no. ${c} Administered`); };
-
-  $('rosc').onclick = () => {
-    stamp('ROSC Achieved');
-    running=false; adrRunning=false; endedWall=new Date();
-    cycleAnchor=audioCtx.currentTime; adrAnchor=audioCtx.currentTime; cyclePausedAt=null; adrPausedAt=null;
-    ['pauseCycle','stop','adrPause'].forEach(id=>$(id).disabled=true);
-    ['start','adrStart','shock','amio'].forEach(id=>$(id).disabled=false);
-    $('startAgain').disabled=false; metOn=false; clearTimeout(tickTimer); $('mute').disabled=true; $('unmute').disabled=false; $('heart').classList.remove('beat');
-    alert('Make sure to Print/Export to save the data.');
-  };
-
-  // Adrenaline controls
-  $('adrStart').onclick = async () => {
-    await ensureAudio();
-    if(!running){ $('start').click(); } // match Kotlin: starting Adrenaline can start CPR
-    const now = audioCtx.currentTime;
-    if (!adrRunning){
-      if (adrPausedAt!=null){ const delta = now - adrPausedAt; adrAnchor += delta; adrPausedAt=null; }
-      else { adrAnchor = now; const n = ++adrCount; stamp(`Adrenaline no. ${n} Administered`); }
-      adrRunning = true; $('adrPause').disabled=false; stamp('Adrenaline Timer Started');
-    }
-  };
-  $('adrPause').onclick = () => { if(!adrRunning) return; adrPausedAt = audioCtx.currentTime; adrRunning=false; $('adrPause').disabled=true; stamp('Adrenaline Timer Paused'); };
-
-  // ----- Display loop & rule triggers -----
+  // ---------- Timers loop ----------
+  function nowMs(){ return Date.now(); }
   function loop(){
-    if (audioCtx){
-      const now = audioCtx.currentTime;
+    if (running){
+      const t = nowMs();
+      const total = t - startTime - pauseAccum;
+      $('totalVal').textContent = fmt(total/1000);
 
-      // Main elapsed + 20:00 banner
-      let el=0; if (running) el = now - startAudioTime; else if (startedWall&&endedWall) el=(endedWall - startedWall)/1000;
-      $('elapsed').textContent = fmt(el);
-      if (running && !twentyBannerShown && el>=1200){ twentyBannerShown=true; show($('twentyBanner')); blip(now+0.05,true); }
+      const cyc = t - cycleStart - cyclePausedAccum;
+      $('cycleVal').textContent = fmt(cyc/1000);
+    } else if (startedWall && endedWall){
+      const total = endedWall - startedWall - pauseAccum;
+      $('totalVal').textContent = fmt(total/1000);
 
-      // Cycle
-      if (running){
-        const ref = (cyclePausedAt!=null ? cyclePausedAt : now) - cycleAnchor;
-        const left = Math.max(0, CONFIG.cycleSeconds - ref)|0; $('cycleT').textContent = fmt(left);
-        if ((ref|0) === CONFIG.cycleSeconds-2 && !cycleInterrupted){ pushLog(`${hhmmss(new Date())} | Cycle ${cycleCount+1} Finished`); }
-        if (left===0 && !cycleInterrupted){
-          cycleInterrupted = true; cycleCount++; stamp('Two minutes reached - 10s interruption'); blip(now+0.05,true);
-          const startInt = now; const iv = setInterval(()=>{ const remain = CONFIG.interruptionSeconds - (audioCtx.currentTime - startInt);
-            if (remain<=0){ clearInterval(iv); cycleAnchor = audioCtx.currentTime; cycleInterrupted=false; stamp('CPR Timer Resumed (post interruption)'); }
-          },200);
-        }
-      }
-
-      // Adrenaline
-      if (adrRunning && adrAnchor!=null){
-        const a = now - adrAnchor; $('adrT').textContent = fmt(a);
-        if ((a|0) === CONFIG.adrenalinePreLog){ pushLog(`${hhmmss(new Date())} | Adrenaline no. ${adrCount} Administered`); }
-        if ((a|0) === CONFIG.adrenalineCue){
-          show($('adrBanner')); blip(now+0.05,true);
-          adrRunning=false;
-          adrBannerTimer = setTimeout(()=>{ hide($('adrBanner')); adrAnchor = audioCtx.currentTime; adrRunning=true; }, 5000);
-        }
-      } else {
-        if (adrAnchor && adrPausedAt) $('adrT').textContent = fmt(adrPausedAt - adrAnchor);
-        else if (!adrAnchor) $('adrT').textContent = '00:00';
-      }
+      const cyc = endedWall - cycleStart - cyclePausedAccum;
+      $('cycleVal').textContent = fmt(cyc/1000);
     }
+
+    if (adrRunning){
+      const t = nowMs();
+      const a = t - adrStart - adrPausedAccum;
+      $('adrVal').textContent = fmt(a/1000);
+    } else if (adrStart){
+      const a = (adrPausedAt || endedWall || nowMs()) - adrStart - adrPausedAccum;
+      $('adrVal').textContent = fmt(Math.max(0,a)/1000);
+    } else {
+      $('adrVal').textContent = '00:00';
+    }
+
     rafID = requestAnimationFrame(loop);
   }
   rafID = requestAnimationFrame(loop);
 
-  // ----- Export & Print -----
-  $('exportTxt').onclick = () => {
-    const started = startedWall ? startedWall.toLocaleString() : 'N/A';
-    const ended   = endedWall ? endedWall.toLocaleString() : 'N/A';
-    const counts  = `Cycles: ${cycleCount}; Adr: ${adrCount}; Shocks: ${window.__shockCount||0}; Amio: ${window.__amioCount||0}`;
-    const lines = [`CPR SESSION REPORT`, `Started: ${started}`, `Ended:   ${ended}`, `BPM:     ${bpm}`, counts, ``, `Events:`];
+  // ---------- Controls: CPR ----------
+  $('btnStart').onclick = () => {
+    const t = nowMs();
+    if (!startedWall){ // fresh start
+      startedWall = t;
+      startTime = t;
+      cycleStart = t;
+      pauseAccum = 0; cyclePausedAccum = 0;
+      stamp('CPR Timer Started');
+    } else if (pausedAt){ // resume
+      const pausedDur = t - pausedAt;
+      pauseAccum += pausedDur;
+      // cycle pause
+      if (cyclePausedAt) cyclePausedAccum += pausedDur;
+      pausedAt = 0; cyclePausedAt = 0;
+      stamp('CPR Timer Resumed');
+    }
+    running = true;
+    updateButtons();
+  };
+
+  $('btnPause').onclick = () => {
+    if (!running) return;
+    running = false;
+    pausedAt = nowMs();
+    cyclePausedAt = pausedAt;
+    stamp('CPR Timer Paused');
+    updateButtons();
+  };
+
+  $('btnStop').onclick = () => {
+    const t = nowMs();
+    if (running){
+      running = false;
+      endedWall = t;
+    } else if (!endedWall){
+      endedWall = t;
+    }
+    stamp('CPR Timer Stopped');
+    updateButtons();
+  };
+
+  // ---------- Controls: Adrenaline ----------
+  $('btnAdrStart').onclick = () => {
+    const t = nowMs();
+    // If CPR hasn’t started yet, start it (quality of life)
+    if (!startedWall){ $('btnStart').click(); }
+
+    if (!adrStart){ // first start
+      adrStart = t; adrPausedAccum = 0; adrPausedAt = 0; adrRunning = true;
+      adrCount += 1; stamp(`Adrenaline no. ${adrCount} Administered`);
+      stamp('Adrenaline Timer Started');
+    } else if (adrPausedAt){ // resume
+      const d = t - adrPausedAt;
+      adrPausedAccum += d;
+      adrPausedAt = 0;
+      adrRunning = true;
+      stamp('Adrenaline Timer Resumed');
+    }
+    updateButtons();
+  };
+
+  $('btnAdrPause').onclick = () => {
+    if (!adrRunning) return;
+    adrRunning = false;
+    adrPausedAt = nowMs();
+    stamp('Adrenaline Timer Paused');
+    updateButtons();
+  };
+
+  // ---------- Actions ----------
+  $('btnShock').onclick = () => {
+    const n = (window.__shockCount = (window.__shockCount||0)+1);
+    stamp(`Shock no. ${n} Delivered`);
+  };
+  $('btnAmio').onclick = () => {
+    const n = (window.__amioCount = (window.__amioCount||0)+1);
+    stamp(`Amiodarone no. ${n} Administered`);
+  };
+  $('btnROSC').onclick = () => {
+    stamp('ROSC Achieved');
+    // Stop everything (soft stop)
+    const t = nowMs();
+    if (running){ running = false; endedWall = t; }
+    if (adrRunning){ adrRunning = false; adrPausedAt = t; }
+    updateButtons();
+    alert('Remember to Export or Print if you want to keep a record.');
+  };
+
+  // ---------- Export & Print ----------
+  function exportLines(){
+    const started = startedWall ? new Date(startedWall).toLocaleString() : 'N/A';
+    const ended   = endedWall ? new Date(endedWall).toLocaleString() : 'N/A';
+    const totalSeconds = endedWall && startedWall ? Math.floor((endedWall - startedWall - pauseAccum)/1000) : 0;
+    const counts  = `Adr: ${adrCount}; Shocks: ${window.__shockCount||0}; Amio: ${window.__amioCount||0}`;
+    const lines = [`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (visual): ${bpm}`,`Total: ${fmt(totalSeconds)}`,counts,``,`Events:`];
     for (const e of events) lines.push(`${hhmmss(e.ts)} | ${e.label}`);
-    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
+    return lines;
+  }
+  $('btnExport').onclick = () => {
+    const blob = new Blob([exportLines().join('\n')], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
+    a.click();
   };
-
-  $('printReport').onclick = () => {
-    const started = startedWall ? startedWall.toLocaleString() : 'N/A';
-    const ended   = endedWall ? endedWall.toLocaleString() : 'N/A';
-    const counts  = `Cycles: ${cycleCount}; Adr: ${adrCount}; Shocks: ${window.__shockCount||0}; Amio: ${window.__amioCount||0}`;
+  $('btnPrint').onclick = () => {
+    const lines = exportLines();
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
-      <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111} h2{margin:0 0 8px} .meta div{margin:2px 0} ol{margin-top:8px}</style>
-      </head><body>
-      <h2>CPR Session Report</h2>
-      <div class="meta"><div><b>Started:</b> ${started}</div><div><b>Ended:</b> ${ended}</div><div><b>BPM:</b> ${bpm}</div><div>${counts}</div></div>
-      <h3>Events</h3><ol>${events.map(e=>`<li>${hhmmss(e.ts)} | ${e.label}</li>`).join('')}</ol>
-      <p style="margin-top:14px;color:#666">Note: Training/operational aid; not a medical device.</p>
-      <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script></body></html>`;
-    const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close();
+    <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111} h2{margin:0 0 8px} pre{white-space:pre-wrap}</style>
+    </head><body><h2>CPR Session Report</h2><pre>${lines.join('\n')}</pre>
+    <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script></body></html>`;
+    const w = window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close();
   };
 
-  // ----- WAAFLES -----
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  // ---------- WAAFELSS ----------
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
   function wafflesMonths(age){
     const weight = age*0.5 + 4;
-    const adrenalineDose = +(weight*0.01).toFixed(2);
-    const amioDose = +(weight*5).toFixed(1);
-    const minFl = Math.round(weight*10), maxFl = Math.round(weight*20);
-    let joules = Math.round(clamp(weight*4, 0, 360));
-    let d10 = +(clamp(weight*2.5, 0, 50)).toFixed(1);
-    const tube = (weight<=5) ? 'Size 1' : 'Size 1.5';
-    return `${age} MONTHS
-(W ${weight.toFixed(1)}kg) |||| (Ad ${adrenalineDose}mg)
-(Am ${amioDose}mg) |||| (F ${minFl}-${maxFl}ml)
-(SGA ${tube}) |||| (E ${joules}J)
-(D10% ${d10}ml)`;
+    const adr = +(weight*0.01).toFixed(2);
+    const amio = +(weight*5).toFixed(1);
+    const minF = Math.round(weight*10), maxF = Math.round(weight*20);
+    const joules = Math.round(clamp(weight*4, 0, 360));
+    const d10 = +(clamp(weight*2.5, 0, 50)).toFixed(1);
+    const sga = weight <= 5 ? 'Size 1' : 'Size 1.5';
+    return {age: `${age} months`, weight, adr, amio, minF, maxF, sga, joules, d10};
   }
   function wafflesYears(age){
-    let weight, tube;
-    if (age<=5){ weight=age*2+8; tube = (weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':''; }
-    else { weight=age*3+7; tube=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes'; }
-    const adrenalineDose=+(weight*0.01).toFixed(2);
-    const amioDose=+(weight*5).toFixed(1);
-    const minFl=Math.round(weight*10), maxFl=Math.round(weight*20);
-    let joules=Math.round(clamp(weight*4,0,360));
-    let d10=+(clamp(weight*2.5,0,50)).toFixed(1);
-    return `${age} YEARS
-(W ${weight.toFixed(1)}kg) |||| (Ad ${adrenalineDose}mg)
-(Am ${amioDose}mg) |||| (F ${minFl}-${maxFl}ml)
-(SGA ${tube||'-'}) |||| (E ${joules}J)
-(D10% ${d10}ml)`;
+    let weight, sga;
+    if (age<=5){
+      weight = age*2 + 8;
+      sga = (weight>=10 && weight<=24) ? 'Size 2' : (weight>=25 && weight<=35) ? 'Size 2.5' : '';
+    } else {
+      weight = age*3 + 7;
+      sga = (weight>=25 && weight<=35) ? 'Size 2.5' : 'Consider adult SGA sizes';
+    }
+    const adr = +(weight*0.01).toFixed(2);
+    const amio = +(weight*5).toFixed(1);
+    const minF = Math.round(weight*10), maxF = Math.round(weight*20);
+    const joules = Math.round(clamp(weight*4, 0, 360));
+    const d10 = +(clamp(weight*2.5, 0, 50)).toFixed(1);
+    return {age: `${age} years`, weight, adr, amio, minF, maxF, sga, joules, d10};
   }
-  $('monthsBtn').onclick = ()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){ alert('Please enter age.'); return; } $('wafflesOut').textContent = wafflesMonths(n); };
-  $('yearsBtn').onclick  = ()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){ alert('Please enter age.'); return; } $('wafflesOut').textContent = wafflesYears(n); };
+  function renderW(o){
+    $('wAge').textContent = o.age;
+    $('wWeight').textContent = `${o.weight.toFixed(1)} kg`;
+    $('wAdr').textContent = `${o.adr} mg`;
+    $('wAmio').textContent = `${o.amio} mg`;
+    $('wFluids').textContent = `${o.minF}–${o.maxF} mL`;
+    $('wSGA').textContent = o.sga || '—';
+    $('wJoules').textContent = `${o.joules} J`;
+    $('wD10').textContent = `${o.d10} mL`;
+  }
+  $('btnWaffles').onclick = () => {
+    const v = $('ageInput').value.trim();
+    if (!v){ alert('Enter age first'); return; }
+  };
+  $('monthsBtn').onclick = () => {
+    const n = +$('ageInput').value; if (isNaN(n)||n<0){ alert('Enter age'); return; }
+    renderW(wafflesMonths(n));
+  };
+  $('yearsBtn').onclick = () => {
+    const n = +$('ageInput').value; if (isNaN(n)||n<0){ alert('Enter age'); return; }
+    renderW(wafflesYears(n));
+  };
 
-  // ----- Wake Lock best-effort -----
-  let wl; document.addEventListener('visibilitychange', async () => { try {
-    if (document.visibilityState==='visible' && 'wakeLock' in navigator) wl = await navigator.wakeLock.request('screen');
-    else if (wl) { await wl.release(); wl=null; }
-  } catch {}});
+  // Initial state
+  updateButtons();
 })();
 </script>
+</body>
 </html>
