@@ -11,9 +11,9 @@
     --primary:#0f2e39; --primary-border:#2e89a8; --primary-fg:#e6fbff;
     --danger:#3a1212;  --danger-border:#7a2626;  --danger-fg:#ffecec;
 
-    --total-color:#f1f5f9;      /* Total (own color) */
-    --cycle-color:#ff4d4d;      /* Cycle RED */
-    --adr-color:#2ea0ff;        /* Adrenaline BLUE */
+    --total-color:#f1f5f9;        /* Total (own color) */
+    --cycle-color:#ff2d2d;        /* Cycle RED */
+    --adr-color:#2ea0ff;          /* Adrenaline BLUE */
   }
   @media (prefers-color-scheme: light){
     :root{
@@ -43,67 +43,78 @@
   html,body{height:100%}
   body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
 
-  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .wrap{max-width:1200px;margin:0 auto;padding:14px}
 
-  /* Header */
-  .header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-  .title{font-weight:900;font-size:22px;letter-spacing:.2px}
-  .trial{margin-left:6px;font-weight:700;font-size:12px;color:#8b5cf6}
-  .sp{flex:1}
-  .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px}
-
-  /* Buttons */
-  button{padding:12px 16px;border-radius:12px;border:1px solid var(--btn-border);background:var(--btn);color:var(--btn-fg);cursor:pointer}
-  button:hover{filter:brightness(1.05)}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  .primary{background:var(--primary); border-color:var(--primary-border); color:var(--primary-fg)}
-  .danger{ background:var(--danger);  border-color:var(--danger-border);  color:var(--danger-fg)}
-  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px}
+  /* Header / controls */
+  .header{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .title{font-weight:900;font-size:24px;letter-spacing:.2px;text-align:center}
+  .trial{margin-left:6px;font-weight:800;font-size:12px;color:#8b5cf6}
+  .ctrls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:8px;min-width:150px;justify-content:center;
+        padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:14px}
+  .chip input{width:84px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--fg);text-align:center}
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--fg)}
+  .icon{width:28px;height:28px}
   .hidden{display:none !important}
 
-  /* Top total timer (big) */
-  .total-wrap{display:flex;justify-content:center;margin:8px 0 14px}
-  .total-title{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;font-weight:800}
-  .total-value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:64px;font-weight:900;color:var(--total-color);text-align:center}
+  /* Total timer top */
+  .total-wrap{display:flex;justify-content:center;margin:6px 0 10px}
+  .total-title{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:900}
+  .total-value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:70px;font-weight:900;color:var(--total-color);text-align:center}
 
-  /* Cards & grid */
-  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  /* Landscape grid: left=cycle, center=actions+log, right=adrenaline */
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
   @media (max-width:900px){.grid{grid-template-columns:1fr}}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
 
-  .kpi{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;border:1px solid var(--border);padding:16px;min-height:160px}
-  .kpi .label{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:900}
-  .kpi .value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:56px;font-weight:900}
+  /* KPI/timers */
+  .kpi{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;border:1px solid var(--border);padding:16px;min-height:200px}
+  .kpi .label{font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:900}
+  .kpi .value{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-size:72px;font-weight:900}
   #cycleVal{color:var(--cycle-color)}
   #adrVal{color:var(--adr-color)}
 
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
-  .grow{flex:1}
+  button{padding:12px 18px;border-radius:12px;border:1px solid var(--btn-border);background:var(--btn);color:var(--btn-fg);cursor:pointer}
+  button:hover{filter:brightness(1.05)} button:disabled{opacity:.5;cursor:not-allowed}
+  .primary{background:var(--primary); border-color:var(--primary-border); color:var(--primary-fg)}
+  .danger{ background:var(--danger);  border-color:var(--danger-border);  color:var(--danger-fg)}
+  .wide{min-width:160px}
 
-  /* Heart overlay */
-  .heart-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  /* Heart shape overlay on Cycle */
+  .heart-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .heart{
-    width:160px;height:160px;border-radius:50%;
-    background: radial-gradient(rgba(255,77,77,.22), rgba(179,0,0,.08));
-    opacity:.28; transform:scale(1);
-    animation:beat 0.6s ease-in-out infinite;
+    position:relative;width:150px;height:135px;
+    transform:rotate(-45deg); opacity:.28; filter:drop-shadow(0 0 10px rgba(255,77,77,.15));
+    animation:beat .6s ease-in-out infinite;
   }
-  @keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .heart::before,.heart::after{
+    content:""; position:absolute; width:150px; height:150px; border-radius:50%;
+    background:radial-gradient(rgba(255,77,77,.28), rgba(179,0,0,.08));
+  }
+  .heart::before{left:75px; top:0}
+  .heart::after {left:0; top:75px}
+  @keyframes beat{0%{transform:rotate(-45deg) scale(1)}50%{transform:rotate(-45deg) scale(1.14)}100%{transform:rotate(-45deg) scale(1)}}
+
+  /* Countdown overlay (10→1) */
+  .countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:transparent;font-family:ui-monospace,Consolas,monospace;font-size:96px;font-weight:900;color:var(--cycle-color);pointer-events:none}
+
+  /* Actions & Log */
+  .actions .row{justify-content:center}
+  .actions .row button{min-width:180px}
+  ul.log{margin:10px 0 0;padding-left:20px;max-height:260px;overflow:auto;font-size:12px;line-height:1.25}
+  ul.log li{margin:4px 0}
 
   /* WAAFELSS */
-  .wa-header{display:flex;justify-content:center;align-items:center;margin-top:4px;margin-bottom:8px}
-  .wa-title{font-size:22px;font-weight:900;text-align:center}
-  .wa-input-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px}
-  .wa-age-label{font-weight:700;color:var(--muted)}
-  .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  @media (max-width:600px){.waffles-grid{grid-template-columns:1fr}}
+  .wa-title{font-size:22px;font-weight:900;text-align:center;margin:4px 0 10px}
+  .wa-input{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:10px}
+  .wa-label{font-weight:800;color:var(--muted)}
+  .wa-input input{width:180px;font-size:20px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg);text-align:center}
+  .wa-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media (max-width:600px){.wa-grid{grid-template-columns:1fr}}
   .w-row{display:flex;gap:8px;align-items:center}
   .w-tag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
   .w-val{font-weight:800}
-
-  /* Log */
-  ul.log{margin:0;padding-left:20px;max-height:260px;overflow:auto}
-  ul.log li{margin:6px 0}
 
   @media print{ .no-print{display:none !important} body{background:#fff;color:#000} .card{border:none} .total-value{color:#000} }
 </style>
@@ -112,18 +123,22 @@
 <div id="root" class="wrap">
   <div class="header">
     <div class="title">CPR Timer <span class="trial">Trial Version</span></div>
-    <div class="sp"></div>
-    <div class="chip">Theme <button id="themeToggle" title="Toggle theme">Auto</button></div>
-    <div class="chip">BPM <input id="bpm" type="number" min="60" max="160" step="1" value="110" style="width:84px;padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)"></div>
-    <button id="btnUnmute" class="icon-btn" title="Unmute beat" aria-label="Unmute beat">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/></svg>
-    </button>
-    <button id="btnMute" class="icon-btn hidden" title="Mute beat" aria-label="Mute beat">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2"/></svg>
-    </button>
+    <div class="ctrls">
+      <div class="chip" id="themeChip">Theme <button id="themeToggle" title="Toggle theme">Auto</button></div>
+      <div class="chip">BPM <input id="bpm" type="number" min="60" max="160" step="1" value="110"></div>
+      <div class="chip" style="gap:12px">
+        <span>Beat</span>
+        <button id="btnUnmute" class="icon-btn" title="Unmute beat" aria-label="Unmute beat">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button id="btnMute" class="icon-btn hidden" title="Mute beat" aria-label="Mute beat">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Total CPR Time (always runs until Stop) -->
+  <!-- Total CPR Time -->
   <div class="total-wrap">
     <div>
       <div class="total-title">Total CPR Time</div>
@@ -132,63 +147,64 @@
   </div>
 
   <div class="grid">
-    <!-- Cycle -->
-    <div class="kpi">
-      <div id="cycleLabel" class="label">Cycle</div>
-      <div id="cycleVal" class="value">00:00</div>
-      <div class="heart-overlay"><div id="heart" class="heart"></div></div>
+    <!-- Left: Cycle -->
+    <div class="card">
+      <div class="kpi" id="cycleBox">
+        <div class="label">Cycle</div>
+        <div id="cycleVal" class="value">00:00</div>
+        <div class="heart-wrap"><div id="heart" class="heart"></div></div>
+        <div id="countdown" class="countdown hidden">10</div>
+      </div>
       <div class="row no-print" style="margin-top:12px">
-        <button id="btnStart" class="primary">Start CPR</button>
-        <button id="btnPause"            >Pause CPR</button>
-        <button id="btnStop"  class="danger">Stop</button>
+        <button id="btnStart" class="primary wide">Start CPR</button>
+        <button id="btnPause"            class="wide">Pause CPR</button>
+        <button id="btnStop"  class="danger wide">Stop</button>
       </div>
     </div>
 
-    <!-- Adrenaline -->
-    <div class="kpi">
-      <div id="adrLabel" class="label">Adrenaline</div>
-      <div id="adrVal" class="value">00:00</div>
-      <div class="row no-print" style="margin-top:12px">
-        <button id="btnAdrStart">Start Adrenaline</button>
-        <button id="btnAdrPause" disabled>Pause Adrenaline</button>
-      </div>
-    </div>
-
-    <!-- Actions & Log -->
-    <div class="kpi" style="align-items:stretch">
-      <div class="label" style="text-align:center">Actions</div>
-      <div class="row no-print" style="margin-top:10px">
-        <button id="btnShock">Shock</button>
-        <button id="btnAmio">Amiodarone</button>
-        <button id="btnROSC" class="danger">ROSC</button>
+    <!-- Center: Actions + Log + WAAFELSS -->
+    <div class="card actions">
+      <div class="row">
+        <button id="btnShock" class="wide">Shock</button>
+        <button id="btnAmio"  class="wide">Amiodarone</button>
+        <button id="btnROSC"  class="danger wide">ROSC</button>
       </div>
       <div class="row no-print" style="margin-top:10px">
-        <div class="grow"></div>
-        <button id="btnExport">Export .txt</button>
-        <button id="btnPrint">Print (PDF)</button>
+        <button id="btnExport" class="wide">Export .txt</button>
+        <button id="btnPrint"  class="wide">Print (PDF)</button>
       </div>
-      <ul id="log" class="log" style="margin-top:10px"></ul>
-    </div>
-  </div>
+      <ul id="log" class="log"></ul>
 
-  <div class="card" style="margin-top:12px">
-    <div class="wa-header"><div class="wa-title">WAAFELSS</div></div>
-    <div class="wa-input-row no-print">
-      <span class="wa-age-label">Age</span>
-      <input id="ageInput" type="number" min="0" placeholder="Enter age" style="width:140px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)"/>
-      <button id="monthsBtn">Months</button>
-      <button id="yearsBtn">Years</button>
+      <div class="wa-title">WAAFELSS</div>
+      <div class="wa-input no-print">
+        <span class="wa-label">Age</span>
+        <input id="ageInput" type="number" min="0" placeholder="Enter age">
+        <button id="monthsBtn">Months</button>
+        <button id="yearsBtn">Years</button>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <div class="wa-grid">
+          <div class="w-row"><div class="w-tag">Age</div><div id="wAge" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">Weight</div><div id="wWeight" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">Adrenaline</div><div id="wAdr" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">Amiodarone</div><div id="wAmio" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">Fluids</div><div id="wFluids" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">SGA</div><div id="wSGA" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">Energy</div><div id="wJoules" class="w-val">—</div></div>
+          <div class="w-row"><div class="w-tag">D10%</div><div id="wD10" class="w-val">—</div></div>
+        </div>
+      </div>
     </div>
-    <div id="wafflesCard" class="card" style="margin-top:12px">
-      <div class="waffles-grid">
-        <div class="w-row"><div class="w-tag">Age</div><div id="wAge" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">Weight</div><div id="wWeight" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">Adrenaline</div><div id="wAdr" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">Amiodarone</div><div id="wAmio" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">Fluids</div><div id="wFluids" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">SGA</div><div id="wSGA" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">Energy</div><div id="wJoules" class="w-val">—</div></div>
-        <div class="w-row"><div class="w-tag">D10%</div><div id="wD10" class="w-val">—</div></div>
+
+    <!-- Right: Adrenaline -->
+    <div class="card">
+      <div class="kpi">
+        <div class="label">Adrenaline</div>
+        <div id="adrVal" class="value">00:00</div>
+      </div>
+      <div class="row no-print" style="margin-top:12px">
+        <button id="btnAdrStart" class="wide">Start Adrenaline</button>
+        <button id="btnAdrPause" class="wide" disabled>Pause Adrenaline</button>
       </div>
     </div>
   </div>
@@ -199,305 +215,178 @@
   // ---------- Theme ----------
   const root = document.documentElement;
   const themeBtn = document.getElementById('themeToggle');
-  let themeState = 'auto';
-  function applyTheme(){
-    root.removeAttribute('data-theme');
-    if (themeState==='light') root.setAttribute('data-theme','light');
-    if (themeState==='dark')  root.setAttribute('data-theme','dark');
-    themeBtn.textContent = themeState[0].toUpperCase()+themeState.slice(1);
-  }
-  themeBtn.onclick = () => { themeState = themeState==='auto' ? 'light' : themeState==='light' ? 'dark' : 'auto'; applyTheme(); };
-  applyTheme();
+  let themeState='auto';
+  function applyTheme(){ root.removeAttribute('data-theme'); if(themeState==='light')root.dataset.theme='light'; if(themeState==='dark')root.dataset.theme='dark'; themeBtn.textContent=themeState[0].toUpperCase()+themeState.slice(1);}
+  themeBtn.onclick=()=>{ themeState = themeState==='auto'?'light':themeState==='light'?'dark':'auto'; applyTheme(); }; applyTheme();
 
   // ---------- Helpers ----------
-  const $ = id => document.getElementById(id);
+  const $ = id=>document.getElementById(id);
   const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const logEl = $('log');
-  const events = [];
-  function stamp(label){
-    const ts=new Date();
-    const li=document.createElement('li');
-    li.textContent=`${hhmmss(ts)} | ${label}`;
-    logEl.prepend(li);
-    events.push({ts,label});
-  }
+  const time24 = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+  const logEl = $('log'); const events=[];
+  function stamp(label){ const ts=new Date(); const li=document.createElement('li'); li.textContent=`${time24(ts)} | ${label}`; logEl.prepend(li); events.push({ts,label}); }
 
-  // ---------- Wake Lock (no screen dim) ----------
-  let wakeLock = null;
-  async function requestWakeLock(){
-    try{
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-        wakeLock.addEventListener('release',()=>{ /* released */ });
-      }
-    }catch(e){ /* ignore */ }
-  }
-  async function releaseWakeLock(){
-    try{ if (wakeLock) { await wakeLock.release(); wakeLock=null; } }catch{}
-  }
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && (running || adrRunning)) requestWakeLock();
-  });
+  // ---------- Wake Lock ----------
+  let wakeLock=null; async function requestWakeLock(){ try{ if('wakeLock'in navigator){ wakeLock = await navigator.wakeLock.request('screen'); }}catch{} }
+  async function releaseWakeLock(){ try{ if(wakeLock){ await wakeLock.release(); wakeLock=null; } }catch{} }
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && (running||adrRunning)) requestWakeLock();});
 
-  // ---------- Sounds ----------
-  let audioCtx;
-  const buffers = {};              // name -> AudioBuffer
-  const soundFiles = {
-    beat: 'beat.wav',
-    start: 'start.wav',
-    pause: 'pause.wav',
-    adr4: 'adr4.wav',
-    total20: 'total20.wav',
-    cpr90: 'cpr90.wav',
-    cpr120: 'cpr120.wav',
-    rosc: 'rosc.wav'
-  };
-  async function ensureAudio(){
-    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    await audioCtx.resume();
-    // lazy-load buffers once
-    if (!buffers._loaded){
-      for (const [k, path] of Object.entries(soundFiles)){
-        try{
-          const resp = await fetch(path);
-          const arr = await resp.arrayBuffer();
-          buffers[k] = await audioCtx.decodeAudioData(arr);
-        }catch(e){ /* if a file is missing, skip */ }
-      }
-      buffers._loaded = true;
-    }
-  }
-  function play(name, gain=1){
-    const buf = buffers[name];
-    if (!audioCtx || !buf) return;
-    const src = audioCtx.createBufferSource();
-    const g = audioCtx.createGain();
-    g.gain.value = gain;
-    src.buffer = buf; src.connect(g).connect(audioCtx.destination);
-    src.start();
-  }
+  // ---------- Audio ----------
+  let audioCtx; const buffers={};
+  const soundFiles={ beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav', adr4:'adr4.wav' };
+  async function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); await audioCtx.resume(); if(!buffers._loaded){ for(const[k,p] of Object.entries(soundFiles)){ try{ const r=await fetch(p); const a=await r.arrayBuffer(); buffers[k]=await audioCtx.decodeAudioData(a);}catch{ /* ignore missing */ } } buffers._loaded=true; } }
+  function play(name, gain=1){ const b=buffers[name]; if(!audioCtx||!b) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=gain; src.buffer=b; src.connect(g).connect(audioCtx.destination); src.start(); }
 
-  // ---------- Beat (metronome) – ONLY this is muted ----------
-  let beatMuted = false;
-  let beatTimer = null;
-  let bpm = +$('bpm').value || 110;
-  $('bpm').addEventListener('change', e => {
-    bpm = +e.target.value || 110;
-    setHeartBpm(bpm);
-    if (running) restartBeat();
-  });
-  function startBeat(){
-    clearInterval(beatTimer);
-    if (beatMuted) return;
-    const interval = Math.max(200, 60000/Math.max(1,bpm)); // ms
-    beatTimer = setInterval(()=>{ play('beat', 0.9); }, interval);
-  }
-  function stopBeat(){ clearInterval(beatTimer); beatTimer = null; }
+  // Beat (mute controls):
+  let beatMuted=false, beatTimer=null, bpm=+$('bpm').value||110;
+  $('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; setHeartBpm(bpm); if(running) restartBeat(); });
+  function startBeat(){ clearInterval(beatTimer); if(beatMuted) return; const iv=Math.max(200, 60000/Math.max(1,bpm)); beatTimer=setInterval(()=>play('beat',0.9), iv); }
+  function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
   function restartBeat(){ stopBeat(); startBeat(); }
+  $('btnUnmute').onclick=async()=>{ beatMuted=false; $('btnUnmute').classList.add('hidden'); $('btnMute').classList.remove('hidden'); if(running){ await ensureAudio(); startBeat(); } };
+  $('btnMute').onclick  =()=>{ beatMuted=true;  $('btnMute').classList.add('hidden');   $('btnUnmute').classList.remove('hidden'); stopBeat(); };
 
-  const btnUnmute = $('btnUnmute'), btnMute = $('btnMute');
-  btnUnmute.onclick = async () => { beatMuted=false; btnUnmute.classList.add('hidden'); btnMute.classList.remove('hidden'); if (running){ await ensureAudio(); startBeat(); } };
-  btnMute.onclick   = () =>     { beatMuted=true;  btnMute.classList.add('hidden');   btnUnmute.classList.remove('hidden'); stopBeat(); };
-
-  // ---------- Heart beat sync (visual only) ----------
-  const heart = $('heart');
-  function setHeartBpm(b){
-    const dur = Math.max(0.25, 60/Math.max(1,b));
-    heart.style.animationDuration = dur + 's';
-  }
+  // Heart BPM
+  const heart=$('heart');
+  function setHeartBpm(b){ const dur=Math.max(.25, 60/Math.max(1,b)); heart.style.animationDuration=dur+'s'; }
   setHeartBpm(bpm);
 
   // ---------- State ----------
   let running=false;
   let startedWall=0, endedWall=0;
+
+  // Cycle (2:00, then 10s countdown overlay)
   let cycleStart=0, cyclePausedAt=0, cyclePausedAccum=0;
+  let inCountdown=false, countdownLeft=10, countdownTimer=null;
 
-  let adrRunning=false, adrStart=0, adrPausedAt=0, adrPausedAccum=0, adrCount=0;
+  // Adrenaline
+  let adrRunning=false, adrStart=0, adrPausedAt=0, adrPausedAccum=0;
 
-  // one-shot cue flags
-  let cueTotal20=false, cueCpr90=false, cueCpr120=false, cueAdr240=false;
-
-  // ---------- Timers loop ----------
+  // ---------- Loop ----------
   function nowMs(){ return Date.now(); }
   function loop(){
-    const now = nowMs();
+    const now=nowMs();
 
-    // Total CPR Time:
-    if (startedWall && !endedWall){
-      const total = (now - startedWall)/1000;      // DOES NOT pause
-      $('totalVal').textContent = fmt(total);
-      if (!cueTotal20 && total >= 20*60){ cueTotal20=true; play('total20'); }
-    } else if (startedWall && endedWall){
-      $('totalVal').textContent = fmt((endedWall - startedWall)/1000);
-    } else {
-      $('totalVal').textContent = '00:00';
-    }
+    // Total never pauses (until Stop)
+    if(startedWall && !endedWall) $('totalVal').textContent = fmt((now-startedWall)/1000);
+    else if(startedWall && endedWall) $('totalVal').textContent = fmt((endedWall-startedWall)/1000);
+    else $('totalVal').textContent='00:00';
 
-    // Cycle (pauses on Pause)
-    let cyc = 0;
-    if (cycleStart){
-      if (running){
-        cyc = (now - cycleStart - cyclePausedAccum)/1000;
-      } else if (cyclePausedAt){
-        cyc = (cyclePausedAt - cycleStart - cyclePausedAccum)/1000;
-      } else if (endedWall){
-        cyc = (endedWall - cycleStart - cyclePausedAccum)/1000;
-      }
+    // Cycle
+    if(cycleStart && !inCountdown){
+      const cyc = running ? (now - cycleStart - cyclePausedAccum)/1000
+                          : (cyclePausedAt ? (cyclePausedAt - cycleStart - cyclePausedAccum)/1000 : 0);
       $('cycleVal').textContent = fmt(Math.max(0,cyc|0));
-
-      // Cycle cues
-      if (!cueCpr90  && cyc>=90){ cueCpr90=true;  play('cpr90');  }
-      if (!cueCpr120 && cyc>=120){ cueCpr120=true; play('cpr120'); }
-    } else {
-      $('cycleVal').textContent = '00:00';
+      if (running && cyc>=120){ // hit 2:00 → start 10s visible countdown
+        startCountdown();
+      }
     }
 
-    // Adrenaline (pauses when paused)
-    if (adrStart){
-      let a=0;
-      if (adrRunning) a = (now - adrStart - adrPausedAccum)/1000;
-      else if (adrPausedAt) a = (adrPausedAt - adrStart - adrPausedAccum)/1000;
-      else if (endedWall)   a = (endedWall   - adrStart - adrPausedAccum)/1000;
+    // Adrenaline (auto reset at 4:00)
+    if(adrStart){
+      const a = adrRunning ? (now - adrStart - adrPausedAccum)/1000
+                           : (adrPausedAt ? (adrPausedAt - adrStart - adrPausedAccum)/1000 : 0);
       $('adrVal').textContent = fmt(Math.max(0,a|0));
-      if (!cueAdr240 && a>=240){ cueAdr240=true; play('adr4'); }
-    } else {
-      $('adrVal').textContent = '00:00';
-    }
+      if(adrRunning && a>=240){ // play and reset immediately
+        play('adr4');
+        adrStart = now; adrPausedAccum=0; adrPausedAt=0;
+      }
+    } else $('adrVal').textContent='00:00';
 
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 
+  // ---------- Countdown (10s) over Cycle ----------
+  function startCountdown(){
+    inCountdown=true; countdownLeft=10;
+    $('cycleVal').classList.add('hidden');
+    const cd=$('countdown'); cd.textContent=String(countdownLeft); cd.classList.remove('hidden');
+    clearInterval(countdownTimer);
+    countdownTimer=setInterval(()=>{
+      countdownLeft--;
+      if(countdownLeft<=0){
+        clearInterval(countdownTimer);
+        cd.classList.add('hidden');
+        $('cycleVal').classList.remove('hidden');
+        // restart new cycle at 00:00 and play start sound
+        cycleStart = nowMs(); cyclePausedAccum=0; cyclePausedAt=0;
+        inCountdown=false; play('start');
+      } else { cd.textContent=String(countdownLeft); }
+    },1000);
+  }
+
   // ---------- Controls: CPR ----------
   $('btnStart').onclick = async () => {
     await ensureAudio();
-    if (!startedWall){
+    if(!startedWall){
       startedWall = nowMs();
       cycleStart  = startedWall;
-      cyclePausedAccum = 0;
-      cueTotal20=cueCpr90=cueCpr120=false; // reset cues
+      cyclePausedAccum=0; cyclePausedAt=0; inCountdown=false;
       stamp('CPR Timer Started');
-      play('start');
-      requestWakeLock();
-    } else if (cyclePausedAt){
-      const pausedDur = nowMs() - cyclePausedAt;
-      cyclePausedAccum += pausedDur;
-      cyclePausedAt = 0;
-      stamp('CPR Timer Resumed');
-      play('start');
-      requestWakeLock();
+      play('start'); requestWakeLock();
+    } else if (cyclePausedAt){ // resume cycle
+      const d = nowMs() - cyclePausedAt;
+      cyclePausedAccum += d; cyclePausedAt=0; stamp('CPR Timer Resumed'); play('start'); requestWakeLock();
     }
-    endedWall = 0; running = true;
-    setHeartBpm(bpm);
-    if (!beatMuted) startBeat();
+    endedWall=0; running=true; setHeartBpm(bpm); if(!beatMuted) startBeat();
   };
 
   $('btnPause').onclick = async () => {
-    if (!running) return;
+    if(!running) return;
     await ensureAudio();
-    running = false;
-    cyclePausedAt = nowMs();
-    stamp('CPR Timer Paused');
-    play('pause');
-    stopBeat();
+    running=false; cyclePausedAt=nowMs(); stamp('CPR Timer Paused'); play('pause'); stopBeat();
   };
 
-  $('btnStop').onclick = () => {
-    if (!startedWall) return;
-    endedWall = nowMs();
-    if (running){ running=false; cyclePausedAt=0; }
-    stamp('CPR Timer Stopped');
-    stopBeat();
-    releaseWakeLock();
+  $('btnStop').onclick = async () => {
+    await ensureAudio();
+    play('stop');
+    // reset everything
+    running=false; inCountdown=false; clearInterval(countdownTimer);
+    startedWall=0; endedWall=0;
+    cycleStart=0; cyclePausedAt=0; cyclePausedAccum=0;
+    adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0;
+    $('countdown').classList.add('hidden'); $('cycleVal').classList.remove('hidden');
+    $('totalVal').textContent='00:00'; $('cycleVal').textContent='00:00'; $('adrVal').textContent='00:00';
+    stopBeat(); releaseWakeLock();
+    stamp('CPR Timers Reset');
   };
 
   // ---------- Controls: Adrenaline ----------
   $('btnAdrStart').onclick = async () => {
     await ensureAudio();
-    if (!startedWall) $('btnStart').click(); // QoL
-    if (!adrStart){
-      adrStart = nowMs(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount+=1;
-      cueAdr240=false;
-      stamp(`Adrenaline no. ${adrCount} Administered`);
-      stamp('Adrenaline Timer Started');
-    } else if (adrPausedAt){
-      const d = nowMs() - adrPausedAt; adrPausedAccum += d; adrPausedAt=0; adrRunning=true;
-      stamp('Adrenaline Timer Resumed');
-    }
+    if(!startedWall) $('btnStart').click(); // also starts cycle + sound
+    if(!adrStart){ adrStart=nowMs(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Started'); }
+    else if(adrPausedAt){ const d = nowMs() - adrPausedAt; adrPausedAccum += d; adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
+    $('btnAdrPause').disabled=false;
   };
-  $('btnAdrPause').onclick = () => {
-    if (!adrRunning) return;
-    adrRunning=false; adrPausedAt=nowMs(); stamp('Adrenaline Timer Paused');
-  };
-  // toggle states each frame to keep labels correct
-  setInterval(()=> {
-    $('btnAdrStart').textContent = adrRunning ? 'Start Adrenaline' : (adrStart && adrPausedAt ? 'Resume Adrenaline' : (adrStart? 'Resume Adrenaline' : 'Start Adrenaline'));
-    $('btnAdrPause').disabled = !adrRunning;
-  }, 150);
+  $('btnAdrPause').onclick = ()=>{ if(!adrRunning) return; adrRunning=false; adrPausedAt=nowMs(); stamp('Adrenaline Timer Paused'); };
 
   // ---------- Actions ----------
-  $('btnShock').onclick = () => { const n=(window.__shockCount=(window.__shockCount||0)+1); stamp(`Shock no. ${n} Delivered`); };
-  $('btnAmio').onclick  = () => { const n=(window.__amioCount =(window.__amioCount ||0)+1); stamp(`Amiodarone no. ${n} Administered`); };
-  $('btnROSC').onclick  = async () => { await ensureAudio(); play('rosc'); stamp('ROSC Achieved'); };
+  $('btnShock').onclick = ()=>{ const n=(window.__shock=(window.__shock||0)+1); stamp(`Shock no. ${n} Delivered`); };
+  $('btnAmio').onclick  = ()=>{ const n=(window.__amio =(window.__amio ||0)+1); stamp(`Amiodarone no. ${n} Administered`); };
+  $('btnROSC').onclick  = ()=>{ stamp('ROSC Achieved'); };
 
   // ---------- Export & Print ----------
   function exportLines(){
-    const started = startedWall ? new Date(startedWall).toLocaleString() : 'N/A';
-    const ended   = endedWall   ? new Date(endedWall).toLocaleString()   : 'N/A';
-    const total   = (startedWall && endedWall) ? fmt((endedWall - startedWall)/1000) : '—';
-    const counts  = `Adr: ${adrCount}; Shocks: ${window.__shockCount||0}; Amio: ${window.__amioCount||0}`;
-    const lines = [`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (visual beat): ${bpm}`,`Total: ${total}`,counts,``,`Events:`];
-    for (const e of events) lines.push(`${hhmmss(e.ts)} | ${e.label}`);
+    const started = startedWall ? new Date(startedWall).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = endedWall   ? new Date(endedWall).toLocaleString([], {hour12:false})   : 'N/A';
+    const total   = (startedWall && endedWall) ? fmt((endedWall-startedWall)/1000) : '—';
+    const counts  = `Shocks: ${window.__shock||0}; Amio: ${window.__amio||0}`;
+    const lines   = [`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (beat): ${bpm}`,`Total: ${total}`,counts,``,`Events:`];
+    for (const e of events) lines.push(`${time24(e.ts)} | ${e.label}`);
     return lines;
   }
-  $('btnExport').onclick = () => {
-    const blob = new Blob([exportLines().join('\n')], {type:'text/plain'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
-    a.click();
-  };
-  $('btnPrint').onclick = () => {
-    const lines = exportLines();
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
-    <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111} h2{margin:0 0 8px} pre{white-space:pre-wrap}</style>
-    </head><body><h2>CPR Session Report</h2><pre>${lines.join('\n')}</pre>
-    <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script></body></html>`;
-    const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close();
-  };
+  $('btnExport').onclick=()=>{ const blob=new Blob([exportLines().join('\n')],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click(); };
+  $('btnPrint').onclick =()=>{ const html=`<!doctype html><meta charset="utf-8"><title>CPR Report</title><style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111}h2{margin:0 0 8px}pre{white-space:pre-wrap}</style><h2>CPR Session Report</h2><pre>${exportLines().join('\n')}</pre><script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>`; const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close(); };
 
   // ---------- WAAFELSS ----------
   function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-  function wafflesMonths(age){
-    const weight=age*0.5+4, adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
-    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
-    const sga=(weight<=5)?'Size 1':'Size 1.5';
-    return {age:`${age} months`,weight,adr,amio,minF,maxF,sga,joules,d10};
-  }
-  function wafflesYears(age){
-    let weight,sga;
-    if (age<=5){ weight=age*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':''; }
-    else { weight=age*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes'; }
-    const adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
-    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
-    return {age:`${age} years`,weight,adr,amio,minF,maxF,sga,joules,d10};
-  }
-  function renderW(o){
-    $('wAge').textContent = o.age;
-    $('wWeight').textContent = `${o.weight.toFixed(1)} kg`;
-    $('wAdr').textContent = `${o.adr} mg`;
-    $('wAmio').textContent = `${o.amio} mg`;
-    $('wFluids').textContent = `${o.minF}–${o.maxF} mL`;
-    $('wSGA').textContent = o.sga || '—';
-    $('wJoules').textContent = `${o.joules} J`;
-    $('wD10').textContent = `${o.d10} mL`;
-  }
-  $('monthsBtn').onclick=()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(wafflesMonths(n)); };
-  $('yearsBtn').onclick =()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(wafflesYears(n)); };
-
+  function months(age){ const weight=age*0.5+4, adr=+(weight*0.01).toFixed(2), am=+(weight*5).toFixed(1); const minF=Math.round(weight*10), maxF=Math.round(weight*20); const j=Math.round(clamp(weight*4,0,360)), d=+(clamp(weight*2.5,0,50)).toFixed(1); const sga=weight<=5?'Size 1':'Size 1.5'; return {age:`${age} months`,weight,adr:adr,amio:am,minF,maxF,joules:j,d10:d,sga}; }
+  function years(age){ let weight,sga; if(age<=5){ weight=age*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':''; } else { weight=age*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes'; } const adr=+(weight*0.01).toFixed(2), am=+(weight*5).toFixed(1); const minF=Math.round(weight*10), maxF=Math.round(weight*20); const j=Math.round(clamp(weight*4,0,360)), d=+(clamp(weight*2.5,0,50)).toFixed(1); return {age:`${age} years`,weight,adr,amio:am,minF,maxF,joules:j,d10:d,sga}; }
+  function renderW(o){ $('wAge').textContent=o.age; $('wWeight').textContent=`${o.weight.toFixed(1)} kg`; $('wAdr').textContent=`${o.adr} mg`; $('wAmio').textContent=`${o.amio} mg`; $('wFluids').textContent=`${o.minF}–${o.maxF} mL`; $('wSGA').textContent=o.sga||'—'; $('wJoules').textContent=`${o.joules} J`; $('wD10').textContent=`${o.d10} mL`; }
+  $('monthsBtn').onclick=()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(months(n)); };
+  $('yearsBtn').onclick =()=>{ const n=+$('ageInput').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(years(n)); };
 })();
 </script>
 </body>
