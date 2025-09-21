@@ -1,516 +1,485 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>CPR Timer — Trial</title>
 <style>
 /* =========================
-   QUICK TUNING VARIABLES
+   QUICK-TUNE VARIABLES
    ========================= */
+/* Palette (dark) */
 :root{
-  /* Theme palettes */
+  color-scheme: light dark;
   --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3;
-  --panel:#14181d; --border:#222a31;
+  --card:#14181d; --border:#20262d;
 
-  /* Key colors */
-  --total:#f1f5f9;      /* total timer text */
-  --cycle:#ff4545;      /* cycle digits */
-  --adren:#2ea0ff;      /* adrenaline digits */
-  --accent:#8b5cf6;     /* "Trial Version" */
+  --total-color:#f1f5f9;   /* Total CPR color */
+  --cycle-color:#ff4d4d;   /* Cycle (red) */
+  --adr-color:#2ea0ff;     /* Adrenaline (blue) */
 
-  /* Sizes (tweak freely) */
-  --title:28px;
-  --total-size-por:56px;   /* portrait total */
-  --total-size-land:48px;  /* landscape total */
-  --timer-size-por:64px;
-  --timer-size-land:88px;
-  --count10-size:120px;    /* 10s overlay */
-  --log-size:15px;
+  /* Button colors */
+  --btn-bg:#1a2027; --btn-fg:#e9eef3; --btn-bd:#2b333b;
+  --primary:#0f2e39; --primary-bd:#2e89a8; --primary-fg:#e6fbff;
+  --danger:#671d1d;  --danger-bd:#9a3333;  --danger-fg:#fff0f0;
 
-  /* Controls */
-  --chip-bg:#101419; --chip-bd:#2a323a;
-  --btn-bg:#1b222a; --btn-bd:#2a323a; --btn-fg:var(--fg);
-  --danger:#681b1b; --danger-bd:#8b2323; --danger-fg:#ffecec;
-  --ok:#0f2e39; --ok-bd:#2e89a8; --ok-fg:#e6fbff;
+  /* Sizing knobs */
+  --title-size: clamp(22px, 3.5vw, 36px);
+  --total-size: clamp(44px, 7vw, 72px);        /* total timer digits */
+  --kpi-digits: clamp(52px, 9vw, 110px);       /* cycle/adrenaline digits */
+  --icon-btn: 54px;                             /* play/pause buttons size */
+  --actions-gap: 12px;
 
-  /* Heart overlay colors */
-  --heart-fill: radial-gradient(rgba(255,69,69,.25), rgba(120,0,0,.05));
-  --heart-light: radial-gradient(rgba(220,0,0,.22), rgba(120,0,0,.06));
+  --heart-opacity: .28;                         /* heartbeat overlay */
+  --log-font: 15px;                             /* log text size */
 }
-@media (prefers-color-scheme: light){
-  :root{
-    --bg:#f6f8fc; --fg:#0f141a; --muted:#5b6571;
-    --panel:#ffffff; --border:#e5e7eb;
-    --chip-bg:#fbfdff; --chip-bd:#d6dbe1;
-    --btn-bg:#ffffff; --btn-bd:#d6dbe1; --btn-fg:#0f141a;
-    --danger:#b91c1c; --danger-bd:#991b1b; --danger-fg:#ffffff;
-    --ok:#0b6b82; --ok-bd:#0b6b82; --ok-fg:#ffffff;
-    --total:#111;
-    --heart-fill: radial-gradient(rgba(255,69,69,.18), rgba(120,0,0,.04));
-    --heart-light: radial-gradient(rgba(220,0,0,.16), rgba(120,0,0,.04));
-  }
+/* Palette (light) */
+[data-theme="light"]{
+  --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
+  --card:#ffffff; --border:#e5e7eb;
+  --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+  --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
+  --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
+  --total-color:#111111;
 }
-[data-theme="dark"] { color-scheme:dark; }
-[data-theme="light"]{ color-scheme:light; }
 
 /* Base */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
 a{color:inherit}
 
-/* Top bar */
-.header{
-  display:grid; align-items:center; gap:10px;
-  grid-template-columns: 1fr auto 1fr;
-  padding:10px 14px;
-}
-.title{
-  text-align:center; font-weight:900; font-size:var(--title);
-}
-.trial{color:var(--accent); font-weight:800; margin-left:8px; font-size:14px}
-.ctrls{display:flex; gap:8px; justify-content:flex-end}
-.ctrls.left{justify-content:flex-start}
+.container{max-width:1200px;margin:0 auto;padding:16px}
 
-/* compact chips */
-.chip{display:inline-flex;align-items:center;gap:8px;
-  padding:6px 10px;border-radius:12px;background:var(--chip-bg);border:1px solid var(--chip-bd);
-  font-size:12px;color:var(--muted)}
-input[type="number"]{width:74px;padding:6px 8px;border-radius:10px;border:1px solid var(--chip-bd);
-  background:transparent;color:var(--fg);text-align:center}
+/* Header bar */
+.header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px}
+.brand .trial{margin-left:8px;color:#8b5cf6;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
 
-/* mute icon button (big glyph) */
-.icon-btn{display:inline-flex;align-items:center;justify-content:center;
-  width:42px;height:42px;border-radius:10px;background:var(--chip-bg);border:1px solid var(--chip-bd)}
-.icon-btn svg{width:26px;height:26px}
+/* Tiny control chips */
+.controls{display:flex;gap:10px;align-items:center;justify-content:flex-start}
+.controls.right{justify-content:flex-end}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.chip input[type=number]{width:84px;padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+.icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
+.icon-toggle svg{width:28px;height:28px}
 
-/* TOTAL CPR time (no card) */
-.total{
-  display:flex;justify-content:center;align-items:center;gap:10px;margin:6px 0 10px;
-  color:var(--total);
-}
-.total .label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.total .value{font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;
-  font-weight:900}
+/* Total timer */
+.total{display:flex;flex-direction:column;align-items:center;margin:10px 0 12px}
+.total .label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
+.total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* Layout blocks */
-.section{padding:10px 14px}
-.panels{
-  display:grid; gap:12px;
-}
-/* Portrait: stack Cycle then Adrenaline; Actions between them */
+/* --- Layouts by orientation --- */
+.main{display:grid;gap:16px}
+
+/* Portrait: stacked, actions below total */
 @media (orientation:portrait){
-  .total .value{font-size:var(--total-size-por)}
-  .panels{grid-template-columns:1fr}
-  .row-actions{order:2}
+  .main{grid-template-areas:
+    "total"
+    "timers"
+    "actions"
+    "extras";
+    grid-template-columns:1fr}
+  .timers{grid-area:timers; display:grid; gap:14px}
+  /* Two timers side by side when wide enough */
+  @media (min-width:460px){
+    .timers{grid-template-columns:1fr 1fr}
+  }
+  /* When very narrow, stack timers */
+  @media (max-width:459.9px){
+    .timers{grid-auto-rows:auto}
+  }
+  .actions{grid-area:actions; display:flex; flex-wrap:wrap; gap:var(--actions-gap); justify-content:center}
+  .total{grid-area:total}
+  .extras{grid-area:extras}
 }
-/* Landscape: Cycle left, Actions center, Adrenaline right */
+
+/* Landscape: total centered, controls to sides, timers left/right, actions in the middle column */
 @media (orientation:landscape){
-  .total .value{font-size:var(--total-size-land)}
-  .panels{grid-template-columns:1fr minmax(220px,0.9fr) 1fr; align-items:start}
-  #cyclePanel{order:1}
-  .row-actions{order:2}
-  #adrPanel{order:3}
+  .header{grid-template-columns:1fr auto 1fr}
+  .main{
+    grid-template-areas:
+      "total total total"
+      "left  actions right"
+      "extras extras extras";
+    grid-template-columns:1fr minmax(220px, 360px) 1fr;
+    align-items:start;
+  }
+  .total{grid-area:total}
+  .left{grid-area:left}
+  .right{grid-area:right}
+  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch; justify-content:center}
+  .extras{grid-area:extras}
 }
 
 /* Timer cards */
-.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px}
-.card .head{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-  font-weight:900;text-align:center;margin-bottom:10px}
-.timer{
-  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
-}
-.timer .digits{
-  font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;
-  font-weight:900; text-align:center; line-height:1;
-}
-#cycleDigits{color:var(--cycle)}
-#adrDigits{color:var(--adren)}
-/* sizes per orientation */
-@media (orientation:portrait){
-  .timer .digits{font-size:var(--timer-size-por)}
-}
-@media (orientation:landscape){
-  .timer .digits{font-size:var(--timer-size-land)}
-}
+.timer{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.timer .label{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
+.timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
+#cycleDigits{color:var(--cycle-color)}
+#adrDigits{color:var(--adr-color)}
 
-/* Heart overlay (big circle) */
-.heart-layer{position:absolute; inset:0; display:flex;align-items:center;justify-content:center; pointer-events:none}
+/* Heart overlay (single big circle) */
+.heart-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .heart{
-  width:min(58vmin, 320px); height:min(58vmin, 320px); border-radius:50%;
-  background:var(--heart-fill); opacity:.28; transform:scale(1);
+  width:70%;aspect-ratio:1;border-radius:50%;
+  background: radial-gradient(rgba(255,77,77,var(--heart-opacity)), rgba(179,0,0,0.05));
   animation:beat 0.6s ease-in-out infinite;
 }
-@media (prefers-color-scheme:light){ .heart{ background:var(--heart-light);} }
-@keyframes beat{ 0%{transform:scale(1)} 50%{transform:scale(1.13)} 100%{transform:scale(1)} }
+@keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.16)}100%{transform:scale(1)}}
 
-/* 10-second overlay over cycle digits only */
-#count10{
-  position:absolute; inset:0; display:none; align-items:center; justify-content:center;
-  font-family:ui-monospace,Consolas,monospace; font-weight:900;
-  color:var(--cycle); text-shadow:0 2px 10px rgba(0,0,0,.35);
-}
-@media (orientation:portrait){ #count10{font-size:var(--count10-size)} }
-@media (orientation:landscape){ #count10{font-size:calc(var(--count10-size) * 1.1)} }
+/* Play/Pause icon buttons */
+.icon-row{display:flex;gap:12px;margin-top:12px}
+.icon-btn{width:var(--icon-btn);height:var(--icon-btn);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg);display:inline-flex;align-items:center;justify-content:center}
+.icon-btn svg{width:26px;height:26px}
 
-/* timer controls (icons to save space) */
-.controls{display:flex; gap:10px; justify-content:center; margin-top:12px}
-.btn{padding:12px 14px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
-.btn:disabled{opacity:.55}
-.btn.ok{background:var(--ok);border-color:var(--ok-bd);color:var(--ok-fg)}
-.btn.danger{background:var(--danger);border-color:var(--danger-bd);color:var(--danger-fg)}
-.icon{width:22px;height:22px;display:inline-block}
+/* Action buttons (no card background) */
+.actions button{padding:12px 16px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
+.actions .danger{background:var(--danger);border-color:var(--danger-bd);color:var(--danger-fg)}
+.actions .primary{background:var(--primary);border-color:var(--primary-bd);color:var(--primary-fg)}
 
-/* Actions row (no background card) */
-.actions{display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr));}
-.actions .btn{padding:14px 10px}
+.hidden{display:none!important}
 
-/* Log + export & WAAFELSS (below fold) */
-.stack{display:grid; gap:12px; margin-top:12px}
-.tools{display:flex; gap:10px; justify-content:center}
-.log{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px;max-height:260px;overflow:auto}
-.log ul{margin:0;padding-left:18px; font-size:var(--log-size)}
+/* Extras (WAAFELSS + Logs) */
+.extras{margin-top:8px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.wa-title{font-size:20px;font-weight:900;text-align:center;margin-bottom:8px}
+.wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
+.wa-row input{width:130px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+.waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.waffles-grid{grid-template-columns:1fr}}
+.wrow{display:flex;gap:8px;align-items:center}
+.wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+.wval{font-weight:800}
+
+.log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
-/* WAAFELSS */
-.wa{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px}
-.wa .title{font-weight:900;text-align:center;margin-bottom:10px}
-.wa .row{display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:10px}
-.wa input[type="number"]{width:120px}
-.grid2{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid2 .tag{min-width:110px;border:1px solid var(--border);border-radius:10px;padding:6px 10px;color:var(--muted)}
-.grid2 .val{font-weight:800}
-
-/* print */
-@media print{ .no-print{display:none !important} body{background:#fff;color:#000} }
+/* Printing */
+@media print{ .header,.controls,.actions,.wa-row{display:none!important} body{background:#fff;color:#000} .timer,.card{border:none} .digits{color:#000} }
 </style>
 
 <body>
-  <!-- ======= HEADER ======= -->
+<div class="container">
+
+  <!-- Header: controls left/right, title centered -->
   <div class="header">
-    <div class="ctrls left no-print">
+    <div class="controls">
       <div class="chip">Theme
-        <button id="themeBtn" class="btn" style="padding:6px 10px">Auto</button>
+        <button id="themeBtn" class="icon-toggle" title="Theme: Auto">Auto</button>
       </div>
     </div>
-    <div class="title">CPR Timer <span class="trial">Trial Version</span></div>
-    <div class="ctrls no-print">
+
+    <div class="brand">CPR Timer <span class="trial">Trial Version</span></div>
+
+    <div class="controls right">
       <div class="chip">BPM <input id="bpm" type="number" min="60" max="160" step="1" value="110"></div>
-      <button id="muteToggle" class="icon-btn" title="Mute/Unmute beat">
-        <!-- big speaker icon -->
-        <svg id="muteIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 9v6h4l5 4V5L7 9H3z"/><path id="muteX" d="M16 9l5 6M21 9l-5 6" opacity="0"/>
-        </svg>
+      <button id="muteBtn" class="icon-toggle" title="Beat mute/unmute" aria-pressed="false">
+        <!-- speaker big icon -->
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/><path id="muteX" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" opacity="0"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- ======= TOTAL CPR ======= -->
+  <!-- Total CPR Time -->
   <div class="total">
     <div class="label">TOTAL CPR TIME</div>
-  </div>
-  <div class="total" style="margin-top:-6px">
-    <div id="totalVal" class="value">00:00</div>
+    <div id="totalDigits" class="digits">00:00</div>
   </div>
 
-  <!-- ======= PANELS (auto orientation layout) ======= -->
-  <div class="section">
-    <div class="panels">
-      <!-- Left/Top: CYCLE -->
-      <div id="cyclePanel" class="card">
-        <div class="head">CYCLE</div>
-        <div class="timer">
-          <div id="cycleDigits" class="digits">00:00</div>
-          <div id="count10">10</div>
-          <div class="heart-layer"><div id="heart" class="heart"></div></div>
-        </div>
-        <div class="controls no-print">
-          <button id="startCPR" class="btn ok" title="Start/Resume"><span class="icon">▶️</span></button>
-          <button id="pauseCPR" class="btn" title="Pause"><span class="icon">⏸️</span></button>
-        </div>
-      </div>
+  <!-- Main area switches layout with orientation -->
+  <div class="main">
 
-      <!-- Middle: ACTIONS (no card background) -->
-      <div class="row-actions">
-        <div class="actions no-print">
-          <button id="btnROSC" class="btn danger">ROSC</button>
-          <button id="btnStop" class="btn danger">Stop</button>
-          <button id="btnShock" class="btn">Shock</button>
-          <button id="btnAmio"  class="btn">Amiodarone</button>
-        </div>
-      </div>
-
-      <!-- Right/Bottom: ADRENALINE -->
-      <div id="adrPanel" class="card">
-        <div class="head">ADRENALINE</div>
-        <div class="timer">
-          <div id="adrDigits" class="digits">00:00</div>
-        </div>
-        <div class="controls no-print">
-          <button id="startAdr" class="btn" title="Start/Resume"><span class="icon">▶️</span></button>
-          <button id="pauseAdr" class="btn" title="Pause" disabled><span class="icon">⏸️</span></button>
-        </div>
+    <!-- Left: Adrenaline (landscape) / One of two (portrait) -->
+    <div class="timer left">
+      <div class="label">ADRENALINE</div>
+      <div id="adrDigits" class="digits">00:00</div>
+      <div class="icon-row">
+        <button id="adrStart" class="icon-btn" title="Start/Resume Adrenaline">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7-11-7z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button id="adrPause" class="icon-btn" title="Pause Adrenaline" disabled>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 5h4v14H7zM13 5h4v14h-4z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
       </div>
     </div>
-  </div>
 
-  <!-- ======= BELOW-FOLD TOOLS ======= -->
-  <div class="section stack no-print">
-    <div class="tools">
-      <button id="exportTxt" class="btn">Export .txt</button>
-      <button id="printPdf" class="btn">Print (PDF)</button>
-    </div>
-
-    <div class="log"><ul id="logList"></ul></div>
-
-    <div class="wa">
-      <div class="title">WAAFELSS</div>
-      <div class="row">
-        <input id="age" type="number" min="0" placeholder="Enter age">
-        <button id="ageM" class="btn">Months</button>
-        <button id="ageY" class="btn">Years</button>
+    <!-- Actions center in landscape, below total in portrait -->
+    <div class="actions">
+      <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
+        <button id="roscb" class="danger">ROSC</button>
+        <button id="stopb" class="danger">Stop</button>
       </div>
-      <div class="grid2">
-        <div class="tag">Age</div><div id="w_age"   class="val">—</div>
-        <div class="tag">Weight</div><div id="w_wt"   class="val">—</div>
-        <div class="tag">Adrenaline</div><div id="w_adr" class="val">—</div>
-        <div class="tag">Amiodarone</div><div id="w_am"  class="val">—</div>
-        <div class="tag">Fluids</div><div id="w_fl"   class="val">—</div>
-        <div class="tag">SGA</div><div id="w_sga"  class="val">—</div>
-        <div class="tag">Energy</div><div id="w_j"    class="val">—</div>
-        <div class="tag">D10%</div><div id="w_d10"  class="val">—</div>
+      <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
+        <button id="shockb">Shock</button>
+        <button id="amiob" class="primary">Amiodarone</button>
       </div>
     </div>
-  </div>
+
+    <!-- Right: Cycle -->
+    <div class="timer right">
+      <div class="label">CYCLE</div>
+      <div id="cycleDigits" class="digits">00:00</div>
+      <div class="heart-overlay"><div id="heart" class="heart"></div></div>
+      <div class="icon-row">
+        <button id="cprStart" class="icon-btn" title="Start/Resume CPR">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7-11-7z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button id="cprPause" class="icon-btn" title="Pause CPR" disabled>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 5h4v14H7zM13 5h4v14h-4z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Extras (below fold) -->
+    <div class="extras">
+      <div class="card">
+        <div class="wa-title">WAAFELSS</div>
+        <div class="wa-row">
+          <input id="age" type="number" min="0" placeholder="Enter age">
+          <button id="mBtn" class="icon-btn" title="Months">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <button id="yBtn" class="icon-btn" title="Years">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+        </div>
+        <div class="waffles-grid">
+          <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">Weight</div><div id="wWeight" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">Adrenaline</div><div id="wAdr" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">Amiodarone</div><div id="wAmio" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">Fluids</div><div id="wFluids" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">SGA</div><div id="wSGA" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">Energy</div><div id="wJoules" class="wval">—</div></div>
+          <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px">
+          <button id="exportTxt">Export .txt</button>
+          <button id="printPdf">Print (PDF)</button>
+        </div>
+        <ul id="log" class="log"></ul>
+      </div>
+    </div>
+  </div><!-- /main -->
+</div><!-- /container -->
 
 <script>
-(()=> {
-/* =========================
-   THEME
-   ========================= */
-const root = document.documentElement;
-let themeState='auto';
-const themeBtn = document.getElementById('themeBtn');
-function applyTheme(){
-  root.removeAttribute('data-theme');
-  if(themeState==='light') root.setAttribute('data-theme','light');
-  if(themeState==='dark')  root.setAttribute('data-theme','dark');
-  themeBtn.textContent = themeState[0].toUpperCase()+themeState.slice(1);
-}
-themeBtn.onclick=()=>{ themeState = themeState==='auto' ? 'light' : themeState==='light' ? 'dark' : 'auto'; applyTheme(); };
-applyTheme();
-
-/* =========================
-   HELPERS
-   ========================= */
-const $ = id => document.getElementById(id);
-const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-const logList = $('logList'), events=[];
-function log(label){
-  const ts=new Date(); const li=document.createElement('li');
-  li.textContent = `${hhmmss(ts)} | ${label}`;
-  logList.prepend(li); events.push({ts,label});
-}
-
-/* =========================
-   WAKE LOCK (keep screen on)
-   ========================= */
-let wakeLock=null;
-async function lockScreen(){ try{ if('wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen'); } }catch{} }
-async function releaseLock(){ try{ if(wakeLock){ await wakeLock.release(); wakeLock=null; } }catch{} }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && (running||adrRunning)) lockScreen(); });
-
-/* =========================
-   AUDIO
-   ========================= */
-let audioCtx; const buffers={};
-const sounds = { beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
-  adr4:'adr4.wav', total20:'total20.wav', cpr90:'cpr90.wav', cpr120:'cpr120.wav', rosc:'rosc.wav' };
-async function ensureAudio(){
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  await audioCtx.resume();
-  if(!buffers._loaded){
-    for(const [k,src] of Object.entries(sounds)){
-      try{ const r=await fetch(src); const a=await r.arrayBuffer(); buffers[k]=await audioCtx.decodeAudioData(a); }catch{}
-    }
-    buffers._loaded=true;
+(() => {
+  /* ---------- THEME ---------- */
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeBtn');
+  let themeMode = 'auto'; // auto | light | dark
+  function applyTheme(){
+    root.removeAttribute('data-theme');
+    if (themeMode==='light') root.setAttribute('data-theme','light');
+    if (themeMode==='dark')  root.setAttribute('data-theme','dark');
+    themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
+    themeBtn.title = `Theme: ${themeBtn.textContent}`;
   }
-}
-function play(name, gain=1){
-  const buf=buffers[name]; if(!audioCtx||!buf) return;
-  const src=audioCtx.createBufferSource(); const g=audioCtx.createGain(); g.gain.value=gain;
-  src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
-}
+  themeBtn.addEventListener('click', () => {
+    themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
+    applyTheme();
+  });
+  applyTheme();
 
-/* Beat (metronome) — only this is muted */
-let beatMuted=false, beatTimer=null, bpm=+$('bpm').value||110;
-function startBeat(){ clearInterval(beatTimer); if(beatMuted) return; const iv=Math.max(200, 60000/Math.max(1,bpm)); beatTimer=setInterval(()=>play('beat',0.9), iv); }
-function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
-$('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; setHeartBpm(bpm); if(running) startBeat(); });
-$('muteToggle').onclick=()=>{ beatMuted=!beatMuted; $('muteX').setAttribute('opacity', beatMuted?'1':'0'); if(beatMuted) stopBeat(); else if(running) startBeat(); };
+  /* ---------- HELPERS ---------- */
+  const $ = id => document.getElementById(id);
+  const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
+  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}); // 24h obeys device
+  const logEl = $('log');
+  const events = [];
+  function stamp(label){
+    const ts=new Date();
+    const li=document.createElement('li');
+    li.textContent=`${hhmmss(ts)} | ${label}`;
+    logEl.prepend(li);
+    events.push({ts,label});
+  }
 
-/* Heart animation speed */
-function setHeartBpm(b){ const dur=Math.max(0.25, 60/Math.max(1,b)); $('heart').style.animationDuration = dur+'s'; }
-setHeartBpm(bpm);
+  /* ---------- WAKE LOCK ---------- */
+  let wakeLock=null;
+  async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
+  async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-/* =========================
-   STATE
-   ========================= */
-let running=false, startedWall=0, endedWall=0;
-let cycStart=0, cycPausedAt=0, cycPausedAccum=0;
-let adrRunning=false, adrStart=0, adrPausedAt=0, adrPausedAccum=0, adrCount=0;
-let cue20=false, cue90=false, cue120=false;
-let countTimer=null, countLeft=10;
+  /* ---------- AUDIO ---------- */
+  let audioCtx;
+  const buffers={}, files={
+    beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
+    adr4:'adr4.wav', total20:'total20.wav', cpr90:'cpr90.wav', cpr120:'cpr120.wav', rosc:'rosc.wav'
+  };
+  async function ensureAudio(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    await audioCtx.resume();
+    if(!buffers._loaded){
+      for(const [k,p] of Object.entries(files)){
+        try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b); }catch{}
+      }
+      buffers._loaded=true;
+    }
+  }
+  function play(name, vol=1){
+    const buf=buffers[name]; if(!audioCtx || !buf) return;
+    const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
+    g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
+  }
 
-/* =========================
-   LOOP
-   ========================= */
-function now(){ return Date.now(); }
-function loop(){
-  const t=now();
+  /* Beat (only this is muted) */
+  let beatMuted=false, beatTimer=null, bpm=+$('bpm').value||110;
+  $('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; setHeart(bpm); if(cprRunning) restartBeat(); });
+  function startBeat(){ clearInterval(beatTimer); if(beatMuted) return; const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>play('beat',0.95),iv); }
+  function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
+  function restartBeat(){ stopBeat(); startBeat(); }
+  const muteBtn=$('muteBtn'), muteX=document.getElementById('muteX');
+  muteBtn.addEventListener('click',()=>{ beatMuted=!beatMuted; muteX.style.opacity=beatMuted?'1':'0'; if(beatMuted) stopBeat(); else if(cprRunning) startBeat(); });
 
-  // total (never pauses; only stops on Stop)
-  if(startedWall && !endedWall){
-    const total=(t-startedWall)/1000; $('totalVal').textContent=fmt(total);
-    if(!cue20 && total>=1200){ cue20=true; play('total20'); }
-  } else if(startedWall && endedWall){
-    $('totalVal').textContent=fmt((endedWall-startedWall)/1000);
-  } else $('totalVal').textContent='00:00';
+  /* Heart BPM */
+  const heart=$('heart');
+  function setHeart(b){ heart.style.animationDuration = Math.max(0.25, 60/Math.max(1,b))+'s'; }
+  setHeart(bpm);
 
-  // cycle
-  let s=0;
-  if(cycStart){
-    if(running) s=(t-cycStart-cycPausedAccum)/1000;
-    else if(cycPausedAt) s=(cycPausedAt-cycStart-cycPausedAccum)/1000;
-    $('cycleDigits').textContent=fmt(s|0);
-    if(!cue90 && s>=90){ cue90=true; play('cpr90'); }
-    if(!cue120 && s>=120){ cue120=true; play('cpr120'); /* start 10s overlay */ showCount10(); }
-  } else $('cycleDigits').textContent='00:00';
+  /* ---------- STATE ---------- */
+  let totalStart=0,totalEnd=0;      // total CPR (does not pause)
+  let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
+  let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
+  // cues
+  let cue20=false, cue90=false, cue120=false, cueAdr240=false;
 
-  // adrenaline (auto reset at 4:00)
-  if(adrStart){
-    let a=0; if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000; else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
-    $('adrDigits').textContent=fmt(a|0);
-    if(a>=240){ play('adr4'); // reset & loop
-      adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; log(`Adrenaline no. ${adrCount} Administered`); }
-  } else $('adrDigits').textContent='00:00';
+  /* ---------- LOOP ---------- */
+  function now(){ return Date.now(); }
+  function tick(){
+    const t=now();
 
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
+    // total
+    if(totalStart && !totalEnd){ $('totalDigits').textContent=fmt((t-totalStart)/1000); if(!cue20 && (t-totalStart)>=20*60000){ cue20=true; play('total20'); } }
+    else if(totalStart && totalEnd){ $('totalDigits').textContent=fmt((totalEnd-totalStart)/1000); }
+    else $('totalDigits').textContent='00:00';
 
-/* =========================
-   10s COUNTDOWN OVERLAY
-   ========================= */
-function showCount10(){
-  if(countTimer) return; countLeft=10; $('count10').style.display='flex'; $('count10').textContent=countLeft;
-  countTimer=setInterval(()=>{
-    countLeft--; if(countLeft<=0){ hideCount10(); restartCycle(); } else $('count10').textContent=countLeft;
-  },1000);
-}
-function hideCount10(){ clearInterval(countTimer); countTimer=null; $('count10').style.display='none'; }
+    // cycle (pauses on pause)
+    let c=0;
+    if(cprStart){
+      if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
+      else if(cprPausedAt) c=(cprPausedAt-cprStart-cprPausedAccum)/1000;
+      else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
+      $('cycleDigits').textContent=fmt(c|0);
+      if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
+      if(!cue120 && c>=120){ cue120=true; play('cpr120'); }
+    }else{
+      $('cycleDigits').textContent='00:00';
+    }
 
-/* restart cycle after 10s, play start.wav */
-async function restartCycle(){
-  await ensureAudio(); play('start');
-  cycStart=now(); cycPausedAccum=0; cycPausedAt=0; cue90=false; cue120=false;
-  if(running && !beatMuted) startBeat();
-}
+    // adrenaline
+    if(adrStart){
+      let a=0;
+      if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
+      else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
+      else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
+      $('adrDigits').textContent=fmt(a|0);
+      if(!cueAdr240 && a>=240){ cueAdr240=true; play('adr4'); }
+    }else $('adrDigits').textContent='00:00';
 
-/* =========================
-   CONTROLS
-   ========================= */
-$('startCPR').onclick = async ()=>{
-  await ensureAudio();
-  if(!startedWall){ startedWall=now(); log('CPR Timer Started'); }
-  if(!cycStart){ cycStart=now(); cycPausedAccum=0; cue90=cue120=false; }
-  if(cycPausedAt){ cycPausedAccum += (now()-cycPausedAt); cycPausedAt=0; log('CPR Timer Resumed'); }
-  running=true; endedWall=0; setHeartBpm(bpm); play('start'); if(!beatMuted) startBeat(); lockScreen();
-};
-$('pauseCPR').onclick = async ()=>{
-  if(!running) return; await ensureAudio();
-  running=false; cycPausedAt=now(); play('pause'); log('CPR Timer Paused'); stopBeat();
-};
-$('btnStop').onclick = async ()=>{
-  await ensureAudio(); play('stop'); log('CPR Timers Reset');
-  running=false; stopBeat(); hideCount10();
-  endedWall=now();
-  // reset everything
-  cycStart=0; cycPausedAt=0; cycPausedAccum=0; cue90=cue120=false;
-  adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0;
-  releaseLock();
-};
-$('btnROSC').onclick = async ()=>{ await ensureAudio(); play('rosc'); log('ROSC Achieved'); };
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 
-$('startAdr').onclick = async ()=>{
-  await ensureAudio();
-  if(!startedWall) $('startCPR').click();
-  if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; log(`Adrenaline no. ${adrCount} Administered`); log('Adrenaline Timer Started'); }
-  else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; log('Adrenaline Timer Resumed'); }
-  $('pauseAdr').disabled=false;
-};
-$('pauseAdr').onclick = ()=>{ if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); $('pauseAdr').disabled=true; log('Adrenaline Timer Paused'); };
-$('btnShock').onclick = ()=>{ window.__shock=(window.__shock||0)+1; log(`Shock no. ${window.__shock} Delivered`); };
-$('btnAmio').onclick  = ()=>{ window.__amio=(window.__amio||0)+1; log(`Amiodarone no. ${window.__amio} Administered`); };
+  /* ---------- CONTROLS ---------- */
+  $('cprStart').onclick = async () => {
+    await ensureAudio();
+    if(!totalStart){ totalStart=now(); stamp('CPR Timer Started'); requestWake(); }
+    if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=cue120=false; play('start'); }
+    else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
+    totalEnd=0; cprRunning=true; $('cprPause').disabled=false; if(!beatMuted) startBeat();
+  };
+  $('cprPause').onclick = async () => {
+    if(!cprRunning) return;
+    await ensureAudio();
+    cprRunning=false; cprPausedAt=now(); play('pause'); stamp('CPR Timer Paused'); stopBeat();
+  };
 
-/* =========================
-   EXPORT & PRINT
-   ========================= */
-function exportLines(){
-  const started = startedWall ? new Date(startedWall).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = endedWall   ? new Date(endedWall).toLocaleString([], {hour12:false})   : 'N/A';
-  const total   = (startedWall && endedWall) ? fmt((endedWall-startedWall)/1000) : '—';
-  const counts  = `Adrenaline doses: ${adrCount || 0} | Shocks: ${window.__shock||0} | Amiodarone: ${window.__amio||0}`;
-  const lines = [`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (beat): ${bpm}`,`Total CPR Time: ${total}`,counts,``,`Events:`];
-  for(const e of events) lines.push(`${hhmmss(e.ts)} | ${e.label}`);
-  return lines;
-}
-$('exportTxt').onclick = ()=>{
-  const blob=new Blob([exportLines().join('\n')],{type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
-};
-$('printPdf').onclick = ()=>{
-  const html = `<!doctype html><meta charset="utf-8"><title>CPR Report</title>
+  $('adrStart').onclick = async () => {
+    await ensureAudio();
+    if(!totalStart) $('cprStart').click(); // QoL
+    if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; cueAdr240=false; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
+    else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
+    $('adrPause').disabled=false;
+  };
+  $('adrPause').onclick = () => {
+    if(!adrRunning) return;
+    adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused');
+  };
+
+  $('stopb').onclick = async () => {
+    await ensureAudio(); play('stop');
+    if(!totalStart) return;
+    totalEnd=now();
+    if(cprRunning){ cprRunning=false; cprPausedAt=0; }
+    if(adrRunning){ adrRunning=false; adrPausedAt=0; }
+    stamp('CPR Timers Reset'); stopBeat(); releaseWake();
+  };
+  $('roscb').onclick = async () => { await ensureAudio(); play('rosc'); stamp('ROSC Achieved'); };
+
+  $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
+  $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+
+  /* ---------- EXPORT & PRINT ---------- */
+  function lines(){
+    const started = totalStart ? new Date(totalStart).toLocaleString() : 'N/A';
+    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString()   : 'N/A';
+    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+    const counts  = `Adr: ${adrCount}; Shocks: ${window.__shock||0}; Amio: ${window.__amio||0}`;
+    const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (visual beat): ${bpm}`,`Total: ${total}`,counts,``,`Events:`];
+    for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
+    return arr;
+  }
+  $('exportTxt').onclick = () => {
+    const blob = new Blob([lines().join('\n')], {type:'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
+  };
+  $('printPdf').onclick = () => {
+    const html = `<!doctype html><meta charset="utf-8"><title>CPR Report</title>
     <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111} h2{margin:0 0 8px} pre{white-space:pre-wrap}</style>
-    <h2>CPR Session Report</h2><pre>${exportLines().join('\n')}</pre>
+    <h2>CPR Session Report</h2><pre>${lines().join('\n')}</pre>
     <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>`;
-  const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close();
-};
+    const w=window.open('','printwin'); w.document.open(); w.document.write(html); w.document.close();
+  };
 
-/* =========================
-   WAAFELSS
-   ========================= */
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-function wafflesMonths(age){
-  const weight=age*0.5+4, adr=+(weight*0.01).toFixed(2), am=+(weight*5).toFixed(1);
-  const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-  const j=Math.round(clamp(weight*4,0,360)), d=+(clamp(weight*2.5,0,50)).toFixed(1);
-  const sga=(weight<=5)?'Size 1':'Size 1.5';
-  return {age:`${age} months`,weight,adr,am,minF,maxF,sga,j,d};
-}
-function wafflesYears(age){
-  let weight,sga; if(age<=5){ weight=age*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':''; }
-  else { weight=age*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes'; }
-  const adr=+(weight*0.01).toFixed(2), am=+(weight*5).toFixed(1);
-  const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-  const j=Math.round(clamp(weight*4,0,360)), d=+(clamp(weight*2.5,0,50)).toFixed(1);
-  return {age:`${age} years`,weight,adr,am,minF,maxF,sga,j,d};
-}
-function renderW(o){
-  $('w_age').textContent=o.age;
-  $('w_wt').textContent = `${o.weight.toFixed(1)} kg`;
-  $('w_adr').textContent= `${o.adr} mg`;
-  $('w_am').textContent = `${o.am} mg`;
-  $('w_fl').textContent = `${o.minF}–${o.maxF} mL`;
-  $('w_sga').textContent= o.sga || '—';
-  $('w_j').textContent  = `${o.j} J`;
-  $('w_d10').textContent= `${o.d} mL`;
-}
-$('ageM').onclick=()=>{ const n=+$('age').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(wafflesMonths(n)); };
-$('ageY').onclick=()=>{ const n=+$('age').value; if(isNaN(n)||n<0){alert('Enter age');return;} renderW(wafflesYears(n)); };
+  /* ---------- WAAFELSS ---------- */
+  const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function months(n){
+    const weight=n*0.5+4, adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
+    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
+    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
+    const sga=(weight<=5)?'Size 1':'Size 1.5';
+    return {age:`${n} months`,weight,adr,amio,minF,maxF,sga,joules,d10};
+  }
+  function years(n){
+    let weight,sga; if(n<=5){weight=n*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':'';}
+    else{weight=n*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes';}
+    const adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
+    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
+    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
+    return {age:`${n} years`,weight,adr,amio,minF,maxF,sga,joules,d10};
+  }
+  function renderW(o){
+    $('wAge').textContent=o.age;
+    $('wWeight').textContent=`${o.weight.toFixed(1)} kg`;
+    $('wAdr').textContent=`${o.adr} mg`;
+    $('wAmio').textContent=`${o.amio} mg`;
+    $('wFluids').textContent=`${o.minF}–${o.maxF} mL`;
+    $('wSGA').textContent=o.sga||'—';
+    $('wJoules').textContent=`${o.joules} J`;
+    $('wD10').textContent=`${o.d10} mL`;
+  }
+  function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
+  mBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); };
+  yBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); };
 
-})();</script>
+})();
+</script>
 </body>
 </html>
