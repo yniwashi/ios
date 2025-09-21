@@ -1,0 +1,19 @@
+/* Inherit portrait variables, just tweak layout scales if needed */
+@import url('portrait.css');
+
+/* Layout: Cycle | Total | Adrenaline in one row */
+.timers{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+
+/* Slightly larger digits in landscape for distance visibility */
+.value{font-size:calc(var(--timer-size) * 1.05)}
+.value.total{font-size:calc(var(--total-size) * 1.1)}
+
+/* Buttons fit side-by-side neatly */
+.wide{min-width:36vw; max-width:420px}
+
+/* Keep pulse full card in landscape too */
+.pulse{width:100vmin;height:100vmin}
