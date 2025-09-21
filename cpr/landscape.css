@@ -1,33 +1,93 @@
-/* Import base portrait theme/vars */
-@import url('portrait.css');
+/* ======= QUICK KNOBS (easy to tweak) ======= */
+:root{
+  /* sizes */
+  --land-total-size: 56px;     /* total timer at top */
+  --land-side-size:  84px;     /* big side timers (Cycle/Adr) */
+  --land-count-size: 132px;    /* 10s countdown size */
+  --land-icon-size:  30px;     /* icon glyph size under timers */
+  --land-log-size:   16px;
 
-/* Landscape layout: ADR | ACTIONS | CYCLE */
+  /* colors (match your portrait theme vars) */
+  --cycle-color:#ff4d4d;   /* red */
+  --adr-color:#2ea0ff;     /* blue */
+  --total-color:var(--fg); /* inherits light/dark */
+}
+
+/* ======= PAGE SCAFFOLD ======= */
+.wrap{ max-width:none; padding:14px 18px; }
+
+/* header stays; we just keep it compact in landscape */
+.header{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+.title{ margin:0; }
+.ctrls{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* ------ Total (alone, center, smaller than side timers) ------ */
+.total-strip{
+  display:flex; justify-content:center; margin:6px 0 10px;
+}
+.total-strip .kpi{ min-width: 420px; max-width: 640px; width: 60vw; }
+.value.total{ font-size: var(--land-total-size); color: var(--total-color); }
+
+/* ------ Main lane: 3 columns (ADR | ACTIONS | CYCLE) ------ */
 .lane{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:14px;
   align-items:start;
+}
+
+/* Side timer tiles bigger and prominent */
+#adrCard .value, #cycleCard .value{
+  font-size: var(--land-side-size);
+}
+#adrCard .value{ color: var(--adr-color); }
+#cycleVal{ color: var(--cycle-color); }
+
+/* Controls under each side timer: icons first; auto-hide text if cramped */
+.ctrls-under{ margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.ctrls-under .icon-ctrl{
+  display:inline-flex; align-items:center; gap:8px;
+  border:1px solid var(--btn-border); background:var(--btn); color:var(--btn-fg);
+  border-radius:12px; padding:10px 12px;
+}
+.ctrls-under .icon-ctrl svg{ width: var(--land-icon-size); height: var(--land-icon-size); fill: currentColor; }
+@media (max-height: 480px){ .ctrls-under .icon-ctrl span{ display:none; } } /* phones with very tight height */
+
+/* ------ Center Actions column (ROSC, Stop, Shock, Amio) ------ */
+#actionsCard .actions-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
   gap:12px;
 }
-
-/* Total stays alone above; slightly smaller than the two side timers */
-.value.total{font-size:calc(var(--total-size) * 0.95)}
-
-/* Make side timers big for visibility */
-#adrCard .value, #cycleCard .value{font-size:calc(var(--timer-size) * 1.1)}
-
-/* Action buttons in a tidy grid (center column) */
-.actions .actions-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-.pill{min-width:0}
-
-/* Controls under timers: allow icons-only if space tight */
-.ctrls-under .icon-ctrl{padding:10px 12px}
-@media (max-width:900px){
-  .icon-ctrl span{display:none} /* show just icons on compact landscape */
+#actionsCard .pill{
+  min-width:0; padding:14px 12px; border-radius:12px;
 }
 
-/* Pulse is bounded to card */
-.pulse{width:80vmin;height:80vmin}
+/* ------ 10-second countdown replaces the cycle face ------ */
+#countdown{
+  position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+  font-family: ui-monospace, Consolas, monospace; font-weight:900;
+  font-size: var(--land-count-size); color: var(--cycle-color); pointer-events:none;
+}
+#countdown.show{ display:flex; }
+#cycleCard.cycle-hidden #cycleVal,
+#cycleCard.cycle-hidden #cycleLabel{ visibility:hidden; }
+
+/* ------ Pulse overlay: larger, visible on both themes ------ */
+.pulse-wrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.pulse{
+  width: 80vmin; height: 80vmin; border-radius:50%;
+  background: radial-gradient(circle, rgba(255,77,77,.32) 18%, rgba(179,0,0,.12) 55%, transparent 70%);
+  opacity:.42; transform:scale(1); animation: beat .6s ease-in-out infinite;
+}
+@keyframes beat{ 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+
+/* ------ Below area (log, waffles, export) scrollable) ------ */
+.below{ margin-top: 14px; }
+.log{ max-height: 42vh; overflow:auto; font-size: var(--land-log-size); line-height:1.35; }
+
+/* keep everything printable nicely */
+@media print{
+  .no-print{ display:none!important }
+  .value.total{ color:#000 }
+}
