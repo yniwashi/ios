@@ -1,19 +1,33 @@
-/* Inherit portrait variables, just tweak layout scales if needed */
+/* Import base portrait theme/vars */
 @import url('portrait.css');
 
-/* Layout: Cycle | Total | Adrenaline in one row */
-.timers{
+/* Landscape layout: ADR | ACTIONS | CYCLE */
+.lane{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
+  align-items:start;
   gap:12px;
 }
 
-/* Slightly larger digits in landscape for distance visibility */
-.value{font-size:calc(var(--timer-size) * 1.05)}
-.value.total{font-size:calc(var(--total-size) * 1.1)}
+/* Total stays alone above; slightly smaller than the two side timers */
+.value.total{font-size:calc(var(--total-size) * 0.95)}
 
-/* Buttons fit side-by-side neatly */
-.wide{min-width:36vw; max-width:420px}
+/* Make side timers big for visibility */
+#adrCard .value, #cycleCard .value{font-size:calc(var(--timer-size) * 1.1)}
 
-/* Keep pulse full card in landscape too */
-.pulse{width:100vmin;height:100vmin}
+/* Action buttons in a tidy grid (center column) */
+.actions .actions-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.pill{min-width:0}
+
+/* Controls under timers: allow icons-only if space tight */
+.ctrls-under .icon-ctrl{padding:10px 12px}
+@media (max-width:900px){
+  .icon-ctrl span{display:none} /* show just icons on compact landscape */
+}
+
+/* Pulse is bounded to card */
+.pulse{width:80vmin;height:80vmin}
