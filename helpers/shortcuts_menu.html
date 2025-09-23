@@ -1,267 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>My Quick Links</title>
-    <style>
-        /* --- Basic Setup & Theme --- */
-        :root {
-            --background-color: #121212;
-            --surface-color: #1e1e1e;
-            --primary-color: #007aff;
-            --text-color: #ffffff;
-            --text-secondary-color: #8e8e93;
-            --green-color: #34c759;
-            --border-radius: 12px; /* Slightly smaller radius for smaller buttons */
-            --transition-speed: 0.3s;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Care Tools Hub</title>
+  <style>
+    /* ===== THEME ===== */
+    :root{
+      --bg:#0f1115;            /* page background */
+      --surface:#171a21;       /* card/button surface */
+      --accent:#2f81f7;        /* brand/primary */
+      --accent-2:#1fbf7a;      /* success toggle */
+      --text:#eef2ff;          /* main text */
+      --muted:#99a2b4;         /* secondary text */
+      --radius:14px;
+      --speed:.25s;
+      --shadow:0 8px 20px rgba(0,0,0,.35);
+      --shadow-2:0 12px 30px rgba(0,0,0,.45);
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
+    /* ===== LAYOUT ===== */
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px clamp(12px,4vw,28px) 28px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
 
-        /* --- News Banner --- */
-        .news-banner {
-            background-color: rgba(0, 122, 255, 0.2);
-            border-left: 4px solid var(--primary-color);
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* ===== HEADER ===== */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;
+    }
+    .logo{
+      width:28px;height:28px;border-radius:8px;
+      background:linear-gradient(150deg,var(--accent),#8854d0);
+      box-shadow:var(--shadow);
+    }
+    .title{
+      font-size:clamp(18px,3.5vw,22px);
+      letter-spacing:.2px;
+      margin:0;
+    }
 
-        /* --- Toggle Switch Section --- */
-        .switch-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
+    /* ===== NEWS BANNER (auto-hides if empty) ===== */
+    .news{
+      display:none;
+      background:linear-gradient(180deg,rgba(47,129,247,.14),rgba(47,129,247,.06));
+      border:1px solid rgba(47,129,247,.35);
+      color:#dbe7ff;
+      padding:12px 14px;
+      border-radius:12px;
+      line-height:1.35;
+      animation:fadeIn .3s ease-out both;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
-        .switch-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 0;
-        }
+    /* ===== SWITCH ===== */
+    .switch-row{
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--surface);
+      border-radius:12px;
+      padding:10px 12px;
+    }
+    .switch-copy{
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .switch-title{font-size:15px;margin:0}
+    .switch-note{font-size:12px;color:var(--muted);margin:0}
 
-        .switch-description {
-            font-size: 0.9rem;
-            color: var(--text-secondary-color);
-            margin: 0;
-            max-width: 320px;
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-            margin-top: 5px; 
-            margin-bottom: 5px;
-        }
+    .toggle{
+      position:relative;width:56px;height:30px;flex:none;
+    }
+    .toggle input{opacity:0;width:0;height:0}
+    .rail{
+      position:absolute;inset:0;border-radius:999px;
+      background:#222734;border:1px solid #2b3140;
+      transition:background var(--speed),border var(--speed),box-shadow var(--speed);
+      box-shadow:inset 0 2px 6px rgba(0,0,0,.35);
+    }
+    .knob{
+      position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;
+      background:linear-gradient(180deg,#ffffff,#dfe7ff);
+      box-shadow:0 2px 6px rgba(0,0,0,.35);
+      transition:transform var(--speed);
+    }
+    .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a);border-color:#20c385}
+    .toggle input:checked + .rail .knob{transform:translateX(26px)}
 
-        .switch input { opacity: 0; width: 0; height: 0; }
+    /* ===== GRID ===== */
+    .grid{
+      display:grid;
+      gap:10px;
+      grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+    }
+    @media (orientation:landscape){
+      .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+    }
 
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--surface-color);
-            transition: var(--transition-speed);
-            border-radius: 28px;
-        }
+    /* ===== BUTTON CARD ===== */
+    .btn{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:8px;
+      background:linear-gradient(180deg,#1a1f28,#141821);
+      border:1px solid #232a37;
+      border-radius:12px;
+      text-decoration:none;color:var(--text);
+      padding:12px 8px;
+      min-height:84px;
+      font-size:13px;font-weight:600;
+      letter-spacing:.2px;text-align:center;
+      box-shadow:var(--shadow);
+      transition:transform var(--speed),box-shadow var(--speed),border var(--speed),background var(--speed);
+      will-change:transform;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+    .btn:active{transform:translateY(0) scale(.98)}
+    .ico{width:24px;height:24px;display:block}
+    .muted{opacity:.9;font-weight:500}
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 22px; width: 22px;
-            left: 3px; bottom: 3px;
-            background-color: white;
-            transition: var(--transition-speed);
-            border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: var(--green-color); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* --- Button Grid --- */
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Smaller min-width for smaller buttons */
-            gap: 12px; /* Slightly smaller gap */
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* --- Individual Buttons (UPDATED) --- */
-        .button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px 10px; /* Reduced padding to make buttons smaller */
-            background-color: var(--surface-color);
-            border-radius: var(--border-radius);
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 0.85rem; /* Slightly smaller font */
-            font-weight: 500;
-            text-align: center;
-            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            animation: popIn 0.5s ease-out forwards;
-            opacity: 0;
-        }
-
-        .button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .button:active {
-            transform: translateY(-1px) scale(0.98);
-        }
-
-        .button-icon svg {
-            width: 28px; /* Control icon size */
-            height: 28px;
-            margin-bottom: 8px;
-            fill: currentColor; /* Icon color will match the text color */
-        }
-        
-        @keyframes popIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
-    </style>
+    /* subtle “pop” on mount */
+    .btn{opacity:0;animation:pop .35s ease-out forwards}
+    .btn:nth-child(odd){animation-delay:.02s}
+    .btn:nth-child(even){animation-delay:.06s}
+    @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  </style>
 </head>
 <body>
-
-    <div class="main-container">
-        <div id="newsBanner" class="news-banner"></div>
-
-        <div class="switch-section">
-            <h2 class="switch-title">Shortcuts Mode</h2>
-            <label class="switch">
-                <input type="checkbox" id="modeToggle">
-                <span class="slider"></span>
-            </label>
-            <p class="switch-description">
-                Enable to run actions directly in the Shortcuts app. When disabled, some features may not be available.
-            </p>
-        </div>
-        
-        <div id="buttonGrid" class="button-grid"></div>
+  <div class="wrap">
+    <!-- Header -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1 class="title">Care Tools Hub</h1>
+      </div>
     </div>
 
-    <script>
-        // #######################################################
-        // ############### EASY CONFIGURATION AREA ###############
-        // #######################################################
+    <!-- News (hidden if no message) -->
+    <div id="news" class="news"></div>
 
-        // 1. SET YOUR NEWS MESSAGE HERE (or leave empty "")
-        const newsMessage = "New care tools and calculators have been added. Switch to Shortcuts Mode to try them out!";
+    <!-- Shortcuts Mode -->
+    <div class="switch-row">
+      <div class="switch-copy">
+        <p class="switch-title">Shortcuts Mode</p>
+        <p class="switch-note">Enable to run items in the Shortcuts app. When off, buttons open their normal links.</p>
+      </div>
+      <label class="toggle" aria-label="Toggle Shortcuts Mode">
+        <input id="mode" type="checkbox" />
+        <div class="rail"><div class="knob"></div></div>
+      </label>
+    </div>
 
-        // 2. CONFIGURE YOUR BUTTONS AND ICONS HERE
-        // Just add or remove items from this list. The code will handle the rest.
-        const buttonDefinitions = [
-            { text: 'CCP Pediatric', icon: `<svg viewBox="0 0 24 24"><path d="M12 2C9.25 2 7 4.25 7 7s2.25 5 5 5 5-2.25 5-5S14.75 2 12 2zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm0 3c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>` },
-            { text: 'WAAFELSS', icon: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-2 16h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>` },
-            { text: 'CPG Wizard', icon: `<svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>` },
-            { text: 'HOS', icon: `<svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>` },
-            { text: 'AS-Call', icon: `<svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.02.75-.25 1.02l-2.2 2.2z"/></svg>` },
-            { text: 'CPR', icon: `<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` },
-            { text: 'Websites', icon: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>` },
-            { text: 'Flowcharts', icon: `<svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-4 6H4V6h2v4zm10 2h-4c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zm-4 6h-2v-4h2v4zm4-16h-4c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-4 6h-2V6h2v4z"/></svg>` },
-            { text: 'Care Tools', icon: `<svg viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM5.92 19H5v-.92l9.06-9.06.92.92L5.92 19z"/></svg>` },
-            { text: 'RSI Checklist', icon: `<svg viewBox="0 0 24 24"><path d="M17.75 7H14V5.5C14 4.12 12.88 3 11.5 3S9 4.12 9 5.5V7H6.25c-.41 0-.75.34-.75.75s.34.75.75.75H9v1.5H7.5c-.41 0-.75.34-.75.75s.34.75.75.75H9V14h5v-3.5h1.5c.41 0 .75-.34.75-.75s-.34-.75-.75-.75H14V8.5h3.75c.41 0 .75-.34.75-.75s-.34-.75-.75-.75zM11 20h2v-4h-2v4z"/></svg>` },
-            { text: 'SAT Score', icon: `<svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>` },
-            { text: 'APGAR Score', icon: `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z"/></svg>` },
-            { text: 'GCS Score', icon: `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-4h2v4zm4 0h-2v-7h2v7zm4 0h-2V7h2v10z"/></svg>` },
-            { text: 'Westley Score', icon: `<svg viewBox="0 0 24 24"><path d="M7.5 2.5C7.5 3.33 6.83 4 6 4s-1.5-.67-1.5-1.5S5.17 1 6 1s1.5.67 1.5 1.5zM18 10h-5V4h-2v6H6L12 16l6-6z"/></svg>` },
-            { text: 'RBS Converter', icon: `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 14h-2v-2h2v2zm0-4h-2V7h2v6zm-4-4H9v2h2V7zm0 4H9v2h2v-2z"/></svg>` },
-            { text: 'Estimated Weight', icon: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8l4-5v4h3l-4 5z"/></svg>` },
-            { text: 'AP Pediatrics', icon: `<svg viewBox="0 0 24 24"><path d="M15.5 7.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5.83.67 1.5 1.5zm-5 0c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5.83.67 1.5 1.5zM12 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>` },
-            { text: 'Calculate MAP', icon: `<svg viewBox="0 0 24 24"><path d="M7 21h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zM19.006 3.011l-7.07 7.07-4.24-4.24-1.41 1.41 5.66 5.66 8.49-8.49L19.006 3.01zM3 5h10v2H3V5z"/></svg>` },
-        ];
+    <!-- Buttons -->
+    <div id="grid" class="grid"></div>
+  </div>
 
+  <!-- ===== Icons (inline SVG paths) ===== -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ico-user" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 12c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z"/></symbol>
+    <symbol id="ico-doc"  viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8Zm-2 14h-2v-2h2Zm0-4h-2v-2h2Zm0-4h-2V6h2Z"/></symbol>
+    <symbol id="ico-plus" viewBox="0 0 24 24"><path fill="currentColor" d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6z"/></symbol>
+    <symbol id="ico-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3z"/></symbol>
+    <symbol id="ico-call" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8c1.44 2.83 3.76 5.14 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24c1.12.37 2.33.57 3.57.57c.55 0 1 .45 1 1V20c0 .55-.45 1-1 1c-9.39 0-17-7.61-17-17c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1c0 1.25.2 2.45.57 3.57c.11.35.02.75-.25 1.02z"/></symbol>
+    <symbol id="ico-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04z"/></symbol>
+    <symbol id="ico-globe" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20ZM4.93 6.27A8 8 0 0 1 9 4.07V8H6c-.97 0-1.75.78-1.75 1.75V12h2.75v2H5a2 2 0 0 0-2 2v.8a8 8 0 0 1 1.93-10.53ZM12 20a8 8 0 0 1-2-.27V16h2l2-2V9h3a2 2 0 0 0 2-2v-.28A8 8 0 0 1 12 20Z"/></symbol>
+    <symbol id="ico-flow"  viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm6 8h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Zm0-12h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V2Z"/></symbol>
+    <symbol id="ico-wrench" viewBox="0 0 24 24"><path fill="currentColor" d="M22 19l-6.6-6.6a5 5 0 0 0-6.8-6.8L11 8L8 11L4.6 8A5 5 0 0 0 11.4 14.6L19 22z"/></symbol>
+    <symbol id="ico-clip" viewBox="0 0 24 24"><path fill="currentColor" d="M16 6a4 4 0 0 0-8 0v9a6 6 0 1 0 12 0V9h-2v6a4 4 0 1 1-8 0V6a2 2 0 1 1 4 0v8h2z"/></symbol>
+    <symbol id="ico-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></symbol>
+    <symbol id="ico-bars" viewBox="0 0 24 24"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-4h2Zm4 0h-2V6h2Zm4 0h-2V9h2Z"/></symbol>
+    <symbol id="ico-weight" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h10l3 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8zM9 8a3 3 0 1 0 6 0"/></symbol>
+    <symbol id="ico-pulse" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12h4l2-5l4 10l2-5h6"/></symbol>
+    <symbol id="ico-calc" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21h2v-2H7Zm4 0h2v-2h-2Zm4 0h2v-2h-2ZM19 3H5v2h14Zm-4 4H9v6h6Z"/></symbol>
+  </svg>
 
-        // #######################################################
-        // ############## CORE LOGIC (No need to edit) #############
-        // #######################################################
+  <script>
+    /* =========================
+       EASY CONFIG SECTION
+       ========================= */
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const newsBanner = document.getElementById('newsBanner');
-            const buttonGrid = document.getElementById('buttonGrid');
-            const modeToggle = document.getElementById('modeToggle');
+    // 1) Optional news (set "" to hide)
+    const NEWS_MESSAGE = ""; // e.g. "New care tools added. Try Shortcuts Mode."
 
-            // --- Generate full button data from definitions ---
-            const buttonsData = buttonDefinitions.map(btn => ({
-                id: btn.text.toLowerCase().replace(/\s+/g, '-'), // Auto-create a unique ID
-                icon: btn.icon,
-                text: btn.text,
-                urlDefault: '#', // Default "in-app" link
-                urlSwitched: `shortcuts://run-shortcut?name=Switched&input=text&text=web::${encodeURIComponent(btn.text)}`, // Auto-create shortcut URL
-                showWhenSwitched: true,
-                showWhenDefault: true,
-            }));
+    // 2) Shortcuts wiring
+    const SHORTCUT_NAME = "Ambulance";
+    const SEPARATOR = "::"; // input format: web::Button Name
+    const USE_RETURN_URL = false;      // set true to round-trip back to your site
+    const RETURN_URL = "https://yourdomain.com/done.html";
 
-            function setupNews() {
-                if (newsMessage && newsMessage.trim() !== '') {
-                    newsBanner.textContent = newsMessage;
-                    newsBanner.style.display = 'block';
-                }
-            }
+    // 3) Buttons list (add more later). Each can define:
+    // - id (auto from text if omitted)
+    // - icon: SVG symbol id
+    // - href: normal (non-shortcuts) link
+    // - showDefault: show when switch is OFF
+    // - showShortcuts: show when switch is ON
+    const BUTTONS = [
+      { text:"CCP Pediatric",  icon:"ico-user",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"WAAFELSS",       icon:"ico-doc",    href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"CPG Wizard",     icon:"ico-plus",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"HOS",            icon:"ico-home",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"AS-Call",        icon:"ico-call",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"CPR",            icon:"ico-heart",  href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"Websites",       icon:"ico-globe",  href:"#",             showDefault:true,  showShortcuts:false }, // example: hide in Shortcuts mode
+      { text:"Flowcharts",     icon:"ico-flow",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"Care Tools",     icon:"ico-wrench", href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"RSI Checklist",  icon:"ico-clip",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"SAT Score",      icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"APGAR Score",    icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"GCS Score",      icon:"ico-bars",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"Westley Score",  icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"RBS Converter",  icon:"ico-bars",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"Estimated Weight",icon:"ico-weight",href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"AP Pediatrics",  icon:"ico-user",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"Calculate MAP",  icon:"ico-calc",   href:"#",             showDefault:true,  showShortcuts:true },
+    ];
 
-            function renderButtons() {
-                buttonGrid.innerHTML = ''; // Clear existing buttons
-                const isSwitched = modeToggle.checked;
+    /* =========================
+       CORE LOGIC (no edits needed)
+       ========================= */
 
-                buttonsData.forEach((button, index) => {
-                    const isVisibleInDefault = button.showWhenDefault !== false;
-                    const isVisibleInSwitched = button.showWhenSwitched === true;
-                    
-                    if ((!isSwitched && isVisibleInDefault) || (isSwitched && isVisibleInSwitched)) {
-                        const buttonElement = document.createElement('a');
-                        buttonElement.className = 'button';
-                        buttonElement.id = button.id;
-_                        buttonElement.href = isSwitched ? button.urlSwitched : button.urlDefault;
-                        buttonElement.style.animationDelay = `${index * 30}ms`;
-                        
-                        buttonElement.innerHTML = `
-                            <div class="button-icon">${button.icon}</div>
-                            <span>${button.text}</span>
-                        `;
+    // Build Shortcuts URL for a given button label
+    function buildShortcutsUrl(label){
+      const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
+      const payload = USE_RETURN_URL
+        ? `web${SEPARATOR}${label}${SEPARATOR}${RETURN_URL}`
+        : `web${SEPARATOR}${label}`;
+      return base + encodeURIComponent(payload);
+    }
 
-                        buttonGrid.appendChild(buttonElement);
-                    }
-                });
-            }
+    function mount(){
+      // News
+      const newsEl = document.getElementById("news");
+      if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){
+        newsEl.textContent = NEWS_MESSAGE.trim();
+        newsEl.style.display = "block";
+      }
 
-            modeToggle.addEventListener('change', renderButtons);
+      // Buttons
+      const grid = document.getElementById("grid");
+      const toggle = document.getElementById("mode");
 
-            // Initial setup
-            setupNews();
-            renderButtons();
+      function render(){
+        const useShortcuts = toggle.checked;
+        grid.innerHTML = "";
+
+        BUTTONS.forEach((btn, i) => {
+          const show = useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false);
+          if (!show) return;
+
+          const id = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
+          const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
+
+          const a = document.createElement("a");
+          a.className = "btn";
+          a.id = id;
+          a.href = href;
+          a.style.animationDelay = `${i*20}ms`;
+          a.innerHTML = `
+            <svg class="ico" aria-hidden="true"><use href="#${btn.icon}"/></svg>
+            <span class="muted">${btn.text}</span>
+          `;
+
+          // If default link is "#" (placeholder), block navigation and nudge user
+          if (!useShortcuts && (!btn.href || btn.href === "#")){
+            a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set a URL in BUTTONS[].href"); });
+          }
+
+          grid.appendChild(a);
         });
-    </script>
+      }
+
+      document.getElementById("mode").addEventListener("change", render);
+      render();
+    }
+
+    document.addEventListener("DOMContentLoaded", mount);
+  </script>
 </body>
 </html>
