@@ -1,25 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Care Tools Hub</title>
   <style>
-    /* ===== THEME ===== */
+    /* =========================
+       THEME SYSTEM
+       - Auto: follows device (prefers-color-scheme)
+       - Manual override via [data-theme="light"|"dark"]
+       ========================= */
     :root{
-      --bg:#0f1115;            /* page background */
-      --surface:#171a21;       /* card/button surface */
-      --accent:#2f81f7;        /* brand/primary */
-      --accent-2:#1fbf7a;      /* success toggle */
-      --text:#eef2ff;          /* main text */
-      --muted:#99a2b4;         /* secondary text */
-      --radius:14px;
-      --speed:.25s;
-      --shadow:0 8px 20px rgba(0,0,0,.35);
-      --shadow-2:0 12px 30px rgba(0,0,0,.45);
+      /* shared */
+      --radius:12px;
+      --speed:.22s;
+      --shadow:0 8px 18px rgba(0,0,0,.28);
+      --shadow-2:0 12px 28px rgba(0,0,0,.35);
+    }
+    /* Light tokens */
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7f9fc; --surface:#ffffff; --border:#e7ecf3;
+        --text:#0c1230; --muted:#616b86;
+        --accent:#1f6fff; --accent-2:#19b36b;
+        --surface-2:#f1f5fb;
+      }
+    }
+    /* Dark tokens */
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0f1115; --surface:#171a21; --border:#232a37;
+        --text:#eef2ff; --muted:#9aa6c3;
+        --accent:#2f81f7; --accent-2:#20c385;
+        --surface-2:#12151c;
+      }
+    }
+    /* Manual override */
+    [data-theme="light"]{
+      --bg:#f7f9fc; --surface:#ffffff; --border:#e7ecf3;
+      --text:#0c1230; --muted:#616b86;
+      --accent:#1f6fff; --accent-2:#19b36b;
+      --surface-2:#f1f5fb;
+    }
+    [data-theme="dark"]{
+      --bg:#0f1115; --surface:#171a21; --border:#232a37;
+      --text:#eef2ff; --muted:#9aa6c3;
+      --accent:#2f81f7; --accent-2:#20c385;
+      --surface-2:#12151c;
     }
 
-    /* ===== LAYOUT ===== */
+    /* =========================
+       BASE LAYOUT
+       ========================= */
     html,body{height:100%}
     body{
       margin:0;
@@ -29,137 +61,139 @@
       -webkit-tap-highlight-color:transparent;
     }
     .wrap{
-      max-width:1100px;
+      max-width:980px;
       margin:0 auto;
-      padding:16px clamp(12px,4vw,28px) 28px;
+      padding:14px clamp(10px,4vw,20px) 24px;
       display:flex;
       flex-direction:column;
-      gap:16px;
+      gap:14px;
     }
 
-    /* ===== HEADER ===== */
+    /* =========================
+       TOPBAR + THEME SWITCH
+       ========================= */
     .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px
     }
-    .brand{
-      display:flex;align-items:center;gap:10px;
-    }
-    .logo{
-      width:28px;height:28px;border-radius:8px;
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:26px;height:26px;border-radius:8px;
       background:linear-gradient(150deg,var(--accent),#8854d0);
-      box-shadow:var(--shadow);
+      box-shadow:var(--shadow)}
+    .title{margin:0;font-size:clamp(18px,3.8vw,22px);letter-spacing:.2px}
+    .theme-toggle{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:999px;padding:4px 10px;display:flex;align-items:center;gap:8px;
+      font-size:13px;color:var(--text);cursor:pointer;user-select:none
     }
-    .title{
-      font-size:clamp(18px,3.5vw,22px);
-      letter-spacing:.2px;
-      margin:0;
+    .theme-toggle select{
+      appearance:none;background:transparent;border:none;color:inherit;font:inherit;outline:none;cursor:pointer
     }
 
-    /* ===== NEWS BANNER (auto-hides if empty) ===== */
+    /* =========================
+       NEWS BANNER
+       ========================= */
     .news{
-      display:none;
-      background:linear-gradient(180deg,rgba(47,129,247,.14),rgba(47,129,247,.06));
-      border:1px solid rgba(47,129,247,.35);
-      color:#dbe7ff;
-      padding:12px 14px;
-      border-radius:12px;
-      line-height:1.35;
-      animation:fadeIn .3s ease-out both;
+      display:none;background:
+        linear-gradient(180deg,rgba(47,129,247,.12),rgba(47,129,247,.06));
+      border:1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+      color:color-mix(in oklab, var(--text) 85%, var(--accent));
+      padding:10px 12px;border-radius:12px;line-height:1.35;
+      animation:fadeIn .25s ease-out both
     }
-    @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 
-    /* ===== SWITCH ===== */
-    .switch-row{
-      display:flex;align-items:center;justify-content:space-between;
-      background:var(--surface);
-      border-radius:12px;
-      padding:10px 12px;
+    /* =========================
+       SWITCH ROW (Shortcuts Mode)
+       ========================= */
+    .row{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px
     }
-    .switch-copy{
-      display:flex;flex-direction:column;gap:4px;
-    }
-    .switch-title{font-size:15px;margin:0}
-    .switch-note{font-size:12px;color:var(--muted);margin:0}
-
-    .toggle{
-      position:relative;width:56px;height:30px;flex:none;
-    }
+    .copy{display:flex;flex-direction:column;gap:3px}
+    .copy .t{margin:0;font-size:15px;font-weight:600}
+    .copy .s{margin:0;font-size:12px;color:var(--muted)}
+    .toggle{position:relative;width:56px;height:30px;flex:none}
     .toggle input{opacity:0;width:0;height:0}
-    .rail{
-      position:absolute;inset:0;border-radius:999px;
-      background:#222734;border:1px solid #2b3140;
-      transition:background var(--speed),border var(--speed),box-shadow var(--speed);
-      box-shadow:inset 0 2px 6px rgba(0,0,0,.35);
-    }
-    .knob{
-      position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;
-      background:linear-gradient(180deg,#ffffff,#dfe7ff);
-      box-shadow:0 2px 6px rgba(0,0,0,.35);
-      transition:transform var(--speed);
-    }
-    .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a);border-color:#20c385}
+    .rail{position:absolute;inset:0;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);transition:background var(--speed),border var(--speed)}
+    .knob{position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;
+      background:linear-gradient(180deg,#fff,#e7ecff);box-shadow:0 2px 6px rgba(0,0,0,.28);
+      transition:transform var(--speed)}
+    .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a);border-color:color-mix(in oklab, var(--accent-2) 60%, var(--border))}
     .toggle input:checked + .rail .knob{transform:translateX(26px)}
 
-    /* ===== GRID ===== */
+    /* =========================
+       GRID & BUTTONS (SMALLER)
+       ========================= */
     .grid{
-      display:grid;
-      gap:10px;
-      grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+      display:grid;gap:8px;
+      /* very compact minimum tile width for phones */
+      grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
     }
     @media (orientation:landscape){
-      .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+      .grid{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
     }
-
-    /* ===== BUTTON CARD ===== */
     .btn{
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:8px;
-      background:linear-gradient(180deg,#1a1f28,#141821);
-      border:1px solid #232a37;
-      border-radius:12px;
-      text-decoration:none;color:var(--text);
-      padding:12px 8px;
-      min-height:84px;
-      font-size:13px;font-weight:600;
-      letter-spacing:.2px;text-align:center;
-      box-shadow:var(--shadow);
-      transition:transform var(--speed),box-shadow var(--speed),border var(--speed),background var(--speed);
-      will-change:transform;
-      user-select:none;
+      gap:6px;text-decoration:none;color:#fff;
+      border-radius:10px;min-height:70px;padding:10px 6px;
+      font-size:12px;font-weight:700;letter-spacing:.2px;text-align:center;
+      box-shadow:var(--shadow);transition:transform var(--speed),box-shadow var(--speed),filter var(--speed)
     }
     .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
-    .ico{width:24px;height:24px;display:block}
-    .muted{opacity:.9;font-weight:500}
+    .ico{width:22px;height:22px;display:block;opacity:.95}
+    .label{opacity:.98}
 
-    /* subtle “pop” on mount */
-    .btn{opacity:0;animation:pop .35s ease-out forwards}
+    /* mount animation */
+    .btn{opacity:0;animation:pop .28s ease-out forwards}
     .btn:nth-child(odd){animation-delay:.02s}
     .btn:nth-child(even){animation-delay:.06s}
-    @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+    @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+
+    /* =========================
+       COLOR PALETTE (per-button)
+       ========================= */
+    .c-blue{background:linear-gradient(180deg,#3a7bfd,#2660ea)}
+    .c-teal{background:linear-gradient(180deg,#22c1b9,#169e97)}
+    .c-purple{background:linear-gradient(180deg,#7a5cff,#5a3df0)}
+    .c-pink{background:linear-gradient(180deg,#ff6ea9,#e34e8a)}
+    .c-green{background:linear-gradient(180deg,#2ecc71,#19b36b)}
+    .c-amber{background:linear-gradient(180deg,#ffb43a,#ff9620)}
+    .c-red{background:linear-gradient(180deg,#ff5757,#e23b3b)}
+    .c-cyan{background:linear-gradient(180deg,#12c2e9,#0aa0c2)}
+    .c-slate{background:linear-gradient(180deg,#64748b,#475569)}
+    .c-indigo{background:linear-gradient(180deg,#6366f1,#4f46e5)}
+    .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
+    .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- Header -->
+    <!-- Topbar -->
     <div class="topbar">
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <h1 class="title">Care Tools Hub</h1>
       </div>
+      <!-- Theme switch -->
+      <div class="theme-toggle">
+        <span style="font-weight:600">Theme</span>
+        <select id="themeSelect" aria-label="Theme">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
     </div>
 
-    <!-- News (hidden if no message) -->
+    <!-- News -->
     <div id="news" class="news"></div>
 
     <!-- Shortcuts Mode -->
-    <div class="switch-row">
-      <div class="switch-copy">
-        <p class="switch-title">Shortcuts Mode</p>
-        <p class="switch-note">Enable to run items in the Shortcuts app. When off, buttons open their normal links.</p>
+    <div class="row">
+      <div class="copy">
+        <p class="t">Shortcuts Mode</p>
+        <p class="s">Enable to run actions in the Shortcuts app. When off, items open in the Ambulance app and some features may be limited.</p>
       </div>
       <label class="toggle" aria-label="Toggle Shortcuts Mode">
         <input id="mode" type="checkbox" />
@@ -171,7 +205,7 @@
     <div id="grid" class="grid"></div>
   </div>
 
-  <!-- ===== Icons (inline SVG paths) ===== -->
+  <!-- ===== Icons (inline sprites) ===== -->
   <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
     <symbol id="ico-user" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 12c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z"/></symbol>
     <symbol id="ico-doc"  viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8Zm-2 14h-2v-2h2Zm0-4h-2v-2h2Zm0-4h-2V6h2Z"/></symbol>
@@ -186,56 +220,59 @@
     <symbol id="ico-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></symbol>
     <symbol id="ico-bars" viewBox="0 0 24 24"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-4h2Zm4 0h-2V6h2Zm4 0h-2V9h2Z"/></symbol>
     <symbol id="ico-weight" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h10l3 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8zM9 8a3 3 0 1 0 6 0"/></symbol>
-    <symbol id="ico-pulse" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12h4l2-5l4 10l2-5h6"/></symbol>
     <symbol id="ico-calc" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21h2v-2H7Zm4 0h2v-2h-2Zm4 0h2v-2h-2ZM19 3H5v2h14Zm-4 4H9v6h6Z"/></symbol>
+    <symbol id="ico-pulse" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12h4l2-5l4 10l2-5h6"/></symbol>
   </svg>
 
   <script>
     /* =========================
-       EASY CONFIG SECTION
+       CONFIG
        ========================= */
-
-    // 1) Optional news (set "" to hide)
-    const NEWS_MESSAGE = ""; // e.g. "New care tools added. Try Shortcuts Mode."
-
-    // 2) Shortcuts wiring
+    const NEWS_MESSAGE = ""; // e.g. "New care tools shipped. Try Shortcuts Mode."
     const SHORTCUT_NAME = "Ambulance";
     const SEPARATOR = "::"; // input format: web::Button Name
-    const USE_RETURN_URL = false;      // set true to round-trip back to your site
+    const USE_RETURN_URL = false; // set true to bounce to your /done.html
     const RETURN_URL = "https://yourdomain.com/done.html";
 
-    // 3) Buttons list (add more later). Each can define:
-    // - id (auto from text if omitted)
-    // - icon: SVG symbol id
-    // - href: normal (non-shortcuts) link
-    // - showDefault: show when switch is OFF
-    // - showShortcuts: show when switch is ON
+    // Button list (add more later). You can hide per mode with showDefault/showShortcuts
     const BUTTONS = [
-      { text:"CCP Pediatric",  icon:"ico-user",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"WAAFELSS",       icon:"ico-doc",    href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"CPG Wizard",     icon:"ico-plus",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"HOS",            icon:"ico-home",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"AS-Call",        icon:"ico-call",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"CPR",            icon:"ico-heart",  href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"Websites",       icon:"ico-globe",  href:"#",             showDefault:true,  showShortcuts:false }, // example: hide in Shortcuts mode
-      { text:"Flowcharts",     icon:"ico-flow",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"Care Tools",     icon:"ico-wrench", href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"RSI Checklist",  icon:"ico-clip",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"SAT Score",      icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"APGAR Score",    icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"GCS Score",      icon:"ico-bars",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"Westley Score",  icon:"ico-star",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"RBS Converter",  icon:"ico-bars",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"Estimated Weight",icon:"ico-weight",href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"AP Pediatrics",  icon:"ico-user",   href:"#",             showDefault:true,  showShortcuts:true },
-      { text:"Calculate MAP",  icon:"ico-calc",   href:"#",             showDefault:true,  showShortcuts:true },
+      { text:"CCP Pediatric",   icon:"ico-user",   color:"c-blue",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"WAAFELSS",        icon:"ico-doc",    color:"c-teal",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"CPG Wizard",      icon:"ico-plus",   color:"c-purple", href:"#", showDefault:true,  showShortcuts:true },
+      { text:"HOS",             icon:"ico-home",   color:"c-amber",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"AS-Call",         icon:"ico-call",   color:"c-green",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"CPR",             icon:"ico-heart",  color:"c-red",    href:"#", showDefault:true,  showShortcuts:true },
+      { text:"Websites",        icon:"ico-globe",  color:"c-slate",  href:"#", showDefault:true,  showShortcuts:false },
+      { text:"Flowcharts",      icon:"ico-flow",   color:"c-indigo", href:"#", showDefault:true,  showShortcuts:true },
+      { text:"Care Tools",      icon:"ico-wrench", color:"c-cyan",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"RSI Checklist",   icon:"ico-clip",   color:"c-pink",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"SAT Score",       icon:"ico-star",   color:"c-olive",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"APGAR Score",     icon:"ico-star",   color:"c-brown",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"GCS Score",       icon:"ico-bars",   color:"c-blue",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"Westley Score",   icon:"ico-star",   color:"c-teal",   href:"#", showDefault:true,  showShortcuts:true },
+      { text:"RBS Converter",   icon:"ico-bars",   color:"c-purple", href:"#", showDefault:true,  showShortcuts:true },
+      { text:"Estimated Weight",icon:"ico-weight", color:"c-amber",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"AP Pediatrics",   icon:"ico-user",   color:"c-green",  href:"#", showDefault:true,  showShortcuts:true },
+      { text:"Calculate MAP",   icon:"ico-calc",   color:"c-indigo", href:"#", showDefault:true,  showShortcuts:true },
     ];
 
     /* =========================
-       CORE LOGIC (no edits needed)
+       THEME SWITCH (Auto/Light/Dark)
        ========================= */
+    const THEME_KEY = "cth_theme";
+    function applyTheme(val){
+      document.documentElement.setAttribute("data-theme", val);
+      localStorage.setItem(THEME_KEY, val);
+    }
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY) || "auto";
+      document.getElementById("themeSelect").value = saved;
+      applyTheme(saved);
+    }
 
-    // Build Shortcuts URL for a given button label
+    /* =========================
+       SHORTCUTS URL BUILDER
+       ========================= */
     function buildShortcutsUrl(label){
       const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
       const payload = USE_RETURN_URL
@@ -244,7 +281,14 @@
       return base + encodeURIComponent(payload);
     }
 
+    /* =========================
+       MOUNT
+       ========================= */
     function mount(){
+      // Theme
+      initTheme();
+      document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
+
       // News
       const newsEl = document.getElementById("news");
       if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){
@@ -252,7 +296,7 @@
         newsEl.style.display = "block";
       }
 
-      // Buttons
+      // Grid
       const grid = document.getElementById("grid");
       const toggle = document.getElementById("mode");
 
@@ -268,25 +312,23 @@
           const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
 
           const a = document.createElement("a");
-          a.className = "btn";
+          a.className = `btn ${btn.color || "c-blue"}`;
           a.id = id;
           a.href = href;
-          a.style.animationDelay = `${i*20}ms`;
+          a.style.animationDelay = `${i*18}ms`;
           a.innerHTML = `
             <svg class="ico" aria-hidden="true"><use href="#${btn.icon}"/></svg>
-            <span class="muted">${btn.text}</span>
+            <span class="label">${btn.text}</span>
           `;
 
-          // If default link is "#" (placeholder), block navigation and nudge user
           if (!useShortcuts && (!btn.href || btn.href === "#")){
-            a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set a URL in BUTTONS[].href"); });
+            a.addEventListener("click",(e)=>{e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href");});
           }
-
           grid.appendChild(a);
         });
       }
 
-      document.getElementById("mode").addEventListener("change", render);
+      toggle.addEventListener("change", render);
       render();
     }
 
