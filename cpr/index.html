@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta id="themeColor" name="theme-color" content="#0b0d10"/>
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Consolidated Build (2025-09-22)
+   CPR TIMER — Consolidated Build (2025-09-23)
    - Controls row on top (Theme, BPM, Mute), title centered below
    - Cycle timer ABOVE Adrenaline with nice gap
    - Nicer buttons (primary/danger/ghost)
    - Responsive clamp() sizing across components
    - Audio primed early to remove start lag
-   - Export .txt bug fixed (joins with "\n"), PDF uses escaped newlines
+   - Export .txt bug fixed (joins with "\n"), PDF uses real newlines
    - Cycle card beats **in sync with the metronome** (even when muted)
    - Beat color: red (light), warm orange (dark), high-contrast
    - Beat visible only while CPR running (stops on Pause/Stop/ROSC)
@@ -135,12 +136,20 @@ a{color:inherit}
   15%  { transform:scale(1.04); box-shadow:0 0 0 10px var(--cycle-shadow) }
   100% { transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
+/* Countdown overlay */
+.countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-weight:900;pointer-events:none;color:#ff4d4d}
+.countdown.show{display:flex}
+@media (orientation:portrait){.countdown{font-size:clamp(80px,16vw,140px);}}
+@media (orientation:landscape){.countdown{font-size:clamp(80px,14vw,160px);}}
+/* Hide cycle UI while countdown active */
+#cycleTimer.countdown-active .label,
+#cycleTimer.countdown-active #cycleDigits,
+#cycleTimer.countdown-active .icon-row{ visibility:hidden; }
 
-/* ===== Small icon buttons inside timer cards ===== */
-.icon-row{display:flex;gap:12px;margin-top:12px}
-.icon-btn{width:var(--icon-btn);height:var(--icon-btn);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
-.icon-btn:active{transform:translateY(1px)}
-.icon-btn svg{width:clamp(18px,3vw,26px);height:clamp(18px,3vw,26px)}
+/* ===== Legacy icon-ctrl style for timer controls (requested) ===== */
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+.icon-ctrl svg{width:26px;height:26px;fill:currentColor}
+@media (max-width:380px){ .icon-ctrl span{display:none} }
 
 /* ===== Pretty action buttons ===== */
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow)}
@@ -211,14 +220,15 @@ a{color:inherit}
     <div class="timers">
       <!-- CYCLE (first) -->
       <div id="cycleTimer" class="timer centered" style="margin-bottom:var(--timers-gap)">
-        <div class="label">CYCLE</div>
+        <div id="cycleLabel" class="label">CYCLE</div>
         <div id="cycleDigits" class="digits">00:00</div>
+        <div id="countdown" class="countdown" style="display:none"></div>
         <div class="icon-row">
-          <button id="cprStart" class="icon-btn" title="Start/Resume CPR">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7-11-7z" stroke="currentColor" stroke-width="2"/></svg>
+          <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR" aria-label="Start CPR">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <button id="cprPause" class="icon-btn" title="Pause CPR" disabled>
-            <svg viewBox="0 0 24 24" fill="none"><path d="M7 5h4v14H7zM13 5h4v14h-4z" stroke="currentColor" stroke-width="2"/></svg>
+          <button id="cprPause" class="icon-ctrl" title="Pause CPR" aria-label="Pause CPR" disabled>
+            <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
         </div>
       </div>
@@ -228,11 +238,11 @@ a{color:inherit}
         <div class="label">ADRENALINE</div>
         <div id="adrDigits" class="digits">00:00</div>
         <div class="icon-row">
-          <button id="adrStart" class="icon-btn" title="Start/Resume Adrenaline">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7-11-7z" stroke="currentColor" stroke-width="2"/></svg>
+          <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline" aria-label="Start Adrenaline">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <button id="adrPause" class="icon-btn" title="Pause Adrenaline" disabled>
-            <svg viewBox="0 0 24 24" fill="none"><path d="M7 5h4v14H7zM13 5h4v14h-4z" stroke="currentColor" stroke-width="2"/></svg>
+          <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" aria-label="Pause Adrenaline" disabled>
+            <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
         </div>
       </div>
@@ -278,9 +288,9 @@ a{color:inherit}
       <div class="card">
         <div class="wa-title">WAAFELSS</div>
         <div class="wa-row">
-          <input id="age" type="number" min="0" placeholder="Enter age">
-          <button id="mBtn" class="btn ghost" title="Months">Months</button>
-          <button id="yBtn" class="btn ghost" title="Years">Years</button>
+          <input id="age" type="number" min="0" placeholder="Enter Age" value="" autocomplete="off" inputmode="numeric">
+          <button id="mBtn" class="btn ghost" title="Months" disabled>Months</button>
+          <button id="yBtn" class="btn ghost" title="Years" disabled>Years</button>
         </div>
         <div class="waffles-grid">
           <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
@@ -313,6 +323,10 @@ a{color:inherit}
     if (themeMode==='dark')  root.setAttribute('data-theme','dark');
     themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
     themeBtn.title = `Theme: ${themeBtn.textContent}`;
+    // update top browser bar color
+    const meta = document.getElementById('themeColor');
+    const isLight = root.getAttribute('data-theme')==='light' || (themeMode==='auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
+    meta.setAttribute('content', isLight ? '#f6f8fc' : '#0b0d10');
   }
   themeBtn.addEventListener('click', () => {
     themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
@@ -323,7 +337,7 @@ a{color:inherit}
   /* ===== HELPERS ===== */
   const $ = id => document.getElementById(id);
   const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
   const logEl = $('log');
   const events = [];
   function stamp(label){
@@ -381,7 +395,7 @@ a{color:inherit}
   function startBeat(){
     clearInterval(beatTimer);
     const iv=Math.max(200,60000/Math.max(1,bpm));
-    beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv);
+    beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); if(cprRunning && !counting) flashCycle(); }, iv);
   }
   function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
   function restartBeat(){ stopBeat(); startBeat(); }
@@ -392,6 +406,7 @@ a{color:inherit}
   let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
   // cues
   let cue20=false, cue90=false, cue120=false, cueAdr240=false;
+  let counting=false; // 10s interruption countdown active
 
   function now(){ return Date.now(); }
   function tick(){
@@ -401,27 +416,36 @@ a{color:inherit}
     else if(totalStart && totalEnd){ $('totalDigits').textContent=fmt((totalEnd-totalStart)/1000); }
     else $('totalDigits').textContent='00:00';
 
-    // cycle
+    // cycle (locks at 2:00, then shows 10s countdown)
     let c=0;
     if(cprStart){
       if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
       else if(cprPausedAt) c=(cprPausedAt-cprStart-cprPausedAccum)/1000;
       else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
-      $('cycleDigits').textContent=fmt(c|0);
-      if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
-      if(!cue120 && c>=120){ cue120=true; play('cpr120'); }
+      if(c>=120 && !counting){
+        $('cycleDigits').textContent='02:00';
+        if(!cue120){ cue120=true; play('cpr120'); }
+        startCountdown();
+      }else{
+        $('cycleDigits').textContent=fmt(Math.min(c|0,120));
+        if(!cue90 && c>=90 && c<120){ cue90=true; play('cpr90'); }
+      }
     }else{
       $('cycleDigits').textContent='00:00';
     }
 
-    // adrenaline
+    // adrenaline (loops each 4:00)
     if(adrStart){
       let a=0;
       if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
       else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
       else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
-      $('adrDigits').textContent=fmt(a|0);
-      if(!cueAdr240 && a>=240){ cueAdr240=true; play('adr4'); }
+      if(a>=240){
+        $('adrDigits').textContent='04:00';
+        if(!cueAdr240){ cueAdr240=true; play('adr4'); }
+        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; cueAdr240=false; a=0;
+      }
+      $('adrDigits').textContent=fmt(Math.min(a|0,240));
     }else $('adrDigits').textContent='00:00';
 
     requestAnimationFrame(tick);
@@ -434,7 +458,9 @@ a{color:inherit}
     if(!totalStart){ totalStart=now(); stamp('CPR Timer Started'); requestWake(); }
     if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=cue120=false; play('start'); }
     else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
-    totalEnd=0; cprRunning=true; $('cprPause').disabled=false; startBeat(); // start visual+metronome
+    totalEnd=0; counting=false; const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
+    const card=$('cycleTimer'); card.classList.remove('countdown-active');
+    cprRunning=true; $('cprPause').disabled=false; startBeat(); // start visual+metronome
   };
   $('cprPause').onclick = () => {
     if(!cprRunning) return; primeAudio();
@@ -448,19 +474,40 @@ a{color:inherit}
   };
   $('adrPause').onclick = () => { if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused'); };
   $('stopb').onclick = () => {
-    primeAudio(); play('stop'); if(!totalStart) return; totalEnd=now();
-    if(cprRunning){ cprRunning=false; cprPausedAt=0; }
-    if(adrRunning){ adrRunning=false; adrPausedAt=0; }
-    stamp('CPR Timers Reset'); stopBeat(); releaseWake();
+    primeAudio(); play('stop');
+    // Hard reset all timers and UI
+    totalStart=0; totalEnd=0;
+    cprRunning=false; cprStart=0; cprPausedAt=0; cprPausedAccum=0; cue90=false; cue120=false;
+    adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0; adrCount=0; cueAdr240=false;
+    $('totalDigits').textContent='00:00';
+    $('cycleDigits').textContent='00:00';
+    $('adrDigits').textContent='00:00';
+    // Hide countdown if present
+    const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
+    const card=$('cycleTimer'); if(card){ card.classList.remove('cycle-flash'); card.classList.remove('countdown-active'); }
+    stopBeat(); releaseWake();
+    stamp('CPR Timers Reset');
   };
-  $('roscb').onclick = () => { primeAudio(); play('rosc'); stamp('ROSC Achieved'); stopBeat(); };
+  $('roscb').onclick = () => { 
+    primeAudio(); play('rosc'); stamp('ROSC Achieved');
+    // Hard reset all timers and UI (same as Stop)
+    totalStart=0; totalEnd=0;
+    cprRunning=false; cprStart=0; cprPausedAt=0; cprPausedAccum=0; cue90=false; cue120=false;
+    adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0; adrCount=0; cueAdr240=false;
+    $('totalDigits').textContent='00:00';
+    $('cycleDigits').textContent='00:00';
+    $('adrDigits').textContent='00:00';
+    const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
+    const card=$('cycleTimer'); if(card){ card.classList.remove('cycle-flash'); card.classList.remove('countdown-active'); }
+    stopBeat(); releaseWake();
+  };
   $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
   $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 
   /* ===== EXPORT & PRINT ===== */
   function lines(){
-    const started = totalStart ? new Date(totalStart).toLocaleString() : 'N/A';
-    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString()   : 'N/A';
+    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString([],   {hour12:false})   : 'N/A';
     const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
     const counts  = `Adr: ${adrCount}; Shocks: ${window.__shock||0}; Amio: ${window.__amio||0}`;
     const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (visual beat): ${bpm}`,`Total: ${total}`,counts,``,`Events:`];
@@ -469,15 +516,30 @@ a{color:inherit}
   }
   $('exportTxt').onclick = () => {
     const blob = new Blob([lines().join('\n')], {type:'text/plain'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url); a.remove();
   };
   $('printPdf').onclick = () => {
-    const html = `<!doctype html><meta charset="utf-8"><title>CPR Report</title>
-    <style>body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111} h2{margin:0 0 8px} pre{white-space:pre-wrap}</style>
-    <h2>CPR Session Report</h2><pre>${lines().join('\\n')}</pre>
-    <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>`;
-    const w=window.open('', 'printwin'); w.document.open(); w.document.write(html); w.document.close();
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
+    <meta name="color-scheme" content="light dark">
+    <style>
+      :root{color-scheme:light dark}
+      body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111}
+      h1{margin:0 0 12px;font-size:20px}
+      .meta{margin:6px 0 14px;line-height:1.6}
+      pre{white-space:pre-wrap;border:1px solid #ddd;padding:12px;border-radius:8px;background:#fafafa}
+      @media (prefers-color-scheme:dark){ body{color:#e5e7eb;background:#0b0d10} pre{border-color:#333;background:#12161b} }
+    </style>
+    </head><body><h1>CPR Session Report</h1><pre>${lines().join('\n')}</pre>
+    <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script></body></html>`;
+    const w = window.open('', 'printwin');
+    if (w && w.document) { w.document.open(); w.document.write(html); w.document.close(); }
+    else { const blob=new Blob([html],{type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='CPR_Report.html'; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove(); }
   };
 
   /* ===== WAAFELSS ===== */
@@ -516,6 +578,11 @@ a{color:inherit}
 
   /* ===== Dev self-tests ===== */
   (function runSelfTests(){
+    console.assert(document.getElementById('totalDigits'), '#totalDigits present');
+    console.assert(document.getElementById('cycleDigits'), '#cycleDigits present');
+    console.assert(document.getElementById('adrDigits'),   '#adrDigits present');
+    console.assert(document.getElementById('countdown'),   '#countdown present');
+
     const arr = lines();
     console.assert(Array.isArray(arr), 'lines returns array');
     console.assert(arr[0]==='CPR SESSION REPORT','first line header');
@@ -529,19 +596,50 @@ a{color:inherit}
     const has = card.classList.contains('cycle-flash');
     console.assert(!had && has || has, 'cycle card receives flash class');
 
-    // NEW: Mute UI toggles (waves + aria)
-    const beforeW1 = waves1.style.opacity, beforeX = muteX.style.opacity;
+    // Mute UI toggles (waves + aria)
+    const waves1=document.getElementById('waves1');
+    const waves2=document.getElementById('waves2');
+    const muteX=document.getElementById('muteX');
     beatMuted = true; setMuteUI();
     console.assert(waves1.style.opacity==='0' && waves2.style.opacity==='0' && muteX.style.opacity==='1', 'mute shows X and hides waves');
     beatMuted = false; setMuteUI();
     console.assert(waves1.style.opacity==='1' && waves2.style.opacity==='1' && muteX.style.opacity==='0', 'unmute shows waves and hides X');
 
-    // NEW: Age buttons disabled until value
-    age.value=''; checkAge();
+    // Age buttons disabled until value
+    const ageInputEl = document.getElementById('age');
+    ageInputEl.value=''; (typeof checkAge==='function') && checkAge();
     console.assert(mBtn.disabled && yBtn.disabled, 'age empty disables buttons');
-    age.value='3'; checkAge();
+    ageInputEl.value='3'; checkAge();
     console.assert(!mBtn.disabled && !yBtn.disabled, 'age set enables buttons');
   })();
+
+  /* ===== 10-second interruption countdown ===== */
+  function startCountdown(){
+    if(counting) return; counting=true;
+    const cd=$('countdown'); const card=$('cycleTimer'); const digits=$('cycleDigits'); const label=$('cycleLabel'); const startBtn=$('cprStart'); const pauseBtn=$('cprPause');
+    if(cd){ cd.textContent=10; cd.classList.add('show'); }
+    if(card){ card.classList.add('countdown-active'); }
+    if(digits) digits.setAttribute('aria-hidden','true');
+    if(label) label.setAttribute('aria-hidden','true');
+    if(startBtn) startBtn.setAttribute('aria-hidden','true');
+    if(pauseBtn) pauseBtn.setAttribute('aria-hidden','true');
+
+    let n=10;
+    const iv=setInterval(()=>{
+      n-=1; if(cd) cd.textContent = n>0 ? n : 1;
+      if(n<=1){ clearInterval(iv);
+        if(cd){ cd.classList.remove('show'); }
+        if(card){ card.classList.remove('countdown-active'); }
+        if(digits) digits.removeAttribute('aria-hidden');
+        if(label) label.removeAttribute('aria-hidden');
+        if(startBtn) startBtn.removeAttribute('aria-hidden');
+        if(pauseBtn) pauseBtn.removeAttribute('aria-hidden');
+        // restart fresh 2-min cycle
+        cprStart = now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; counting=false;
+        play('start'); if(cprRunning) restartBeat();
+      }
+    },1000);
+  }
 })();
 </script>
 </body>
