@@ -131,82 +131,82 @@ a{color:inherit}
   .extras{grid-area:extras; justify-items:center}
 }
 
-/* ===== LANDSCAPE LAYOUT v2 ===== */
+/* ===== LANDSCAPE LAYOUT v3 ===== */
 @media (orientation:landscape){
-  /* Grid: total row, timers row (left/right), actions row (full), extras row (full) */
+
+  /* 1) Center title + total in landscape */
+  .brand{ justify-self:center; text-align:center; }
+  .total{ align-items:center; }
+
+  /* 2) Main flow: actions (top), timers (middle), extras (bottom) */
   .main{
     grid-template-areas:
-      "timers_header timers_header"  /* (we don't move Title/Total; this is just consistent naming) */
-      "left right"
       "actions actions"
-      "extras extras";
+      "left    right"
+      "extras  extras";
     grid-template-columns:
-      minmax(520px, 1fr)    /* Left timer wider in landscape */
-      minmax(520px, 1fr);   /* Right timer wider in landscape */
-    align-items: start;
+      minmax(520px, 1fr) minmax(520px, 1fr);
+    align-items:start;
     gap: 22px;
   }
 
-  /* Use contents to position the two timer cards as grid children without changing HTML */
-  .timers{ display: contents; }
-  #cycleTimer{ grid-area: left; }
-  #adrTimer{   grid-area: right; }
-
-  /* Actions go below both timers and span full width */
+  /* 3) Actions row ABOVE timers; visually split into left/right triplets with a center gutter
+        (the TOTAL CPR TIME sits centered above that gutter) */
   .actions{
     grid-area: actions;
     display: grid;
+    /* columns: 3 (left triplet) + a wide center gutter + 3 (right triplet) */
+    grid-template-columns:
+      repeat(3, minmax(160px, 1fr))
+      minmax(280px, 520px)   /* <— center gutter for TOTAL CPR TIME alignment */
+      repeat(3, minmax(160px, 1fr));
     gap: var(--actions-gap);
-    width: min(1160px, 100%);
+    width: min(1280px, 100%);
     margin: 0 auto;
-    /* First row is 4 buttons; second row will hold 2 centered buttons */
-    grid-template-columns: repeat(4, minmax(180px, 1fr));
-    align-content: start;
+    align-items: start;
   }
+  /* Place the six buttons explicitly into left/right triplets (same DOM order) */
+  .actions > :nth-child(1){ grid-column: 1; } /* Stop      (left 1) */
+  .actions > :nth-child(2){ grid-column: 2; } /* ROSC      (left 2) */
+  .actions > :nth-child(3){ grid-column: 3; } /* Shock     (left 3) */
+  .actions > :nth-child(4){ grid-column: 5; } /* Amiodarone(right 1) */
+  .actions > :nth-child(5){ grid-column: 6; } /* Log DSED  (right 2) */
+  .actions > :nth-child(6){ grid-column: 7; } /* Export PDF(right 3) */
 
-  /* Order already matches your DOM: 1 ROSC, 2 Stop, 3 Shock, 4 Amio, 5 DSED, 6 Export */
-  /* Place the last two centered under row 1 */
-  .actions > :nth-child(5){ grid-column: 2; }  /* Log DSED under col 2 */
-  .actions > :nth-child(6){ grid-column: 3; }  /* Export PDF under col 3 */
-
-  /* Let button labels wrap gracefully if needed */
   .btn{ white-space: normal; text-align: center; }
 
-  /* Scale timers and internals proportionally (landscape only) */
+  /* 4) Timers side-by-side, bigger + proportional */
+  .timers{ display: contents; }   /* flatten so we can place each timer */
+  #cycleTimer{ grid-area: left;  }
+  #adrTimer{   grid-area: right; }
+  .timer{ width: min(820px, 100%); }    /* wider cards */
+
   :root{
-    --card-pad:       clamp(20px, 2.4vw, 28px);
-    --kpi-digits:     clamp(72px, 9.8vw, 150px); /* timer digits bigger */
-    --subtitle-size:  clamp(16px, 2.4vw, 22px);  /* labels bigger */
-    --total-size:     clamp(56px, 7.6vw, 100px); /* total CPR digits bigger */
-    --chip-h:         clamp(42px, 6vw, 54px);    /* bigger top chips */
+    --card-pad:       clamp(20px, 2.6vw, 30px);
+    --kpi-digits:     clamp(74px, 10vw, 160px); /* timer digits */
+    --subtitle-size:  clamp(16px, 2.6vw, 22px); /* CYCLE/ADRENALINE labels */
+    --total-size:     clamp(58px, 8vw, 108px);  /* total CPR digits */
+    --chip-h:         clamp(42px, 6vw, 54px);   /* larger top chips */
     --chip-pad-x:     clamp(10px, 2vw, 14px);
     --actions-gap:    clamp(10px, 1.6vw, 16px);
     --timers-gap:     26px;
   }
 
-  /* Wider timer cards in landscape */
-  .timer{ width: min(780px, 100%); }
+  #countdown{ font-size: clamp(130px, 20vw, 240px); }
+  #adrPrompt{ font-size: clamp(60px, 11vw, 132px); }
 
-  /* Bigger countdown and adrenaline prompt in landscape */
-  #countdown{  font-size: clamp(130px, 20vw, 240px); }
-  #adrPrompt{  font-size: clamp(60px, 11vw, 132px); }
-
-  /* Start/Pause controls scale up too */
   .icon-ctrl{
     font-size: clamp(17px, 2.4vw, 21px);
     padding: 12px 16px;
   }
   .icon-ctrl svg{ width: 32px; height: 32px; }
 
-  /* Keep extras (WAAFELSS + Log) below actions, centered width */
-  .extras{ grid-area: extras; }
-  .wa-shell, .card{ margin-left: auto; margin-right: auto; }
+  /* 5) WAAFELSS under Cycle, Log under Adrenaline (side-by-side) */
+  .extras{ grid-area: extras; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .wa-shell{ grid-column: 1; width: 100%; }
+  .card{     grid-column: 2; width: 100%; }
 
-  /* Title + Total: ensure centered alignment in landscape as well */
-  .brand{ justify-self: center; text-align: center; }
-  .total{ align-items: center; }
-
-  /* Top chips (Back, Theme, BPM, Mute) — bigger & unified spacing */
+  /* 6) Top chips — larger & unified spacing */
   .header{ gap: 8px; }
   .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
   .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
@@ -222,20 +222,22 @@ a{color:inherit}
 /* ===== LANDSCAPE NARROW GUARD ===== */
 @media (orientation:landscape) and (max-width: 920px){
   .main{
-    grid-template-columns:
-      minmax(460px, 1fr)
-      minmax(460px, 1fr);
-  }
-  .timer{ width: min(700px, 100%); }
-  :root{
-    --kpi-digits:    clamp(66px, 9vw, 138px);
-    --total-size:    clamp(52px, 7vw, 96px);
+    grid-template-columns: minmax(460px, 1fr) minmax(460px, 1fr);
   }
   .actions{
-    grid-template-columns: repeat(4, minmax(150px, 1fr));
-    width: min(1000px, 100%);
+    grid-template-columns:
+      repeat(3, minmax(130px, 1fr))
+      minmax(240px, 1fr)
+      repeat(3, minmax(130px, 1fr));
+    width: min(1100px, 100%);
+  }
+  .timer{ width: min(740px, 100%); }
+  :root{
+    --kpi-digits: clamp(66px, 9vw, 140px);
+    --total-size: clamp(52px, 7vw, 96px);
   }
 }
+
 
 
 
