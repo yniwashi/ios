@@ -5,10 +5,10 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 d)
-   - Export PDF via pdfjs
-   - Theme Auto follows device + live updates
-   - Previous patches retained (no-card Theme/Mute, DSED, etc.)
+   CPR TIMER — Patch (2025-09-24 c)
+   - PDF via Blob URL (hides real site URL in footer)
+   - Total CPR display resets on Stop/ROSC but exports keep times
+   - Theme & Mute chips: no card (from prior step)
    ========================================================== */
 
 :root{
@@ -60,6 +60,21 @@
   --cycle-shadow: var(--cycle-shadow-light);
 }
 
+   /* Auto mode: follow device preference */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    color-scheme: light;
+    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
+    --card:#ffffff; --border:#e5e7eb;
+    --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+    --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
+    --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
+    --total-color:#111111;
+    --cycle-accent: var(--cycle-accent-light);
+    --cycle-shadow: var(--cycle-shadow-light);
+  }
+}
+
 /* Base */
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -71,7 +86,7 @@ a{color:inherit}
 .header{display:grid;gap:8px}
 .controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
 
 /* Chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
@@ -114,7 +129,7 @@ a{color:inherit}
 
 /* Cards */
 .centered{display:grid; justify-items:center}
-.timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;width:min(520px,100%);box-shadow:var(--shadow)}
+.timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
 .timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
 #cycleDigits{color:var(--cycle-accent-light)}
@@ -146,27 +161,27 @@ a{color:inherit}
 /* Countdown */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-  font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:clamp(80px,14vw,160px);
-  color:var(--countdown-red);pointer-events:none;text-shadow:0 2px 10px rgba(0,0,0,.28);
+  font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
+  color:var(--countdown-red); pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,.28);
 }
 #countdown.show{display:flex}
-.cycle-hide .label,.cycle-hide #cycleDigits,.cycle-hide .icon-row{visibility:hidden}
+.cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 
 /* Adrenaline prompt */
-#adrPrompt{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:clamp(38px,8vw,96px);color:var(--adr-color);text-align:center}
-#adrTimer.adr-hide .label,#adrTimer.adr-hide #adrDigits,#adrTimer.adr-hide .icon-row{visibility:hidden}
-#adrTimer.adr-show #adrPrompt{display:flex}
+#adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
+#adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
+#adrTimer.adr-show #adrPrompt{ display:flex }
 
 /* Extras */
-.extras{margin-top:8px;display:grid;gap:12px;justify-items:center}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad);width:min(860px,100%);box-shadow:var(--shadow)}
+.extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
 .wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
 .wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
 .wa-row input{width:clamp(110px,20vw,130px);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (max-width:520px){.waffles-grid{grid-template-columns:1fr}}
 .wrow{display:flex;gap:8px;align-items:center}
-.wtag{min-width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:10px;color:var(--muted)}
+.wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
 .wval{font-weight:800}
 
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
@@ -179,7 +194,7 @@ a{color:inherit}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
 }
-@page{ margin:0 } /* suppress header/footer where possible */
+@page{ margin:0 } /* try to suppress Safari footer */
 </style>
 <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f8fc" media="(prefers-color-scheme: light)">
@@ -324,30 +339,38 @@ a{color:inherit}
 
 <script>
 (() => {
-  /* ===== THEME ===== */
-  const root = document.documentElement;
-  const themeBtn = document.getElementById('themeBtn');
-  const mqlDark = window.matchMedia('(prefers-color-scheme: dark)');
-  let themeMode = 'auto'; // auto | light | dark
+/* ===== THEME ===== */
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+let themeMode = 'auto'; // auto | light | dark
 
-  function applyTheme(){
-    // For "auto", mirror system (and update live via listener)
-    const desired = (themeMode === 'auto') ? (mqlDark.matches ? 'dark' : 'light') : themeMode;
-    root.setAttribute('data-theme', desired);
-    themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
-    themeBtn.title = `Theme: ${themeBtn.textContent}`;
-    // set theme-color for browser UI
-    const meta = document.querySelector('meta[name="theme-color"]') || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
-    const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
-    meta.setAttribute('content', bg || '#0b0d10');
-  }
-  themeBtn.addEventListener('click', () => {
-    themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
-    applyTheme();
+function applyTheme(){
+  // remove explicit override first (this enables Auto to follow media query)
+  root.removeAttribute('data-theme');
+  if (themeMode==='light') root.setAttribute('data-theme','light');
+  if (themeMode==='dark')  root.setAttribute('data-theme','dark');
+
+  themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
+  themeBtn.title = `Theme: ${themeBtn.textContent}`;
+
+  // update browser UI color after CSS vars settle
+  const meta = document.querySelector('meta[name="theme-color"]')
+    || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
+  requestAnimationFrame(()=>{
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#0b0d10';
+    meta.setAttribute('content', bg);
   });
-  // Live update when system theme changes if Auto
-  mqlDark.addEventListener?.('change', () => { if(themeMode==='auto') applyTheme(); });
+}
+
+themeBtn.addEventListener('click', () => {
+  themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
   applyTheme();
+});
+
+// If device theme changes while in Auto, follow it
+const mql = window.matchMedia('(prefers-color-scheme: dark)');
+mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
+applyTheme();
 
   // Back button behavior
   const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
@@ -359,7 +382,7 @@ a{color:inherit}
     });
   }
 
-  /* ===== HELPERS ===== */
+  /* HELPERS */
   const $ = id => document.getElementById(id);
   const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
   const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
@@ -373,13 +396,13 @@ a{color:inherit}
     events.push({ts,label});
   }
 
-  /* ===== WAKE LOCK ===== */
+  /* WAKE LOCK */
   let wakeLock=null;
   async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
   async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-  /* ===== AUDIO ===== */
+  /* AUDIO */
   let audioCtx;
   const buffers={}, files={
     beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -396,7 +419,7 @@ a{color:inherit}
   window.addEventListener('keydown', primeAudio, {once:true});
   function play(name, vol=1){ const buf=buffers[name]; if(!audioCtx || !buf) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start(); }
 
-  /* ===== METRONOME ===== */
+  /* METRONOME */
   let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
   const muteBtnEl=$('muteBtn');
   muteBtnEl.addEventListener('click',()=>{
@@ -414,14 +437,16 @@ a{color:inherit}
   function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
   function restartBeat(){ stopBeat(); startBeat(); }
 
-  /* ===== STATE ===== */
+  /* STATE */
   let totalStart=0,totalEnd=0;
   let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
   let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
   let cue20=false, cue90=false, cue120=false;
   let cycleCount = 0;
   let counting=false, countdownTimer=null, countdownN=10;
-  let showTotalZero = true;  // visual reset for Total CPR
+
+  // NEW: control visual reset without losing export times
+  let showTotalZero = true;
 
   function showCountdown(){
     if(counting) return;
@@ -446,7 +471,7 @@ a{color:inherit}
   function now(){ return Date.now(); }
   function tick(){
     const t=now();
-    // total
+    // total (respect visual reset)
     if(showTotalZero){
       $('totalDigits').textContent='00:00';
     }else if(totalStart && !totalEnd){
@@ -479,7 +504,7 @@ a{color:inherit}
       if(!counting) $('cycleDigits').textContent='00:00';
     }
 
-    // adrenaline
+    // adrenaline loop
     if(adrStart){
       let a=0;
       if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
@@ -503,7 +528,7 @@ a{color:inherit}
   }
   requestAnimationFrame(tick);
 
-  /* ===== CONTROLS ===== */
+  /* CONTROLS */
   $('cprStart').onclick = () => {
     primeAudio();
     if(!totalStart){
@@ -531,21 +556,23 @@ a{color:inherit}
     if(!totalStart) return;
     if(!totalEnd) totalEnd = now(); // keep for export
     stamp(label);
+    // stop timers
     if(cprRunning){ cprRunning=false; cprPausedAt=0; }
     cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
     const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
     if(adrRunning){ adrRunning=false; adrPausedAt=0; }
     adrStart=0; adrPausedAccum=0;
-    showTotalZero = true; // visual reset
+    // visually reset total digits but keep times for export
+    showTotalZero = true;
     stopBeat(); releaseWake();
   }
   $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
   $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
   $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
-  $('amiob').onclick  = () => { window.__amio =(window.__amio||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+  $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
   $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-  /* ===== EXPORTS ===== */
+  /* EXPORTS */
   function lines(){
     const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
     const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
@@ -555,89 +582,68 @@ a{color:inherit}
     for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
     return arr;
   }
+  $('exportTxt').onclick = () => {
+    const blob = new Blob([lines().join('\n')], {type:'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
+  };
+  $('printPdf').onclick = () => {
+    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+    const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+    const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
+    <meta name="color-scheme" content="light dark">
+    <style>
+      :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--card:#14181d;--accent:#2ea0ff;--accent2:#6dd3ff}
+      @media (prefers-color-scheme: light){
+        :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--card:#f3f4f6;--accent:#0b6b82;--accent2:#37a0c0}
+      }
+      @page{ margin:0 }
+      body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+      h1{margin:0 0 12px}
+      .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
+      .kvs span{color:var(--muted)}
+      table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
+      thead th{
+        text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
+        background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff
+      }
+      tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
+      tbody tr.even{background:rgba(46,160,255,0.06)}
+      tbody tr.odd{background:rgba(46,160,255,0.12)}
+      tbody tr:hover{outline:2px solid var(--accent);outline-offset:-2px}
+      .total{font-weight:900}
+      footer{margin-top:16px;color:var(--muted);text-align:center}
+    </style></head><body>
+      <h1>CPR Session Report</h1>
+      <div class="kvs">
+        <span>Started</span><div>${started}</div>
+        <span>Ended</span><div>${ended}</div>
+        <span>Total</span><div class="total">${total}</div>
+        <span>Counts</span><div>${counts}</div>
+      </div>
+      <table>
+        <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <footer>Ambulance App</footer>
+      <script>onload=()=>{ print(); setTimeout(()=>close(),300) }<\/script>
+    </body></html>`;
 
-   // Load jsPDF only when needed
-async function ensureJsPDF(){
-  if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
-  await new Promise((resolve, reject)=>{
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
-    s.onload=resolve; s.onerror=reject; document.head.appendChild(s);
-  });
-  return window.jspdf.jsPDF;
-}
+    // Open as a Blob URL so Safari’s PDF footer won’t expose your real URL
+    const blob = new Blob([html], {type:'text/html'});
+    const url  = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if(!w){ return; }
+    // Cleanup after print
+    const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
+    w.addEventListener('afterprint', tidy, {once:true});
+    setTimeout(()=>tidy(), 2000); // fallback
+  };
 
-$('printPdf').onclick = async () => {
-  const jsPDF = await ensureJsPDF();
-  const doc = new jsPDF({orientation:'p', unit:'pt', format:'a4'});
-
-  // helpers (reuse your app’s logic)
-  const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-
-  // pull data from the existing variables in this script
-  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = totalEnd   ? new Date(totalEnd).toLocaleString([],   {hour12:false}) : 'N/A';
-  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-
-  // Page metrics
-  const M = 36;                 // margin
-  const W = 595.28;             // A4 width (pt)
-  const H = 841.89;             // A4 height (pt)
-  const rowH = 22;
-  const col1w = 110, col2w = W - M*2 - col1w;
-  let y = M;
-
-  // Title
-  doc.setFont('Helvetica','bold'); doc.setFontSize(22);
-  doc.text('CPR Session Report', M, y); y += 32;
-
-  // K/V block
-  doc.setFontSize(12); doc.setFont('Helvetica','normal');
-  const key = (k,v)=>{ doc.setTextColor(120); doc.text(k, M, y); doc.setTextColor(20); doc.text(String(v), M+110, y); y+=18; };
-  key('Started', started);
-  key('Ended',   ended);
-  doc.setFont('Helvetica','bold'); key('Total', total);
-  doc.setFont('Helvetica','normal'); key('Counts', counts);
-  y += 6;
-
-  // Table header (teal gradient feel with two tones)
-  doc.setDrawColor(230); doc.setLineWidth(1);
-  doc.setFillColor(11,107,130); doc.rect(M, y, col1w, rowH, 'F');
-  doc.setFillColor(55,160,192); doc.rect(M+col1w, y, col2w, rowH, 'F');
-  doc.setTextColor(255,255,255); doc.setFont('Helvetica','bold');
-  doc.text('Time (24h)', M+8, y+15);
-  doc.text('Event',      M+col1w+8, y+15);
-  y += rowH;
-
-  // Rows (alternating blues)
-  let even=false;
-  for (const e of events){                      // events[] already fills as things happen
-    if (y > H - M - 60){ doc.addPage(); y=M; } // new page if near bottom
-    const fill = even ? [225,243,252] : [209,236,250];
-    doc.setFillColor(...fill); doc.setTextColor(20); doc.setFont('Helvetica','normal');
-
-    // time cell
-    doc.rect(M, y, col1w, rowH, 'F');
-    doc.text(hhmmss(e.ts), M+8, y+15);
-
-    // event cell
-    doc.rect(M+col1w, y, col2w, rowH, 'F');
-    doc.text(String(e.label), M+col1w+8, y+15, {maxWidth: col2w-16});
-
-    y += rowH; even = !even;
-  }
-
-  // Footer
-  doc.setTextColor(120); doc.setFont('Helvetica','normal'); doc.setFontSize(11);
-  doc.text('Ambulance App', W/2, H - M/2, {align:'center'});
-
-  // Save file — no browser print dialog; no URL footer ever.
-  const fname = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-  doc.save(fname);
-};
-  /* ===== WAAFELSS (unchanged) ===== */
+  /* WAAFELSS (unchanged) */
   const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
   function months(n){
