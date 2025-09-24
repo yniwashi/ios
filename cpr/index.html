@@ -121,6 +121,7 @@ a{color:inherit}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
 /* ---------- LAYOUT ---------- */
+/* ===== PORTRAIT LAYOUT ===== */
 .main{display:grid;gap:16px}
 @media (orientation:portrait){
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
@@ -129,13 +130,89 @@ a{color:inherit}
   .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr));}
   .extras{grid-area:extras; justify-items:center}
 }
+/* ===== LANDSCAPE LAYOUT ===== */
 @media (orientation:landscape){
-  .main{grid-template-areas:"total total total" "timers actions actions" "extras extras extras";
-    grid-template-columns:1fr minmax(360px, 560px) 1fr; align-items:start;}
-  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(180px, 1fr));}
-  .extras{grid-area:extras}
-  .timer .digits{font-size:clamp(38px, 7vw, 96px)}
+  /* Layout: total row, then 3-column band (Cycle | Actions | Adrenaline), then extras */
+  .main{
+    grid-template-areas:
+      "total total total"
+      "left  center right"
+      "extras extras extras";
+    grid-template-columns:
+      minmax(420px, 1fr)        /* left: wider timer */
+      minmax(380px, 560px)      /* center: actions band */
+      minmax(420px, 1fr);       /* right: wider timer */
+    align-items: start;
+    gap: 18px;
+  }
+
+  /* Let the timers' children participate in .main grid without changing HTML */
+  .timers{ display: contents; }
+
+  /* Place timers left/right, actions in the center column */
+  #cycleTimer{ grid-area: left; }
+  #adrTimer{   grid-area: right; }
+  .actions{    grid-area: center; }
+
+  /* Actions keep 2 buttons per row, 3 rows, but allow a touch more flexibility */
+  .actions{
+    display: grid;
+    gap: var(--actions-gap);
+    grid-template-columns: repeat(2, minmax(170px, 1fr));
+    align-content: start;
+  }
+  .btn{ white-space: normal; text-align: center; }
+
+  /* Scale up timers and their internals proportionally in landscape */
+  :root{
+    --card-pad:   clamp(18px, 2.6vw, 26px);
+    --kpi-digits: clamp(64px, 9vw, 140px); /* timer digits bigger */
+    --total-size: clamp(52px, 7vw, 96px);  /* total CPR digits bigger */
+    --subtitle-size: clamp(15px, 2.2vw, 20px); /* labels bigger */
+    --timers-gap: 24px;
+  }
+
+  /* Timer cards: allow them to grow wider in landscape */
+  .timer{ width: min(700px, 100%); }
+
+  /* Boost the countdown & adrenaline prompt sizes proportionally */
+  #countdown{
+    font-size: clamp(120px, 18vw, 220px);
+  }
+  #adrPrompt{
+    font-size: clamp(56px, 10vw, 128px);
+  }
+
+  /* Make Start/Pause controls a bit larger too */
+  .icon-ctrl{
+    font-size: clamp(16px, 2.2vw, 20px);
+    padding: 12px 14px;
+  }
+  .icon-ctrl svg{
+    width: 30px; height: 30px;
+  }
+
+  /* Header compaction for more vertical room without changing portrait */
+  .header{ gap: 6px; }
+  .brand{ margin-top: 0; }
 }
+
+   /* ===== LANDSCAPE NARROW SAFETY (ADD BLOCK L2) ===== */
+@media (orientation:landscape) and (max-width: 840px){
+  .main{
+    grid-template-columns:
+      minmax(360px, 1fr)
+      minmax(340px, 480px)
+      minmax(360px, 1fr);
+  }
+  .timer{ width: min(620px, 100%); }
+  :root{
+    --kpi-digits: clamp(58px, 8vw, 126px);
+    --total-size: clamp(48px, 6.5vw, 90px);
+  }
+}
+
+
 
 /* ---------- CARDS ---------- */
 .centered{display:grid; justify-items:center}
