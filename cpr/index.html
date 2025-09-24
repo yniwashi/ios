@@ -1,32 +1,25 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>CPR Timer — Trial</title>
 
 <style>
 /* ==========================================================
-   CPR TIMER — Responsive Grid Rewrite (two-column board)
-   LANDMARKS:
-   [A] Theme tokens (unchanged except bigger landscape digits)
-   [B] Header (unchanged)
-   [C] Centered Title + Total
-   [D] NEW .board layout (two columns)
-       - .col.col-cycle  (left)
-       - .col.col-adr    (right)
-       Each .col has 3 parts with grid-areas:
-         actions / timer / extras  (order swaps by orientation)
-   [E] Original timers/buttons/extras moved into the two columns
+   CPR TIMER — Responsive Layout Rewrite (landscape+portrait)
+   - Timers under Total; side-by-side in landscape
+   - Buttons compact; 2×3 in portrait, split L/R in landscape
+   - WAAFELSS & Log stacked (portrait) or split (landscape)
+   - All original IDs preserved so JS works unchanged
    ========================================================== */
 
-/* ---------- [A] THEME TOKENS ---------- */
+/* ---------- THEME TOKENS (kept from your file) ---------- */
 :root{
   color-scheme: light dark;
   --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3;
   --card:#14181d; --border:#20262d;
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
 
-  /* Color tokens */
   --rosc-1:#fb8686; --rosc-2:#f52a2a; --rosc-bd:#ff5050;
   --stop-1:#C62828; --stop-2:#8E1E1E; --stop-bd:#A12222;
   --shock-1:#ffe79d; --shock-2:#ffd878; --shock-bd:#ffdb7d;
@@ -39,18 +32,18 @@
 
   --title-size: clamp(20px, 3.2vw, 36px);
   --subtitle-size: clamp(12px, 1.8vw, 16px);
-  --total-size: clamp(40px, 6.2vw, 72px);
-  --kpi-digits: clamp(42px, 7.5vw, 110px);          /* portrait base */
-  --kpi-digits-land: clamp(64px, 10vw, 160px);      /* landscape bump */
-
+  --total-size: clamp(44px, 6.6vw, 84px);      /* a bit larger */
+  --kpi-digits: clamp(48px, 8vw, 120px);       /* bigger timers */
   --chip-h: clamp(36px, 5.2vw, 46px);
   --chip-pad-x: clamp(8px, 1.6vw, 12px);
   --chip-gap: clamp(6px, 1.2vw, 10px);
-  --g-gap: clamp(10px, 2vw, 16px);                  /* general gap */
+  --gap-sm: clamp(8px, 1.4vw, 12px);
+  --gap-md: clamp(12px, 2vw, 16px);
+  --gap-lg: clamp(16px, 3vw, 24px);
   --card-pad: clamp(12px, 2vw, 16px);
+  --container-pad: clamp(10px, 2.4vw, 18px);
   --radius: 18px;
   --shadow: 0 6px 20px rgba(0,0,0,.22);
-  --log-font: clamp(12px, 1.2vw, 13px);
 
   --total-color:#f1f5f9;
   --cycle-accent-light:#ff4d4d;
@@ -74,115 +67,87 @@
   --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    color-scheme: light;
-    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
-    --card:#ffffff; --border:#e5e7eb;
-    --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
-    --total-color:#111111;
-    --cycle-accent: var(--cycle-accent-light);
-    --cycle-shadow: var(--cycle-shadow-light);
-    --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
-    --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
-  }
-}
 
 /* ---------- BASE ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
-.container{max-width:1200px;margin:0 auto;padding:clamp(10px,2.4vw,16px)}
-a{color:inherit}
+.container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 
-/* ---------- [B] HEADER ---------- */
+/* ---------- HEADER ---------- */
 .header{display:grid;gap:8px}
-.controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
+.controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
-/* Chips */
+/* chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-#backChip{background:transparent;border:none;padding:0}
-#backChip .chip-label{display:none}
+#backChip,#themeChip,#muteChip{background:transparent;border:none;padding:0}
 #backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
-#themeChip,#muteChip{background:transparent;border:none;padding:0}
-#muteChip .chip-label{display:none}
 .icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
-/* ---------- [C] CENTERED TOTAL CPR ---------- */
-.total{display:flex;flex-direction:column;align-items:center;margin:8px 0 10px}
+/* ---------- TOTAL CPR ---------- */
+.total{grid-area:total;display:flex;flex-direction:column;align-items:center;margin:var(--gap-sm) 0 var(--gap-md)}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* ---------- [D] NEW LAYOUT: BOARD + COLUMNS ---------- */
-.board{
-  display:grid; gap:var(--g-gap);
+/* ---------- MAIN GRID ---------- */
+.main{
+  display:grid;
+  gap:var(--gap-lg);
+  grid-template-areas:
+    "total"
+    "cycle"
+    "adr"
+    "actions"
+    "wa"
+    "log";
+  grid-template-columns: 1fr;
 }
 
-/* Portrait: columns stack */
-@media (orientation:portrait){
-  .board{ grid-template-columns: 1fr; }
-  .cols{ display:grid; grid-template-columns:1fr; gap:var(--g-gap); }
-}
-
-/* Landscape: two equal columns */
+/* Landscape: two columns under the centered total */
 @media (orientation:landscape){
-  .board{ grid-template-columns: 1fr; } /* keep title/total above */
-  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:var(--g-gap); align-items:start }
+  .main{
+    grid-template-areas:
+      "total total"
+      "cycle adr"
+      "actionsL actionsR"
+      "wa log";
+    grid-template-columns: 1fr 1fr;
+    align-items:start;
+  }
 }
 
-/* Each column internally is a 3-row grid.
-   We swap the order by orientation using grid-areas. */
-.col{ display:grid; gap:var(--g-gap); }
-.col .col-actions{ grid-area:actions }
-.col .col-timer  { grid-area:timer }
-.col .col-extras { grid-area:extras }
-
-/* Portrait order: Timer → Actions → Extras */
-@media (orientation:portrait){
-  .col{ grid-template-areas: "timer" "actions" "extras"; }
+/* ---------- TIMER CARDS ---------- */
+.timer{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto;
 }
-/* Landscape order: Actions → Timer → Extras */
-@media (orientation:landscape){
-  .col{ grid-template-areas: "actions" "timer" "extras"; }
-}
-
-/* ---------- CARDS / TIMERS ---------- */
-.centered{display:grid; justify-items:center}
-.timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(560px,100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
 .timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
-@media (orientation:landscape){
-  .timer .digits{ font-size: var(--kpi-digits-land); }
-}
 #cycleDigits{color:var(--cycle-accent-light)}
 #adrDigits{color:#2ea0ff}
 
-/* Flash on beat */
-#cycleTimer{ position:relative; }
-.cycle-flash{ animation: cycleFlash .18s ease-out 1; }
-@keyframes cycleFlash{
-  0%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
-  15%{ transform:scale(1.04); box-shadow:0 0 0 10px var(--cycle-shadow) }
-  100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
-}
+#cycleTimer{grid-area:cycle}
+#adrTimer{grid-area:adr}
 
-/* Start/Pause buttons */
+/* Start/Pause row */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(14px, 2vw, 18px);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
-.icon-ctrl[disabled]{opacity:.45; filter:grayscale(.1); cursor:not-allowed}
+.icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
 
 /* ---------- ACTION BUTTONS ---------- */
-.actions-row{ display:grid; gap:var(--g-gap); grid-template-columns:1fr } /* stack three buttons per column */
-.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(12px,1.8vw,14px) clamp(14px,2.2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;font-size: clamp(15px, 2.2vw, 18px);box-shadow:var(--shadow); width:100%}
+.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 16px;border-radius:14px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;
+  font-size: clamp(15px, 2.2vw, 18px);box-shadow:var(--shadow); width:100%; max-width:460px; margin-inline:auto}
+.btn .ico{width:20px;height:20px}
 .btn:active{transform:translateY(1px)}
-.btn .ico{width:clamp(20px,2.6vw,22px);height:clamp(20px,2.6vw,22px)}
-.btn.is-disabled{opacity:.48; filter:grayscale(.2); cursor:not-allowed}
+.btn.is-disabled{opacity:.48;filter:grayscale(.2);cursor:not-allowed}
 .btn-rosc{ background:linear-gradient(180deg,var(--rosc-1),var(--rosc-2)); border-color:var(--rosc-bd) }
 .btn-stop{ background:linear-gradient(180deg,var(--stop-1),var(--stop-2)); border-color:var(--stop-bd) }
 .btn-shock{ background:linear-gradient(180deg,var(--shock-1),var(--shock-2)); border-color:var(--shock-bd); color:#1a1a1a }
@@ -190,7 +155,44 @@ a{color:inherit}
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* ---------- COUNTDOWN / ADR PROMPT ---------- */
+/* Actions wrapper:
+   - Portrait: 2 rows × 3 buttons total
+   - Landscape: split into left/right stacks under each timer
+*/
+.actions-wrap{grid-area:actions; display:grid; gap:var(--gap-sm); grid-template-columns:repeat(3, minmax(140px,1fr)); justify-items:stretch}
+.actions-left, .actions-right{display:contents;} /* flatten so all 6 join into the 3-column grid */
+
+@media (orientation:landscape){
+  .actions-wrap{display:contents;} /* the two stacks will be placed by areas below */
+  .actions-left{grid-area:actionsL; display:grid; gap:var(--gap-sm); grid-template-columns:1fr; justify-items:center}
+  .actions-right{grid-area:actionsR; display:grid; gap:var(--gap-sm); grid-template-columns:1fr; justify-items:center}
+}
+
+/* ---------- WAAFELSS & LOG (EXTRAS) ---------- */
+.extras-wa{grid-area:wa}
+.extras-log{grid-area:log}
+
+.wa-shell{width:min(560px, 100%); margin-inline:auto}
+.wa-shell details{border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
+.wa-shell summary{list-style:none; cursor:pointer; user-select:none; padding:12px 16px; font-weight:900; display:flex; align-items:center; justify-content:center; gap:8px}
+.wa-shell summary::marker{display:none}
+.wa-shell summary .caret{transition:transform .2s ease}
+.wa-shell details[open] summary .caret{transform:rotate(90deg)}
+.wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
+.wa-row{display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:var(--gap-sm); justify-items:stretch; margin-bottom:8px}
+.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+.btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
+.btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto}
+.log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:clamp(12px, 1.2vw, 13px)}
+.log li{margin:6px 0}
+
+@media (orientation:landscape){
+  .extras-wa, .extras-log { width:min(560px, 100%); }
+}
+
+/* ---------- COUNTDOWN & ADR prompt (unchanged styles) ---------- */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
@@ -203,35 +205,9 @@ a{color:inherit}
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* ---------- EXTRAS ---------- */
-.wa-shell, .card{background:var(--card);border:1px solid var(--border);border-radius:16px; box-shadow:var(--shadow)}
-.wa-shell{ width:100% }
-.wa-shell summary{
-  list-style:none; cursor:pointer; user-select:none; padding:12px 16px; font-weight:900;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-}
-.wa-shell summary::marker{display:none}
-.wa-shell summary .caret{transition:transform .2s ease}
-.wa-shell details[open] summary .caret{transform:rotate(90deg)}
-.wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
-.wa-row{display:grid; grid-template-columns:repeat(2, minmax(160px, 1fr)); gap:var(--g-gap); justify-items:stretch; margin-bottom:8px}
-.wa-row input{grid-column:1 / -1; width:100%; font-size:16px; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-.wa-row input::placeholder{ font-size:16px; color:var(--muted) }
-.btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
-.btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
-.waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-@media (max-width:520px){.waffles-grid{grid-template-columns:1fr}}
-.wrow{display:flex;gap:8px;align-items:center}
-.wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
-.wval{font-weight:800}
-
-.card{ padding:var(--card-pad); width:100% }
-.log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
-.log li{margin:6px 0}
-
-/* ---------- PRINT ---------- */
+/* ---------- Print ---------- */
 @media print{
-  .header,.controls-row,.col-actions,.wa-shell,.wa-content{display:none!important}
+  .header,.controls-row,.actions-wrap,.wa-shell{display:none!important}
   body{background:#fff;color:#000}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
@@ -245,13 +221,23 @@ a{color:inherit}
 <body>
 <div class="container">
 
-  <!-- [B] Header -->
+  <!-- Header -->
   <div class="header">
     <div class="controls-row" id="controlsRow">
-      <div class="chip" id="backChip"><div class="chip-label"></div><button id="backBtn" class="icon-toggle" title="Back">←</button></div>
-      <div class="chip" id="themeChip"><div class="chip-label">Theme</div><button id="themeBtn" class="icon-toggle" title="Theme: Auto">Auto</button></div>
-      <div class="chip" id="bpmChip"><div class="chip-label">BPM</div><input id="bpm" type="number" min="60" max="160" step="1" placeholder="110"></div>
-      <div class="chip" id="muteChip"><div class="chip-label">Mute</div>
+      <div class="chip" id="backChip">
+        <div class="chip-label"></div>
+        <button id="backBtn" class="icon-toggle" title="Back">←</button>
+      </div>
+      <div class="chip" id="themeChip">
+        <div class="chip-label">Theme</div>
+        <button id="themeBtn" class="icon-toggle" title="Theme: Auto">Auto</button>
+      </div>
+      <div class="chip" id="bpmChip">
+        <div class="chip-label">BPM</div>
+        <input id="bpm" type="number" min="60" max="160" step="1" placeholder="110">
+      </div>
+      <div class="chip" id="muteChip">
+        <div class="chip-label">Mute</div>
         <button id="muteBtn" class="icon-toggle" title="Beat mute/unmute" aria-pressed="false">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/>
@@ -261,137 +247,136 @@ a{color:inherit}
         </button>
       </div>
     </div>
+
     <div class="brand">CPR Timer <span class="trial">Trial Version</span></div>
   </div>
 
-  <!-- [C] Centered Total CPR -->
+  <!-- Total CPR Time (always centered) -->
   <div class="total">
     <div class="label">TOTAL CPR TIME</div>
     <div id="totalDigits" class="digits">00:00</div>
   </div>
 
-  <!-- [D] BOARD -->
-  <div class="board">
-    <div class="cols">
+  <!-- Main grid -->
+  <main class="main">
 
-      <!-- ===== LEFT COLUMN: CYCLE ===== -->
-      <section class="col col-cycle">
+    <!-- Timers -->
+    <section id="cycleTimer" class="timer">
+      <div class="label">CYCLE</div>
+      <div id="cycleDigits" class="digits">00:00</div>
+      <div id="countdown">10</div>
+      <div class="icon-row">
+        <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
+        </button>
+        <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
+        </button>
+      </div>
+    </section>
 
-        <!-- [E1] Actions (Stop, ROSC, Export) -->
-        <div class="col-actions">
-          <div class="actions-row">
-            <button id="stopb" class="btn btn-stop">
-              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z" />
-              </svg>
-              Stop
-            </button>
-            <button id="roscb" class="btn btn-rosc">
-              <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
-              ROSC
-            </button>
-            <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
-              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
-              </svg>
-              Export PDF
-            </button>
-          </div>
-        </div>
+    <section id="adrTimer" class="timer">
+      <div class="label">ADRENALINE</div>
+      <div id="adrDigits" class="digits">00:00</div>
+      <div id="adrPrompt">Give Adrenaline</div>
+      <div class="icon-row">
+        <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
+        </button>
+        <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
+        </button>
+      </div>
+    </section>
 
-        <!-- [E2] Cycle Timer -->
-        <div class="col-timer">
-          <div id="cycleTimer" class="timer centered">
-            <div class="label">CYCLE</div>
-            <div id="cycleDigits" class="digits">00:00</div>
-            <div id="countdown">10</div>
-            <div class="icon-row">
-              <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
-              </button>
-              <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
-                <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
-              </button>
-            </div>
-          </div>
-        </div>
+    <!-- Actions -->
+    <div class="actions-wrap">
+      <!-- Left stack (under Cycle in landscape) -->
+      <div class="actions-left">
+        <button id="stopb" class="btn btn-stop">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
+          </svg>
+          Stop
+        </button>
 
-        <!-- [E3] WAAFELSS -->
-        <div class="col-extras">
-          <div class="wa-shell">
-            <details>
-              <summary><span class="caret">▶</span><span>WAAFELSS</span></summary>
-              <div class="wa-content">
-                <div class="wa-row">
-                  <input id="age" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter Age">
-                  <button id="mBtn" class="btn btn-wa-m" title="Months" disabled>Months</button>
-                  <button id="yBtn" class="btn btn-wa-y" title="Years" disabled>Years</button>
-                </div>
-                <div class="waffles-grid">
-                  <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">Weight</div><div id="wWeight" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">Adrenaline</div><div id="wAdr" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">Amiodarone</div><div id="wAmio" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">Fluids</div><div id="wFluids" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">SGA</div><div id="wSGA" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">Energy</div><div id="wJoules" class="wval">—</div></div>
-                  <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
-                </div>
-              </div>
-            </details>
-          </div>
-        </div>
+        <button id="roscb" class="btn btn-rosc">
+          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
+          ROSC
+        </button>
 
-      </section>
+        <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
+          </svg>
+          Export PDF
+        </button>
+      </div>
 
-      <!-- ===== RIGHT COLUMN: ADRENALINE ===== -->
-      <section class="col col-adr">
+      <!-- Right stack (under Adrenaline in landscape) -->
+      <div class="actions-right">
+        <button id="shockb" class="btn btn-shock">
+          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
+          Shock
+        </button>
 
-        <!-- [E4] Actions (Shock, Amiodarone, DSED) -->
-        <div class="col-actions">
-          <div class="actions-row">
-            <button id="shockb" class="btn btn-shock">
-              <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
-              Shock
-            </button>
-            <button id="amiob" class="btn btn-amio">
-              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
-              Amiodarone
-            </button>
-            <button id="dsedb" class="btn btn-dsed" title="Log DSED">
-              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
-              Log DSED
-            </button>
-          </div>
-        </div>
+        <button id="amiob" class="btn btn-amio">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          Amiodarone
+        </button>
 
-        <!-- [E5] Adrenaline Timer -->
-        <div class="col-timer">
-          <div id="adrTimer" class="timer centered">
-            <div class="label">ADRENALINE</div>
-            <div id="adrDigits" class="digits">00:00</div>
-            <div id="adrPrompt">Give Adrenaline</div>
-            <div class="icon-row">
-              <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
-              </button>
-              <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" disabled>
-                <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- [E6] Log -->
-        <div class="col-extras">
-          <div class="card"><ul id="log" class="log"></ul></div>
-        </div>
-
-      </section>
-
+        <button id="dsedb" class="btn btn-dsed" title="Log DSED">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          Log DSED
+        </button>
+      </div>
     </div>
-  </div>
+
+    <!-- Extras -->
+    <div class="extras-wa">
+      <div class="wa-shell">
+        <details>
+          <summary><span class="caret">▶</span><span>WAAFELSS</span></summary>
+          <div class="wa-content">
+            <div class="wa-row">
+              <input id="age" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter Age">
+              <button id="mBtn" class="btn btn-wa-m" title="Months" disabled>Months</button>
+              <button id="yBtn" class="btn btn-wa-y" title="Years" disabled>Years</button>
+            </div>
+            <div class="waffles-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+              <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Weight</div><div id="wWeight" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Adrenaline</div><div id="wAdr" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Amiodarone</div><div id="wAmio" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Fluids</div><div id="wFluids" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">SGA</div><div id="wSGA" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Energy</div><div id="wJoules" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="extras-log">
+      <div class="card">
+        <ul id="log" class="log"></ul>
+      </div>
+    </div>
+
+  </main>
 </div>
+
+
+
+
+
+
+
 
 <!-- ===== ORIGINAL JS (unchanged behavior) ===== -->
 <script>
