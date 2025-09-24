@@ -158,6 +158,46 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 #cycleTimer{ grid-area:cycle }
 #adrTimer{   grid-area:adr }
 
+   /* === Overlay centering helpers === */
+.timer{ position:relative; }                 /* restore positioning context */
+
+.overlay-center{
+  position:absolute;
+  left:0; top:0;                             /* JS will set exact left/top */
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:2;
+  width:auto; height:auto;                   /* let content size itself */
+  display:flex; align-items:center; justify-content:center;
+  text-align:center;
+}
+
+/* keep your existing font scaling, just ensure overlays inherit it well */
+#countdown.overlay-center{
+  font-family:ui-monospace,Consolas,monospace;
+  font-weight:900;
+  line-height:1;
+  color:var(--countdown-red);
+  /* robust responsive size for all phones/tablets */
+  font-size: clamp(80px, min(18vw, 22vh), 180px);
+  text-shadow:0 2px 10px rgba(0,0,0,.28);
+}
+
+#adrPrompt.overlay-center{
+  font-family:ui-monospace,Consolas,monospace;
+  font-weight:900;
+  line-height:1.05;
+  color:var(--adr-color);
+  font-size: clamp(38px, min(10vw, 12vh), 96px);
+}
+
+/* when countdown/prompt shows, hide label/digits/controls (you already had this) */
+#countdown.show{ display:flex; }
+.cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
+#adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
+#adrTimer.adr-show #adrPrompt{ display:flex }
+
+
 /* Start/Pause row (unchanged spacing, slightly tighter) */
 .icon-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(14px, 2vw, 18px);font-weight:700}
@@ -528,6 +568,36 @@ let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
 let showTotalZero = true;
 
+   /* === Overlay centering over the digits === */
+function centerOverlayOverDigits(overlayEl, digitsEl){
+  if(!overlayEl || !digitsEl) return;
+  // Make sure it has our class
+  overlayEl.classList.add('overlay-center');
+
+  // Compute center of digits relative to its timer container
+  const timer = digitsEl.closest('.timer');
+  if(!timer) return;
+  const tr = timer.getBoundingClientRect();
+  const dr = digitsEl.getBoundingClientRect();
+
+  const cx = dr.left + dr.width/2 - tr.left;
+  const cy = dr.top  + dr.height/2 - tr.top;
+
+  // Place overlay’s anchor at that center
+  overlayEl.style.left = `${cx}px`;
+  overlayEl.style.top  = `${cy}px`;
+}
+
+/* Call it whenever layout can change */
+function alignOverlays(){
+  centerOverlayOverDigits(document.getElementById('countdown'), document.getElementById('cycleDigits'));
+  centerOverlayOverDigits(document.getElementById('adrPrompt'),  document.getElementById('adrDigits'));
+}
+window.addEventListener('resize', alignOverlays);
+window.addEventListener('orientationchange', alignOverlays);
+document.addEventListener('DOMContentLoaded', alignOverlays);
+
+
 /* COUNTDOWN */
 function showCountdown(){
   if(counting) return;
@@ -535,6 +605,7 @@ function showCountdown(){
   const box=$('countdown'); const card=$('cycleTimer');
   box.textContent=countdownN; box.classList.add('show');
   card.classList.add('cycle-hide');
+   alignOverlays();
   stopBeat();
   countdownTimer = setInterval(()=>{
     countdownN--;
@@ -599,6 +670,7 @@ function tick(){
       $('adrDigits').textContent='04:00'; play('adr4');
       stamp('Adrenaline timer reached 4:00');
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
+       alignOverlays();
       adrRunning = false;
       setTimeout(()=>{
         adrCard.classList.remove('adr-show','adr-hide');
@@ -611,8 +683,10 @@ function tick(){
   }else $('adrDigits').textContent='00:00';
 
   requestAnimationFrame(tick);
+   alignOverlays();
 }
 requestAnimationFrame(tick);
+   alignOverlays();
 
 /* CONTROLS */
 $('cprStart').onclick = () => {
