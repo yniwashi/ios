@@ -247,8 +247,12 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .wa-shell details[open] summary .caret{transform:rotate(90deg)}
 .wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
 .wa-row{display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:var(--gap-sm); justify-items:stretch; margin-bottom:6px}
-.wa-row input{grid-column:1 / -1; width:100%; padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-.btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
+.wa-row input{grid-column:1 / -1;font-size: 16px; width:100%; padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+.wa-row input::placeholder {
+  font-size: 18px;              /* increase placeholder (hint) text */
+  color: var(--muted);          /* optional: make hint softer */
+}
+   .btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
 .btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
 
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:var(--card-pad); width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto}
@@ -757,7 +761,7 @@ async function buildPdfBlob(){
   const pageCount = doc.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
     doc.setPage(i); doc.setFontSize(10); doc.setTextColor(120);
-    doc.text('Ambulance App', 40, doc.internal.pageSize.getHeight()-24);
+    doc.text('Ambulance App (https://niwashibase.com)', 40, doc.internal.pageSize.getHeight()-24);
   }
   return doc.output('blob');
 }
