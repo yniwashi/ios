@@ -121,7 +121,6 @@ a{color:inherit}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
 /* ---------- LAYOUT ---------- */
-/* ===== PORTRAIT LAYOUT ===== */
 .main{display:grid;gap:16px}
 @media (orientation:portrait){
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
@@ -130,76 +129,70 @@ a{color:inherit}
   .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr));}
   .extras{grid-area:extras; justify-items:center}
 }
-
-/* ===== LANDSCAPE MASTER GRID (PATCH B) ===== */
+/* ===== LANDSCAPE LAYOUT — REPLACE BLOCK (works with your original HTML) ===== */
 @media (orientation:landscape){
 
-  /* Tokens just for landscape */
+  /* Bigger, landscape-only sizing */
   :root{
-    --timer-min:   560px;              /* min width for each timer column */
-    --timer-max:   860px;              /* cap width for each timer card/stack */
-    --center-min:  320px;              /* center track min (title/total) */
-
-    --card-pad:       clamp(20px, 2.6vw, 30px);
-    --kpi-digits:     clamp(76px, 10.2vw, 164px);
-    --subtitle-size:  clamp(16px, 2.6vw, 22px);
-    --total-size:     clamp(58px, 8vw, 108px);
-    --chip-h:         clamp(44px, 6vw, 56px);
-    --chip-pad-x:     clamp(10px, 2vw, 14px);
-    --actions-gap:    clamp(10px, 1.4vw, 14px);
-    --timers-gap:     26px;
-    --row-gap:        22px;
-    --col-gap:        22px;
+    --side-min:      560px;                   /* each side column min width  */
+    --side-max:      860px;                   /* timer/card width cap        */
+    --kpi-digits:    clamp(90px, 12vw, 200px);/* BIGGER timer digits         */
+    --total-size:    clamp(60px, 9vw, 120px); /* bigger TOTAL CPR digits     */
+    --subtitle-size: clamp(16px, 2.4vw, 22px);
+    --actions-gap:   clamp(8px, 1.4vw, 12px);
   }
 
-  /* 0) Make the container the master 3-column grid */
-  .container{
-    display: grid;
+  /* Core grid: 2 equal columns (left = Cycle column, right = Adrenaline column) */
+  .main{
+    display:grid;
     grid-template-columns:
-      minmax(var(--timer-min), var(--timer-max))   /* LEFT: Cycle stack  */
-      minmax(var(--center-min), 1fr)               /* CENTER: Title/Total */
-      minmax(var(--timer-min), var(--timer-max));  /* RIGHT: Adr stack   */
-    grid-auto-rows: auto;
-    column-gap: var(--col-gap);
-    row-gap: var(--row-gap);
-    align-items: start;
-    justify-items: stretch;
+      minmax(var(--side-min), 1fr)
+      minmax(var(--side-min), 1fr);
+    grid-template-areas:
+      "actL1 actR1"   /* buttons row 1 above each timer */
+      "actL2 actR2"   /* buttons row 2 above each timer */
+      "actL3 actR3"   /* buttons row 3 above each timer */
+      "cycle adr"     /* the two timers                  */
+      "wa    log";    /* WAAFELSS (left) | Log (right)   */
+    align-items:start;
+    gap: 20px;
   }
 
-  /* 1) Top chips row spans all columns */
-  .header{ grid-column: 1 / -1; gap: 8px; }
-  .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
-  .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
-  .icon-toggle{ width: var(--chip-h); height: var(--chip-h); }
-  .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
+  /* Let children take areas directly */
+  .timers{ display: contents; }
+  .actions{ display: contents; }
+  .extras{  display: contents; }
 
-  /* 2) Title + TOTAL CPR stay in the CENTER track — perfectly centered */
-  .brand{ grid-column: 2; justify-self: center; text-align: center; }
-  .total{ grid-column: 2; align-items: center; justify-self: center; }
+  /* Map timers into their cells and widen the cards */
+  #cycleTimer{ grid-area: cycle; }
+  #adrTimer{   grid-area: adr;   }
+  .timer{ width: min(var(--side-max), 100%); }
 
-  /* 3) Let .main collapse so its children can be positioned on the container grid */
-  .main{ display: contents; }
+  /* Map WAAFELSS + Log into their cells */
+  .wa-shell{ grid-area: wa;  width: 100%; }
+  .card{     grid-area: log; width: 100%; }
 
-  /* 4) ACTIONS: turn wrappers into grid items placed above their timers */
-  .actions{ display: contents; }   /* expose .actions-left/right to container grid */
+  /* Place the 6 existing action buttons into a 3×2 grid above the timers,
+     using your current DOM order (no HTML changes). Desired order:
+       Left (above cycle):   Stop, ROSC, Export
+       Right (above adrenal): Shock, Amio, DSED
+     Your button order in HTML is: [ROSC(1), Stop(2), Shock(3), Amio(4), DSED(5), Export(6)]
+     So we map by nth-child: */
+  .actions > :nth-child(2){ grid-area: actL1; } /* Stop  -> left row 1 */
+  .actions > :nth-child(1){ grid-area: actL2; } /* ROSC  -> left row 2 */
+  .actions > :nth-child(6){ grid-area: actL3; } /* Export-> left row 3 */
 
-  .actions-left{
-    grid-column: 1;
-    justify-self: center;            /* center within the LEFT column */
-    display: grid;
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
-    gap: var(--actions-gap);
-    max-width: min(var(--timer-max), 100%);
+  .actions > :nth-child(3){ grid-area: actR1; } /* Shock -> right row 1 */
+  .actions > :nth-child(4){ grid-area: actR2; } /* Amio  -> right row 2 */
+  .actions > :nth-child(5){ grid-area: actR3; } /* DSED  -> right row 3 */
+
+  /* Ensure each button row aligns to its side column and never exceeds timer width */
+  .main > .btn{
+    max-width: min(var(--side-max), 100%);
+    justify-self: center;
   }
-  .actions-right{
-    grid-column: 3;
-    justify-self: center;            /* center within the RIGHT column */
-    display: grid;
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
-    gap: var(--actions-gap);
-    max-width: min(var(--timer-max), 100%);
-  }
-  /* Slightly smaller buttons in landscape for fit */
+
+  /* Make action buttons a bit tighter in landscape so they fit on small phones */
   .btn{
     font-size: clamp(14px, 1.8vw, 16px);
     padding: 10px 12px;
@@ -207,52 +200,14 @@ a{color:inherit}
     text-align: center;
   }
 
-  /* 5) TIMERS: each sits in its own column, centered; internals scale up */
-  .timers{ display: contents; }     /* expose #cycleTimer/#adrTimer */
-  #cycleTimer{
-    grid-column: 1;
-    justify-self: center;
-    width: min(var(--timer-max), 100%);
-  }
-  #adrTimer{
-    grid-column: 3;
-    justify-self: center;
-    width: min(var(--timer-max), 100%);
-  }
-  #countdown{ font-size: clamp(132px, 20vw, 240px); }
-  #adrPrompt{ font-size: clamp(60px, 11vw, 132px); }
+  /* Scale in-card elements up too */
+  #countdown{ font-size: clamp(140px, 20vw, 260px); }
+  #adrPrompt{ font-size: clamp(70px, 12vw, 150px); }
 
-  .icon-ctrl{
-    font-size: clamp(17px, 2.4vw, 21px);
-    padding: 12px 16px;
-  }
-  .icon-ctrl svg{ width: 32px; height: 32px; }
-
-  /* 6) EXTRAS: WAAFELSS under Cycle, Log under Adrenaline */
-  .extras{ display: contents; }     /* expose .wa-shell and .card */
-  .wa-shell{ grid-column: 1; width: 100%; }
-  .card{     grid-column: 3; width: 100%; }
+  /* Optional: slightly bigger Start/Pause controls in landscape */
+  .icon-ctrl{ font-size: clamp(16px, 2.2vw, 20px); padding: 12px 16px; }
+  .icon-ctrl svg{ width: 30px; height: 30px; }
 }
-
-/* Narrow-landscape guard so it stays tidy on small phones */
-@media (orientation:landscape) and (max-width: 980px){
-  :root{
-    --timer-min: 480px;
-    --timer-max: 800px;
-    --kpi-digits: clamp(70px, 9.6vw, 150px);
-    --total-size: clamp(52px, 7.2vw, 98px);
-  }
-  .actions-left,
-  .actions-right{
-    grid-template-columns: repeat(3, minmax(100px, 1fr)); /* allow tighter fit */
-  }
-}
-
-
-
-
-
-
 
 
 /* ---------- CARDS ---------- */
@@ -320,9 +275,9 @@ a{color:inherit}
 .wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
 /* Same 2-col layout for WA buttons */
 .wa-row{display:grid; grid-template-columns:repeat(2, minmax(160px, 1fr)); gap:var(--actions-gap); justify-items:stretch; margin-bottom:8px}
-.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size: 18px;color:var(--fg)}
+.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;font-size: 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .wa-row input::placeholder {
-  font-size: 18px;              /* increase placeholder (hint) text */
+  font-size: 16px;              /* increase placeholder (hint) text */
   color: var(--muted);          /* optional: make hint softer */
 }
 /* WA button colors */
@@ -422,50 +377,44 @@ a{color:inherit}
       </div>
     </div>
 
-  <!-- ===== ACTIONS (PATCH A) ===== -->
-<div class="actions">
-  <!-- Left triplet ABOVE CYCLE: Stop • ROSC • Export -->
-  <div class="actions-left">
-    <button id="stopb"  class="btn btn-stop">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
-      </svg>
-      Stop
-    </button>
-    <button id="roscb"  class="btn btn-rosc">
-      <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
-      ROSC
-    </button>
-    <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
-      </svg>
-      Export PDF
-    </button>
-  </div>
-
-  <!-- Right triplet ABOVE ADRENALINE: Shock • Amiodarone • DSED -->
-  <div class="actions-right">
-    <button id="shockb" class="btn btn-shock">
-      <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
-      Shock
-    </button>
-    <button id="amiob"  class="btn btn-amio">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-      </svg>
-      Amiodarone
-    </button>
-    <button id="dsedb"  class="btn btn-dsed" title="Log DSED">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-      </svg>
-      Log DSED
-    </button>
-  </div>
-</div>
-
-
+    <!-- Actions (3 rows × 2 buttons) -->
+    <div class="actions">
+      <!-- Row 1 -->
+      <button id="roscb" class="btn btn-rosc">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
+        ROSC
+      </button>
+     <button id="stopb" class="btn btn-stop">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
+  </svg>
+  Stop
+</button>
+      <!-- Row 2 -->
+      <button id="shockb" class="btn btn-shock">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
+        Shock
+      </button>
+ <button id="amiob" class="btn btn-amio">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+  </svg>
+  Amiodarone
+</button>
+      <!-- Row 3 -->
+  <button id="dsedb" class="btn btn-dsed" title="Log DSED">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+  </svg>
+  Log DSED
+</button>
+      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
+  </svg>
+  Export PDF
+</button>
+    </div>
 
     <!-- Extras -->
     <div class="extras">
@@ -974,7 +923,7 @@ mBtn?.addEventListener('click', () => {
   if (n >= 13) {
     alert(
       "This age is more than 12 months.\n" +
-      "Please use the Years button - the Months calculator is for 0–12 months."
+      "Please use the Years button — the Months calculator is for 0–12 months."
     );
     return;
   }
@@ -995,23 +944,6 @@ yBtn?.addEventListener('click', () => {
 
   renderW(years(n));
 });
-
-   /* ===== (Optional) Viewport scale attempt — iOS may ignore in some versions ===== */
-(function(){
-  const vp = document.querySelector('meta[name="viewport"]');
-  if (!vp) return;
-  function setScale(s){
-    // Locks zoom level; remove user-scalable=no if you want pinch-zoom back
-    vp.setAttribute('content', `width=device-width, initial-scale=${s}, maximum-scale=${s}, user-scalable=no`);
-  }
-  function onOrient(){
-    const isLand = window.matchMedia('(orientation:landscape)').matches;
-    // tweak the value to taste (0.9–1.0)
-    setTimeout(()=> setScale(isLand ? 0.9 : 1.0), 120);
-  }
-  window.addEventListener('orientationchange', onOrient);
-})();
-
 
    /* ===== Self-check ===== */
 (function(){
