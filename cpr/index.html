@@ -156,12 +156,12 @@ a{color:inherit}
 
 /* Start/Pause buttons (visual disabled state) */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
-.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(14px, 2vw, 18px);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45; filter:grayscale(.1); cursor:not-allowed}
 
 /* ---------- ACTION BUTTONS ---------- */
-.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(12px,1.8vw,14px) clamp(14px,2.2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow); width:100%}
+.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(12px,1.8vw,14px) clamp(14px,2.2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;font-size: clamp(15px, 2.2vw, 18px);box-shadow:var(--shadow); width:100%}
 .btn:active{transform:translateY(1px)}
 .btn .ico{width:clamp(20px,2.6vw,22px);height:clamp(20px,2.6vw,22px)}
 .btn.is-disabled{opacity:.48; filter:grayscale(.2); cursor:not-allowed}
