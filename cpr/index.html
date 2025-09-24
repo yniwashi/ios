@@ -60,7 +60,7 @@
   --container-pad: clamp(10px, 2.4vw, 16px);
   --radius: 18px;
 
-  --log-font: clamp(13px, 1.8vw, 15px);
+--log-font: clamp(12px, 1.2vw, 13px);
 
   --cycle-accent: var(--cycle-accent-dark);
   --cycle-shadow: var(--cycle-shadow-dark);
@@ -177,9 +177,21 @@ a{color:inherit}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45; filter:grayscale(0.2)}
 
-/* Actions: 3 rows × 2 buttons; equal widths */
-.actions .row{display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap}
-.actions .row .btn{flex:1 1 240px; max-width:320px; min-width:200px}
+/* Actions: always 2 buttons per row (ROSC/Stop, Shock/Amio, DSED/Export) */
+.actions .row{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: var(--actions-gap);
+  justify-items:stretch;
+}
+
+/* Make buttons fill their grid cell and avoid wrapping to a new line */
+.actions .row .btn{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  flex:none;            /* override any previous flex from older CSS */
+}
 
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
   padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);
