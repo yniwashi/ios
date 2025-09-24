@@ -252,18 +252,19 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   font-size: 18px;              /* increase placeholder (hint) text */
   color: var(--muted);          /* optional: make hint softer */
 }
-   /* Make WAAFELSS tags/values smaller */
+ /* Adjust WAAFELSS label/value text size */
 .wrow .wtag,
 .wrow .wval {
-  font-size: clamp(11px, 1.4vw, 13px);  /* slightly smaller than logs/buttons */
-  font-weight: 600;                     /* keep readable but lighter */
+  font-size: clamp(12px, 1.6vw, 15px);  /* modest reduction */
+  font-weight: 700;                     /* keep them bold enough */
 }
 .wrow .wtag {
-  color: var(--muted);                  /* labels muted */
+  color: var(--muted);
 }
 .wrow .wval {
-  color: var(--fg);                     /* values normal text color */
+  color: var(--fg);
 }
+
 
    .btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
 .btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
