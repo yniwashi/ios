@@ -671,128 +671,190 @@ $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiod
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
 /* ===== EXPORT PDF (blob, modal viewer + Save) ===== */
-function setExportEnabled(enabled){
-  $('printPdf').classList.toggle('is-disabled', !enabled);
-}
-setExportEnabled(false);
-function sessionEnded(){ return !!(totalStart && totalEnd); }
+<script>
+// ===================== EXPORTS (WebClip-safe) =====================
+(() => {
+  // --- tiny helper to escape PDF text ---
+  const pdfEscape = s => String(s)
+    .replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
 
-async function loadScript(src){
-  return new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('load '+src));
-    document.head.appendChild(s);
-  });
-}
-async function buildPdfBlob(){
-  if(!window.jspdf){
-    await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
-  }
-  const { jsPDF } = window.jspdf || {};
-  if(!jsPDF) throw new Error('jsPDF failed');
+  // --- build a very simple single-page PDF (Helvetica, text layout) ---
+  function makeSimplePdf({started, ended, total, counts, events}) {
+    const lines = [
+      'CPR Session Report',
+      '',
+      `Started: ${started}`,
+      `Ended:   ${ended}`,
+      `Total:   ${total}`,
+      `Counts:  ${counts}`,
+      '',
+      'Time (24h)        Event',
+      '----------------  ----------------------------------------------',
+      ...events.map(e => {
+        const t = e.ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+        return `${t}  ${e.label}`;
+      }),
+      '',
+      'Ambulance App'
+    ];
 
-  let autoTableLoaded = true;
-  if(!jsPDF.API.autoTable){
-    try{
-      await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js');
-    }catch{ autoTableLoaded=false; }
-  }
+    // Page geometry (points). iPhone-friendly single page.
+    const width = 595.28;   // A4 width
+    const height = 841.89;  // A4 height
+    const left = 48, top = height - 72, leading = 16;
 
-  const doc = new jsPDF({ unit: 'pt' });
-
-  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(18);
-  doc.text('CPR Session Report', 40, 48);
-
-  doc.setFont('helvetica','normal'); doc.setFontSize(12);
-  const kv = [['Started',started],['Ended',ended],['Total',total],['Counts',counts]];
-  let y = 74;
-  kv.forEach(([k,v])=>{
-    doc.setFont('helvetica','bold'); doc.text(`${k}:`, 40, y);
-    doc.setFont('helvetica','normal'); doc.text(String(v), 120, y);
-    y += 18;
-  });
-
-  const rows = events.map(e=>[hhmmss(e.ts), e.label]);
-  if(autoTableLoaded && doc.autoTable){
-    doc.autoTable({
-      head: [['Time (24h)','Event']],
-      body: rows,
-      startY: y+10,
-      styles: { fontSize: 11, cellPadding: 6 },
-      headStyles: { fillColor: [25,118,210], textColor: 255 },
-      alternateRowStyles: { fillColor: [232,244,253] },
+    // Build content stream (text commands)
+    let content = `BT /F1 12 Tf 0 0 0 rg ${left} ${top} Td\n`;
+    lines.forEach((ln, i) => {
+      if (i === 0) content += '/F1 20 Tf 0 0 0 rg ('+pdfEscape(ln)+') Tj\n/F1 12 Tf\n';
+      else content += '('+pdfEscape(ln)+') Tj\n';
+      content += `0 -${leading} Td\n`;
     });
-  }else{
-    y += 28;
-    doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16;
-    doc.setFont('helvetica','normal');
-    rows.forEach(r=>{
-      if (y > 760){ doc.addPage(); y=48; }
-      doc.text(`${r[0]}  |  ${r[1]}`, 40, y);
-      y += 16;
+    content += 'ET';
+
+    // Objects
+    const o = [];
+    o[1] = `1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj`;
+    o[2] = `2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj`;
+    o[3] = `3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj`;
+    o[4] = `4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj`;
+    const contentBytes = new TextEncoder().encode(content);
+    o[5] = `5 0 obj << /Length ${contentBytes.length} >> stream\n${content}\nendstream endobj`;
+
+    // xref
+    let pdf = `%PDF-1.4\n`;
+    const xref = [];
+    const index = [0];
+    for (let i=1;i<=5;i++){
+      index[i] = pdf.length;
+      pdf += o[i] + '\n';
+    }
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 6\n0000000000 65535 f \n`;
+    for (let i=1;i<=5;i++){
+      pdf += (String(index[i]).padStart(10,'0') + ' 00000 n \n');
+    }
+    pdf += `trailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+    return new Blob([pdf], {type:'application/pdf'});
+  }
+
+  // Collect report lines (you already have helpers)
+  function collectReportLines() {
+    const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
+    const started = window.totalStart ? new Date(window.totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = window.totalEnd ? new Date(window.totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+    const total   = (window.totalStart && window.totalEnd) ? fmt((window.totalEnd-window.totalStart)/1000) : '—';
+    const counts  = `Adrenaline: ${window.adrCount||0}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+    return {started, ended, total, counts};
+  }
+
+  // Build the same HTML preview you already use (kept blob-only, footer text)
+  function buildPreviewHTML(rowsHTML, header) {
+    return `<!doctype html><html><head><meta charset="utf-8">
+      <meta name="color-scheme" content="light dark">
+      <title>CPR Report</title>
+      <style>
+        :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--accent:#2ea0ff;--accent2:#6dd3ff}
+        @media (prefers-color-scheme: light){
+          :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--accent:#0b6b82;--accent2:#37a0c0}
+        }
+        body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+        h1{margin:0 0 12px}
+        .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
+        .kvs span{color:var(--muted)}
+        table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
+        thead th{text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
+          background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff}
+        tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
+        tbody tr.even{background:rgba(46,160,255,0.06)}
+        tbody tr.odd{background:rgba(46,160,255,0.12)}
+        .total{font-weight:900}
+        footer{margin-top:16px;color:var(--muted);text-align:center}
+      </style></head><body>
+        <h1>CPR Session Report</h1>
+        <div class="kvs">
+          <span>Started</span><div>${header.started}</div>
+          <span>Ended</span><div>${header.ended}</div>
+          <span>Total</span><div class="total">${header.total}</div>
+          <span>Counts</span><div>${header.counts}</div>
+        </div>
+        <table>
+          <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
+          <tbody>${rowsHTML}</tbody>
+        </table>
+        <footer>Ambulance App</footer>
+      </body></html>`;
+  }
+
+  // Hook up Export PDF button (kept disabled until Stop/ROSC elsewhere in your code)
+  const exportBtn = document.getElementById('printPdf');
+
+  // Called when user taps Export PDF
+  window.__showPdf = function(events, hhmmss) {
+    // Build HTML preview table
+    const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
+    const header = collectReportLines();
+    const html = buildPreviewHTML(rows, header);
+
+    // 1) Preview in our overlay using a blob URL (no real URL leaks)
+    const htmlBlob = new Blob([html], {type:'text/html'});
+    const htmlURL  = URL.createObjectURL(htmlBlob);
+    const frame    = document.getElementById('pdfFrame');   // your existing iframe in the modal
+    frame.src = htmlURL;
+
+    // 2) Build a *real PDF* (text-only layout) for saving via Share Sheet
+    const pdfBlob  = makeSimplePdf({
+      started: header.started, ended: header.ended, total: header.total, counts: header.counts,
+      events
     });
-  }
+    const fileName = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
 
-  /* Footer text inside the PDF (we do NOT expose your site URL).
-     Browser footer (which used to show the real URL) is not used. */
-  const pageCount = doc.getNumberOfPages();
-  for(let i=1;i<=pageCount;i++){
-    doc.setPage(i);
-    doc.setFontSize(10); doc.setTextColor(120);
-    doc.text('Ambulance App', 40, doc.internal.pageSize.getHeight()-24);
-  }
+    // Wire the Save button to Web Share with files (works inside WebClip)
+    const saveBtn = document.getElementById('pdfSave');
+    saveBtn.onclick = async () => {
+      try{
+        if (navigator.canShare && navigator.canShare({files:[new File([pdfBlob], fileName, {type:'application/pdf'})]})) {
+          await navigator.share({ files: [ new File([pdfBlob], fileName, {type:'application/pdf'}) ] });
+        } else {
+          // Fallback: force a direct download (some iOS versions still honor this)
+          const a=document.createElement('a');
+          a.href = URL.createObjectURL(pdfBlob);
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        }
+      }catch(err){ /* user cancelled or share not available */ }
+    };
 
-  return doc.output('blob');
-}
+    // Also update the text link (“Download report”) to the PDF blob as a backup
+    const dl = document.getElementById('pdfDirectLink');
+    if (dl){
+      dl.href = URL.createObjectURL(pdfBlob);
+      dl.download = fileName;
+    }
 
-/* Modal helpers */
-const pdfModal = $('pdfModal'), pdfFrame=$('pdfFrame'), pdfSaveBtn=$('pdfSaveBtn'), pdfCloseBtn=$('pdfCloseBtn'), pdfDownloadLink=$('pdfDownloadLink');
-let lastPdfUrl = null, lastPdfName = null;
-function openPdfModal(url, filename){
-  lastPdfUrl = url; lastPdfName = filename;
-  pdfFrame.src = url;
-  pdfDownloadLink.href = url;
-  pdfDownloadLink.download = filename;
-  pdfModal.style.display='flex';
-  pdfModal.setAttribute('aria-hidden','false');
-}
-function closePdfModal(){
-  pdfModal.style.display='none';
-  pdfModal.setAttribute('aria-hidden','true');
-  pdfFrame.src = 'about:blank';
-  if(lastPdfUrl){ setTimeout(()=>URL.revokeObjectURL(lastPdfUrl), 30000); lastPdfUrl=null; }
-}
+    // open modal
+    document.getElementById('pdfOverlay').style.display='block';
 
-$('pdfBackdrop').addEventListener('click', closePdfModal);
-pdfCloseBtn.addEventListener('click', closePdfModal);
-pdfSaveBtn.addEventListener('click', ()=>{
-  // Programmatic download; if iOS blocks, user can tap the visible link below.
-  const a=document.createElement('a');
-  a.href = lastPdfUrl;
-  a.download = lastPdfName || 'cpr_report.pdf';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-});
+    // cleanup blob url when closing
+    const close = () => { URL.revokeObjectURL(htmlURL); document.getElementById('pdfOverlay').style.display='none'; };
+    document.getElementById('pdfClose').onclick = close;
+    document.getElementById('pdfBackdrop').onclick = close;
+  };
 
-$('printPdf').onclick = async () => {
-  if ($('printPdf').classList.contains('is-disabled') || !sessionEnded()){
-    alert('Please finish the session first. Tap ROSC or Stop to finalize the report, then export the PDF.');
-    return;
-  }
-  try{
-    const blob = await buildPdfBlob();
-    const url  = URL.createObjectURL(blob); // blob: URL preserved
-    const filename = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-    openPdfModal(url, filename);
-  }catch(err){
-    console.error(err);
-    alert('Could not generate PDF. Please try again.');
-  }
-};
+  // Gate: if user taps Export PDF before Stop/ROSC, show message
+  exportBtn?.addEventListener('click', () => {
+    if (!window.totalEnd) {
+      alert('Finish the CPR session first. Tap Stop or ROSC to close the timers, then export the report.');
+      return;
+    }
+    // __events and __hhmmss were defined elsewhere in your code (events array + hhmmss formatter)
+    window.__showPdf(window.events, window.hhmmss);
+  });
+})();
+</script>
 
 /* ===== WAAFELSS ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
