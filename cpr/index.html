@@ -5,14 +5,18 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 e)
-   - PDF export via hidden <iframe> (more reliable in iOS WebClip)
-   - Removed Export .txt (button + code)
-   - Previous tweaks preserved (Blob-URL privacy, UI, logging)
+   CPR TIMER — Patch (2025-09-24 f)
+   - WAAFELSS collapsible <details>/<summary> + chevron + hint + localStorage + print-open
+   - PDF export via hidden <iframe> using Blob URL (footer shows blob:… not your site)
+   - Actions: 3 rows (2 each) and equal widths
+   - Prior fixes preserved (theme auto, countdown 10→1, adrenaline stamps, etc.)
    ========================================================== */
 
-/* ===== Button theme cheatsheet (EDIT): =====
-   Change .btn classes (.primary / .danger / .ghost) or tweak vars below.
+/* ===== Quick customization guide (EDIT THESE) =====
+   Colors: change CSS vars below (—primary, —danger, etc)
+   Icons: replace inline SVGs next to each button (look for <!-- EDIT: icon -->)
+   Labels: change the innerText (e.g., “ROSC”, “Stop”, etc.)
+   Inputs: tweak attributes (min/max/step/placeholder) at the field location
 */
 
 :root{
@@ -29,8 +33,8 @@
   --adr-color:#2ea0ff;
 
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
-  --primary:#0f2e39; --primary-bd:#2e89a8; --primary-fg:#e6fbff;
-  --danger:#671d1d;  --danger-bd:#9a3333;  --danger-fg:#fff0f0;
+  --primary:#0f2e39; --primary-bd:#2e89a8; --primary-fg:#e6fbff;   /* EDIT: primary button colors */
+  --danger:#671d1d;  --danger-bd:#9a3333;  --danger-fg:#fff0f0;     /* EDIT: danger button colors */
 
   --title-size: clamp(20px, 3.2vw, 36px);
   --subtitle-size: clamp(12px, 1.8vw, 16px);
@@ -64,7 +68,7 @@
   --cycle-shadow: var(--cycle-shadow-light);
 }
 
-/* Auto mode: follow device preference */
+/* Auto mode: follow device preference when no explicit override */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     color-scheme: light;
@@ -97,11 +101,9 @@ a{color:inherit}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 
-/* Back chip visible label off, but button boxed like mute */
+/* Back, Theme, Mute (cardless chips) */
 #backChip{background:transparent;border:none;padding:0}
 #backChip .chip-label{display:none}
-
-/* Theme & Mute chips: cardless so only the buttons show */
 #themeChip{background:transparent;border:none;padding:0}
 #muteChip{background:transparent;border:none;padding:0}
 #muteChip .chip-label{display:none}
@@ -114,7 +116,7 @@ a{color:inherit}
 }
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
-/* Back button tweaks */
+/* Back button bigger & boxed */
 #backBtn.icon-toggle{
   width:calc(var(--chip-h) + 6px); height:calc(var(--chip-h) + 6px);
   font-weight:900; font-size:clamp(22px,3.8vw,32px); line-height:1;
@@ -131,13 +133,13 @@ a{color:inherit}
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
   .timers{grid-area:timers; display:grid; gap:var(--timers-gap); justify-items:center; grid-template-columns:repeat(2,minmax(0,1fr));}
   @media (max-width:459.9px){ .timers{grid-template-columns:1fr} }
-  .actions{grid-area:actions; display:flex; flex-wrap:wrap; gap:var(--actions-gap); justify-content:center}
+  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch}
   .extras{grid-area:extras; justify-items:center}
 }
 @media (orientation:landscape){
   .main{grid-template-areas:"total total total" "timers actions actions" "extras extras extras";
-    grid-template-columns:1fr minmax(220px, 360px) 1fr; align-items:start;}
-  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch; justify-content:center}
+    grid-template-columns:1fr minmax(280px, 420px) 1fr; align-items:start;}
+  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch}
   .extras{grid-area:extras}
   .timer .digits{font-size:clamp(38px, 7vw, 96px)}
 }
@@ -159,13 +161,15 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* Icon-ctrl */
+/* Icon-ctrl (Start/Pause inside cards) */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg)}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.55}
 
-/* Action buttons */
+/* Action buttons (equal widths) */
+.actions .row{display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap}
+.actions .row .btn{flex:1 1 220px; max-width:320px} /* EDIT: change target width */
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow)}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:linear-gradient(180deg,var(--primary),#07303c);border-color:var(--primary-bd);color:var(--primary-fg)}
@@ -187,10 +191,19 @@ a{color:inherit}
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* Extras */
-.extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
-.wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
+/* ===== Collapsible WAAFELSS ===== */
+details.card{position:relative}
+summary.wa-summary{
+  list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:10px; font-weight:900; font-size:clamp(18px,2.8vw,20px); user-select:none;
+}
+summary.wa-summary::-webkit-details-marker{display:none}
+.wa-chevron{width:18px; height:18px; transition:transform .18s ease}
+details[open] .wa-chevron{ transform:rotate(90deg) }
+.wa-hint{font-size:12px; color:var(--muted)}
+.wa-divider{height:1px;background:var(--border);margin:4px 0 8px;display:none}
+details[open] .wa-divider{display:block}
+.wa-content{padding:0 var(--card-pad) var(--card-pad)}
 .wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
 .wa-row input{width:clamp(110px,20vw,130px);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -199,15 +212,19 @@ a{color:inherit}
 .wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
 .wval{font-weight:800}
 
+/* Logs */
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
 /* Print */
 @media print{
-  .header,.controls-row,.actions,.wa-row{display:none!important}
+  .header,.controls-row,.actions{display:none!important}
   body{background:#fff;color:#000}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
+  /* Force WAAFELSS content visible in print even if collapsed */
+  details.card summary{display:none}
+  details.card .wa-content{display:block}
 }
 @page{ margin:0 }
 </style>
@@ -291,9 +308,9 @@ a{color:inherit}
       </div>
     </div>
 
-    <!-- Actions -->
+    <!-- Actions (3 rows, equal widths) -->
     <div class="actions">
-      <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
+      <div class="row">
         <button id="roscb" class="btn danger">
           <!-- EDIT: ROSC icon -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
@@ -305,8 +322,7 @@ a{color:inherit}
           Stop
         </button>
       </div>
-
-      <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
+      <div class="row">
         <button id="shockb" class="btn ghost">
           <!-- EDIT: Shock icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2"/></svg>
@@ -317,14 +333,13 @@ a{color:inherit}
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 10h14" stroke="currentColor" stroke-width="2"/></svg>
           Amiodarone
         </button>
+      </div>
+      <div class="row">
         <button id="dsedb" class="btn ghost" title="Log DSED">
           <!-- EDIT: DSED icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
           Log DSED
         </button>
-      </div>
-
-      <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap;margin-top:8px">
         <button id="printPdf" class="btn primary">
           <!-- EDIT: Export PDF icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
@@ -334,11 +349,17 @@ a{color:inherit}
     </div>
 
     <!-- Extras -->
-    <div class="extras">
-      <div class="card">
-        <div class="wa-title">WAAFELSS</div>
+    <!-- Collapsible WAAFELSS -->
+    <details id="waPanel" class="card">
+      <summary class="wa-summary">
+        <span>WAAFELSS</span>
+        <svg class="wa-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l8 7-8 7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        <span class="wa-hint" id="waHint">Tap to expand</span>
+      </summary>
+      <div class="wa-divider"></div>
+      <div class="wa-content">
         <div class="wa-row">
-          <!-- EDIT: Input label/name placeholder -->
+          <!-- EDIT: Input placeholder/name -->
           <input id="age" type="number" min="0" placeholder="Enter Age">
           <button id="mBtn" class="btn ghost" title="Months" disabled>Months</button>
           <button id="yBtn" class="btn ghost" title="Years" disabled>Years</button>
@@ -354,10 +375,10 @@ a{color:inherit}
           <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
         </div>
       </div>
+    </details>
 
-      <div class="card">
-        <ul id="log" class="log"></ul>
-      </div>
+    <div class="card">
+      <ul id="log" class="log"></ul>
     </div>
   </div>
 </div>
@@ -395,7 +416,7 @@ const backBtn = document.getElementById('backBtn');
 if(backBtn){
   backBtn.addEventListener('click',()=>{
     if (document.referrer && document.referrer !== location.href) history.back();
-    else location.href = HOME; // EDIT: change HOME above
+    else location.href = HOME;
   });
 }
 
@@ -523,7 +544,7 @@ function tick(){
     $('cycleDigits').textContent='00:00';
   }
 
-  // Adrenaline 4:00 loop
+  // Adrenaline 4:00 loop (+stamp each time it hits 4:00)
   if(adrStart){
     let a=0;
     if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
@@ -533,7 +554,7 @@ function tick(){
 
     if(a>=240){
       $('adrDigits').textContent='04:00'; play('adr4');
-      adrCount++; // stamp each 4:00
+      adrCount++;
       stamp(`Adrenaline no. ${adrCount} Administered`);
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
       adrRunning = false;
@@ -599,7 +620,7 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== Export: PDF via hidden iframe (no tab switch) ===== */
+/* ===== Export: PDF via hidden iframe with Blob URL (footer shows blob:…) ===== */
 $('printPdf').onclick = () => {
   const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
   const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
@@ -646,24 +667,75 @@ $('printPdf').onclick = () => {
     <script>onload=()=>{ print(); setTimeout(()=>close(),500) }<\/script>
   </body></html>`;
 
-  // Use a hidden iframe so iOS WebClip doesn't bounce back
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+
+  // Hidden iframe uses Blob URL (PDF footer shows blob:…)
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed';
   iframe.style.right = '0'; iframe.style.bottom = '0';
   iframe.style.width = '0'; iframe.style.height = '0';
   iframe.style.border = '0'; iframe.style.visibility='hidden';
-  // srcdoc keeps your real URL out of the PDF footer; on iOS it often shows about:blank or blob:
-  iframe.srcdoc = html;
+  iframe.src = url;
   document.body.appendChild(iframe);
   iframe.onload = () => {
     try{
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
     }catch{}
-    // cleanup after a moment
-    setTimeout(()=>{ try{ document.body.removeChild(iframe); }catch{} }, 1500);
+    setTimeout(()=>{
+      try{ document.body.removeChild(iframe); }catch{}
+      URL.revokeObjectURL(url);
+    }, 1500);
   };
 };
+
+/* ===== Collapsible WAAFELSS: state & hint ===== */
+const waPanel = document.getElementById('waPanel');
+const waHint = document.getElementById('waHint');
+try{
+  const saved = localStorage.getItem('waPanel');
+  if(saved === 'open') waPanel.setAttribute('open','');
+}catch{}
+waPanel.addEventListener('toggle', ()=>{
+  try{ localStorage.setItem('waPanel', waPanel.open ? 'open' : 'closed'); }catch{}
+  if(waPanel.open && waHint){ waHint.style.display='none'; }
+});
+
+/* ===== WAAFELSS calculations ===== */
+const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function months(n){
+  const weight=n*0.5+4, adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
+  const minF=Math.round(weight*10), maxF=Math.round(weight*20);
+  const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
+  const sga=(weight<=5)?'Size 1':'Size 1.5';
+  return {age:`${n} months`,weight,adr,amio,minF,maxF,sga,joules,d10};
+}
+function years(n){
+  let weight,sga; if(n<=5){weight=n*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':'';}
+  else{weight=n*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes';}
+  const adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
+  const minF=Math.round(weight*10), maxF=Math.round(weight*20);
+  const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
+  return {age:`${n} years`,weight,adr,amio,minF,maxF,sga,joules,d10};
+}
+function renderW(o){
+  $('wAge').textContent=o.age;
+  $('wWeight').textContent=`${o.weight.toFixed(1)} kg`;
+  $('wAdr').textContent=`${o.adr} mg`;
+  $('wAmio').textContent=`${o.amio} mg`;
+  $('wFluids').textContent=`${o.minF}–${o.maxF} mL`;
+  $('wSGA').textContent=o.sga||'—';
+  $('wJoules').textContent=`${o.joules} J`;
+  $('wD10').textContent=`${o.d10} mL`;
+}
+function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
+function checkAge(){ const empty = (age.value===''||age.value===null); mBtn.disabled=empty; yBtn.disabled=empty; }
+age.addEventListener('input',checkAge); checkAge();
+
+mBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); };
+yBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); };
 
 /* ===== Self-tests ===== */
 (function runSelfTests(){
