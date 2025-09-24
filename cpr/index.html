@@ -131,35 +131,35 @@ a{color:inherit}
   .extras{grid-area:extras; justify-items:center}
 }
 
-/* ===== LANDSCAPE LAYOUT v4 (REPLACE BLOCK C1) ===== */
+/* ===== LANDSCAPE LAYOUT v5 (PATCH B: REPLACE WHOLE BLOCK) ===== */
 @media (orientation:landscape){
 
-  /* Center the title + total explicitly */
+  /* A) Center Title + TOTAL CPR TIME (independent of buttons) */
   .brand{ justify-self:center; text-align:center; }
   .total{ align-items:center; }
 
-  /* Shared landscape scale tokens (timers + headings grow) */
+  /* B) Landscape tokens: bigger timers, slightly smaller action buttons on tight screens */
   :root{
-    --timer-min:      560px;             /* min column width for each timer */
-    --timer-max:      860px;             /* hard cap width for each timer/card */
+    --timer-min:      560px;              /* each timer column min width */
+    --timer-max:      860px;              /* hard cap per timer card */
     --card-pad:       clamp(20px, 2.6vw, 30px);
     --kpi-digits:     clamp(76px, 10.2vw, 164px);
     --subtitle-size:  clamp(16px, 2.6vw, 22px);
     --total-size:     clamp(58px, 8vw, 108px);
     --chip-h:         clamp(44px, 6vw, 56px);
     --chip-pad-x:     clamp(10px, 2vw, 14px);
-    --actions-gap:    clamp(10px, 1.6vw, 16px);
+    --actions-gap:    clamp(10px, 1.4vw, 14px);
     --timers-gap:     26px;
   }
 
-  /* Top controls a bit larger & even */
+  /* C) Top controls look even in landscape */
   .header{ gap: 8px; }
   .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
   .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
   .icon-toggle{ width: var(--chip-h); height: var(--chip-h); }
   .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
 
-  /* Main grid: actions (top), timers (middle), extras (bottom) */
+  /* D) Main grid: actions above, then timers, then extras (WAAFELSS | Log) */
   .main{
     grid-template-areas:
       "actions actions"
@@ -172,39 +172,42 @@ a{color:inherit}
     gap: 22px;
   }
 
-  /* Actions row spans both columns BUT contains two columns that exactly match the timer columns */
+  /* E) Actions row is a two-column grid that mirrors the timer columns 1:1 */
   .actions{
     grid-area: actions;
     display: grid;
     grid-template-columns:
-      minmax(var(--timer-min), 1fr)   /* left column aligns with left timer */
-      minmax(var(--timer-min), 1fr);  /* right column aligns with right timer */
-    gap: 0; /* gutters handled inside the triplets */
+      minmax(var(--timer-min), 1fr)   /* aligns with #cycleTimer column */
+      minmax(var(--timer-min), 1fr);  /* aligns with #adrTimer column   */
+    gap: 0;  /* triplets manage their own internal gaps */
     width: 100%;
   }
 
-  /* Triplets sit centered ABOVE their matching timer and never exceed timer width */
+  /* Triplets: exactly 3 buttons each, centered and never wider than their timer */
   .actions-left,
   .actions-right{
     display: grid;
-    grid-template-columns: repeat(3, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, minmax(110px, 1fr)); /* ↓ was 140px */
     gap: var(--actions-gap);
     max-width: min(var(--timer-max), 100%);
-    justify-self: center;   /* centers triplet within its timer column */
+    justify-self: center;    /* center within the timer column */
     align-self: end;
   }
-
-  /* Map each triplet to its side */
   .actions-left{  grid-column: 1; }
   .actions-right{ grid-column: 2; }
 
-  /* Timers row: two big cards side-by-side */
+  /* Slightly smaller buttons in landscape so triplets fit on small devices */
+  .btn{
+    font-size: clamp(14px, 1.8vw, 16px);
+    padding: 10px 12px;
+  }
+
+  /* F) Timers: two big cards side-by-side; everything scales up */
   .timers{ display: contents; } /* let children join the .main grid */
   #cycleTimer{ grid-area: left;  }
   #adrTimer{   grid-area: right; }
   .timer{ width: min(var(--timer-max), 100%); }
 
-  /* Proportional internal scaling (digits, prompts, controls) */
   #countdown{ font-size: clamp(132px, 20vw, 240px); }
   #adrPrompt{ font-size: clamp(60px, 11vw, 132px); }
 
@@ -214,7 +217,7 @@ a{color:inherit}
   }
   .icon-ctrl svg{ width: 32px; height: 32px; }
 
-  /* Extras: WAAFELSS under Cycle, Log under Adrenaline */
+  /* G) Extras: WAAFELSS under Cycle, Log under Adrenaline */
   .extras{
     grid-area: extras;
     display: grid;
@@ -227,7 +230,7 @@ a{color:inherit}
   .card{     grid-column: 2; width: 100%; }
 }
 
-/* Narrow-landscape guard so it still looks tidy on smaller phones */
+/* H) Narrow-landscape guard so it stays tidy on smaller phones */
 @media (orientation:landscape) and (max-width: 980px){
   :root{
     --timer-min: 480px;
@@ -235,7 +238,12 @@ a{color:inherit}
     --kpi-digits: clamp(70px, 9.6vw, 150px);
     --total-size: clamp(52px, 7.2vw, 98px);
   }
+  .actions-left,
+  .actions-right{
+    grid-template-columns: repeat(3, minmax(100px, 1fr)); /* allow tighter fit */
+  }
 }
+
 
 
 
@@ -409,48 +417,49 @@ a{color:inherit}
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="actions">
-<!-- Left triplet ABOVE CYCLE: Stop • ROSC • Export -->
-       <div class="actions-left">
-            <button id="stopb" class="btn btn-stop">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
-  </svg>
-  Stop
-</button>
-   <button id="roscb" class="btn btn-rosc">
-        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
-        ROSC
-      </button>
+    <!-- ===== ACTIONS (PATCH A) ===== -->
+<div class="actions">
+  <!-- Left triplet ABOVE CYCLE: Stop • ROSC • Export -->
+  <div class="actions-left">
+    <button id="stopb"  class="btn btn-stop">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
+      </svg>
+      Stop
+    </button>
+    <button id="roscb"  class="btn btn-rosc">
+      <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
+      ROSC
+    </button>
     <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
-  </svg>
-  Export PDF
-</button>
- </div>
- <!-- Right triplet ABOVE ADRENALINE: Shock • Amiodarone • DSED -->
-  <div class="actions-right">
-      <button id="shockb" class="btn btn-shock">
-        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
-        Shock
-      </button>
- <button id="amiob" class="btn btn-amio">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-  </svg>
-  Amiodarone
-</button>
-      <!-- Row 3 -->
-  <button id="dsedb" class="btn btn-dsed" title="Log DSED">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-  </svg>
-  Log DSED
-</button>
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
+      </svg>
+      Export PDF
+    </button>
   </div>
-    </div>
+
+  <!-- Right triplet ABOVE ADRENALINE: Shock • Amiodarone • DSED -->
+  <div class="actions-right">
+    <button id="shockb" class="btn btn-shock">
+      <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
+      Shock
+    </button>
+    <button id="amiob"  class="btn btn-amio">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+      </svg>
+      Amiodarone
+    </button>
+    <button id="dsedb"  class="btn btn-dsed" title="Log DSED">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+      </svg>
+      Log DSED
+    </button>
+  </div>
+</div>
+
 
     <!-- Extras -->
     <div class="extras">
