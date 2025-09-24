@@ -131,17 +131,15 @@ a{color:inherit}
   .extras{grid-area:extras; justify-items:center}
 }
 
-/* ===== LANDSCAPE LAYOUT v5 (PATCH B: REPLACE WHOLE BLOCK) ===== */
+/* ===== LANDSCAPE MASTER GRID (PATCH B) ===== */
 @media (orientation:landscape){
 
-  /* A) Center Title + TOTAL CPR TIME (independent of buttons) */
-  .brand{ justify-self:center; text-align:center; }
-  .total{ align-items:center; }
-
-  /* B) Landscape tokens: bigger timers, slightly smaller action buttons on tight screens */
+  /* Tokens just for landscape */
   :root{
-    --timer-min:      560px;              /* each timer column min width */
-    --timer-max:      860px;              /* hard cap per timer card */
+    --timer-min:   560px;              /* min width for each timer column */
+    --timer-max:   860px;              /* cap width for each timer card/stack */
+    --center-min:  320px;              /* center track min (title/total) */
+
     --card-pad:       clamp(20px, 2.6vw, 30px);
     --kpi-digits:     clamp(76px, 10.2vw, 164px);
     --subtitle-size:  clamp(16px, 2.6vw, 22px);
@@ -150,64 +148,77 @@ a{color:inherit}
     --chip-pad-x:     clamp(10px, 2vw, 14px);
     --actions-gap:    clamp(10px, 1.4vw, 14px);
     --timers-gap:     26px;
+    --row-gap:        22px;
+    --col-gap:        22px;
   }
 
-  /* C) Top controls look even in landscape */
-  .header{ gap: 8px; }
+  /* 0) Make the container the master 3-column grid */
+  .container{
+    display: grid;
+    grid-template-columns:
+      minmax(var(--timer-min), var(--timer-max))   /* LEFT: Cycle stack  */
+      minmax(var(--center-min), 1fr)               /* CENTER: Title/Total */
+      minmax(var(--timer-min), var(--timer-max));  /* RIGHT: Adr stack   */
+    grid-auto-rows: auto;
+    column-gap: var(--col-gap);
+    row-gap: var(--row-gap);
+    align-items: start;
+    justify-items: stretch;
+  }
+
+  /* 1) Top chips row spans all columns */
+  .header{ grid-column: 1 / -1; gap: 8px; }
   .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
   .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
   .icon-toggle{ width: var(--chip-h); height: var(--chip-h); }
   .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
 
-  /* D) Main grid: actions above, then timers, then extras (WAAFELSS | Log) */
-  .main{
-    grid-template-areas:
-      "actions actions"
-      "left    right"
-      "extras  extras";
-    grid-template-columns:
-      minmax(var(--timer-min), 1fr)
-      minmax(var(--timer-min), 1fr);
-    align-items: start;
-    gap: 22px;
-  }
+  /* 2) Title + TOTAL CPR stay in the CENTER track — perfectly centered */
+  .brand{ grid-column: 2; justify-self: center; text-align: center; }
+  .total{ grid-column: 2; align-items: center; justify-self: center; }
 
-  /* E) Actions row is a two-column grid that mirrors the timer columns 1:1 */
-  .actions{
-    grid-area: actions;
-    display: grid;
-    grid-template-columns:
-      minmax(var(--timer-min), 1fr)   /* aligns with #cycleTimer column */
-      minmax(var(--timer-min), 1fr);  /* aligns with #adrTimer column   */
-    gap: 0;  /* triplets manage their own internal gaps */
-    width: 100%;
-  }
+  /* 3) Let .main collapse so its children can be positioned on the container grid */
+  .main{ display: contents; }
 
-  /* Triplets: exactly 3 buttons each, centered and never wider than their timer */
-  .actions-left,
-  .actions-right{
+  /* 4) ACTIONS: turn wrappers into grid items placed above their timers */
+  .actions{ display: contents; }   /* expose .actions-left/right to container grid */
+
+  .actions-left{
+    grid-column: 1;
+    justify-self: center;            /* center within the LEFT column */
     display: grid;
-    grid-template-columns: repeat(3, minmax(110px, 1fr)); /* ↓ was 140px */
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
     gap: var(--actions-gap);
     max-width: min(var(--timer-max), 100%);
-    justify-self: center;    /* center within the timer column */
-    align-self: end;
   }
-  .actions-left{  grid-column: 1; }
-  .actions-right{ grid-column: 2; }
-
-  /* Slightly smaller buttons in landscape so triplets fit on small devices */
+  .actions-right{
+    grid-column: 3;
+    justify-self: center;            /* center within the RIGHT column */
+    display: grid;
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    gap: var(--actions-gap);
+    max-width: min(var(--timer-max), 100%);
+  }
+  /* Slightly smaller buttons in landscape for fit */
   .btn{
     font-size: clamp(14px, 1.8vw, 16px);
     padding: 10px 12px;
+    white-space: normal;
+    text-align: center;
   }
 
-  /* F) Timers: two big cards side-by-side; everything scales up */
-  .timers{ display: contents; } /* let children join the .main grid */
-  #cycleTimer{ grid-area: left;  }
-  #adrTimer{   grid-area: right; }
-  .timer{ width: min(var(--timer-max), 100%); }
-
+  /* 5) TIMERS: each sits in its own column, centered; internals scale up */
+  .timers{ display: contents; }     /* expose #cycleTimer/#adrTimer */
+  #cycleTimer{
+    grid-column: 1;
+    justify-self: center;
+    width: min(var(--timer-max), 100%);
+  }
+  #adrTimer{
+    grid-column: 3;
+    justify-self: center;
+    width: min(var(--timer-max), 100%);
+  }
   #countdown{ font-size: clamp(132px, 20vw, 240px); }
   #adrPrompt{ font-size: clamp(60px, 11vw, 132px); }
 
@@ -217,20 +228,13 @@ a{color:inherit}
   }
   .icon-ctrl svg{ width: 32px; height: 32px; }
 
-  /* G) Extras: WAAFELSS under Cycle, Log under Adrenaline */
-  .extras{
-    grid-area: extras;
-    display: grid;
-    grid-template-columns:
-      minmax(var(--timer-min), 1fr)
-      minmax(var(--timer-min), 1fr);
-    gap: 22px;
-  }
+  /* 6) EXTRAS: WAAFELSS under Cycle, Log under Adrenaline */
+  .extras{ display: contents; }     /* expose .wa-shell and .card */
   .wa-shell{ grid-column: 1; width: 100%; }
-  .card{     grid-column: 2; width: 100%; }
+  .card{     grid-column: 3; width: 100%; }
 }
 
-/* H) Narrow-landscape guard so it stays tidy on smaller phones */
+/* Narrow-landscape guard so it stays tidy on small phones */
 @media (orientation:landscape) and (max-width: 980px){
   :root{
     --timer-min: 480px;
@@ -243,6 +247,7 @@ a{color:inherit}
     grid-template-columns: repeat(3, minmax(100px, 1fr)); /* allow tighter fit */
   }
 }
+
 
 
 
@@ -417,7 +422,7 @@ a{color:inherit}
       </div>
     </div>
 
-    <!-- ===== ACTIONS (PATCH A) ===== -->
+  <!-- ===== ACTIONS (PATCH A) ===== -->
 <div class="actions">
   <!-- Left triplet ABOVE CYCLE: Stop • ROSC • Export -->
   <div class="actions-left">
@@ -459,6 +464,7 @@ a{color:inherit}
     </button>
   </div>
 </div>
+
 
 
     <!-- Extras -->
