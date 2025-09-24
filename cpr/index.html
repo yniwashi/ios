@@ -228,14 +228,28 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 /* ---------- ACTIONS (Landscape: two 2×2 stacks + bottom button centered) ---------- */
 @media (orientation:landscape){
   .actions-wrap{display:contents}
-  .actions-left, .actions-right{
+
+  .actions-left{
+    /* put this stack under the CYCLE timer */
+    grid-area:actionsL;
     display:grid; gap:var(--gap-sm);
     grid-template-columns:repeat(2, minmax(140px,1fr));
     justify-items:center;
+    align-self:start; /* stay just below the timer row */
   }
-  /* utility to span both columns for the 3rd button on each side */
+
+  .actions-right{
+    /* put this stack under the ADRENALINE timer */
+    grid-area:actionsR;
+    display:grid; gap:var(--gap-sm);
+    grid-template-columns:repeat(2, minmax(140px,1fr));
+    justify-items:center;
+    align-self:start;
+  }
+
   .span-2{ grid-column:1 / -1; justify-self:center; max-width:280px }
 }
+
 
 /* ---------- WAAFELSS & LOG ---------- */
 .extras-wa{grid-area:wa}
