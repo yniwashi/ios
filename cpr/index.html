@@ -5,28 +5,22 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 g)
-   - WAAFELSS stays under Actions; collapsible
-   - Actions: 3 rows × 2 buttons (equal sizing)
-   - Log: framed card with header
-   - Start/Pause show disabled states and toggle correctly
-   - Action button colors updated (light/dark friendly)
-   - PDF export via window.open(Blob URL) → footer shows blob:
-   - Export .txt removed
+   CPR TIMER — Patch (2025-09-24 f)
+   - WebClip audio unlock (multi-gesture + resume + oscillator fallback)
+   - Actions: 3 rows × 2 buttons, equal width
+   - Export PDF only, disabled until Stop/ROSC, blob: URL viewer/downloader
+   - WAAFELSS collapsible, stays below Actions
+   - Back button boxed + larger arrow
+   - Start/Pause "looks disabled" properly
+   - Adrenaline stamps on every 4:00 due
    ========================================================== */
 
-/* ---------- Quick customization points ----------
-   • Change button colors: adjust CSS vars under :root and :root[data-theme="light"]
-   • Change button labels/icons: edit innerText/SVG in HTML below (search “EDIT:”)
--------------------------------------------------- */
-
+/* ---------- THEME TOKENS ---------- */
 :root{
   color-scheme: light dark;
   --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3;
   --card:#14181d; --border:#20262d;
-  --shadow: 0 6px 20px rgba(0,0,0,.22);
 
-  /* Total & timer accents */
   --total-color:#f1f5f9;
   --cycle-accent-light:#ff4d4d;
   --cycle-accent-dark:#ffb347;
@@ -35,22 +29,15 @@
   --countdown-red:#ff3333;
   --adr-color:#2ea0ff;
 
-  /* Generic button shell */
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
+  --primary:#0f2e39; --primary-bd:#2e89a8; --primary-fg:#e6fbff;
+  --danger:#671d1d;  --danger-bd:#9a3333;  --danger-fg:#fff0f0;
 
-  /* Action button palettes (DARK defaults) */
-  --rosc1:#a93a3a; --rosc2:#5a1b1b; --rosc-fg:#fff3f3;            /* light red */
-  --stop1:#b11f2a; --stop2:#5a0f14; --stop-fg:#fff3f3;            /* red */
-  --shock1:#d6a300; --shock2:#5a4500; --shock-fg:#111;            /* yellow */
-  --amio1:#2aa7ff; --amio2:#0a4766; --amio-fg:#ffffff;           /* sky blue */
-  --dsed1:#c78c00; --dsed2:#593f00; --dsed-fg:#111;              /* amber (different shade) */
-  --export1:#7d5cff; --export2:#2a2166; --export-fg:#ffffff;     /* violet */
-
-  /* Sizes */
   --title-size: clamp(20px, 3.2vw, 36px);
   --subtitle-size: clamp(12px, 1.8vw, 16px);
   --total-size: clamp(40px, 6.2vw, 72px);
   --kpi-digits: clamp(42px, 7.5vw, 110px);
+  --icon-btn: clamp(40px, 6.4vw, 54px);
   --chip-h: clamp(36px, 5.2vw, 46px);
   --chip-pad-x: clamp(8px, 1.6vw, 12px);
   --chip-gap: clamp(6px, 1.2vw, 10px);
@@ -59,8 +46,9 @@
   --card-pad: clamp(12px, 2vw, 16px);
   --container-pad: clamp(10px, 2.4vw, 16px);
   --radius: 18px;
+  --shadow: 0 6px 20px rgba(0,0,0,.22);
 
---log-font: clamp(12px, 1.2vw, 13px);
+  --log-font: clamp(12px, 1.6vw, 14px);
 
   --cycle-accent: var(--cycle-accent-dark);
   --cycle-shadow: var(--cycle-shadow-dark);
@@ -70,87 +58,81 @@
   --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
   --card:#ffffff; --border:#e5e7eb;
   --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
-
-  /* Action button palettes (LIGHT overrides) */
-  --rosc1:#fecaca; --rosc2:#ef4444; --rosc-fg:#7f1d1d;
-  --stop1:#ef4444; --stop2:#991b1b; --stop-fg:#ffffff;
-  --shock1:#fde047; --shock2:#f59e0b; --shock-fg:#1f2937;
-  --amio1:#38bdf8; --amio2:#0284c7; --amio-fg:#ffffff;
-  --dsed1:#fbbf24; --dsed2:#b45309; --dsed-fg:#111827;
-  --export1:#c4b5fd; --export2:#7c3aed; --export-fg:#ffffff;
-
+  --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
+  --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
   --total-color:#111111;
   --cycle-accent: var(--cycle-accent-light);
   --cycle-shadow: var(--cycle-shadow-light);
 }
-
-/* Auto mode: follow device pref when Auto selected */
+/* Auto follows device unless explicitly overridden to dark */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     color-scheme: light;
     --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
-    --card:#ffffff; --border:#e5e7eb; --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+    --card:#ffffff; --border:#e5e7eb;
+    --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+    --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
+    --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
     --total-color:#111111;
     --cycle-accent: var(--cycle-accent-light);
     --cycle-shadow: var(--cycle-shadow-light);
   }
 }
 
-/* Base */
+/* ---------- BASE ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
 .container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 a{color:inherit}
 
-/* Header */
+/* ---------- HEADER ---------- */
 .header{display:grid;gap:8px}
 .controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
 
-/* Chips */
+/* ---------- CHIPS ---------- */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 
-/* Back, Theme, Mute (cardless) */
-#backChip,#themeChip,#muteChip{background:transparent;border:none;padding:0}
-#backChip .chip-label,#muteChip .chip-label{display:none}
+/* Back, Theme, Mute: minimal wrappers */
+#backChip{background:transparent;border:none;padding:0}
+#backChip .chip-label{display:none}
+/* Put Back inside a box like other toggles & make arrow bigger */
+#backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
+#themeChip{background:transparent;border:none;padding:0}
+#muteChip{background:transparent;border:none;padding:0}
+#muteChip .chip-label{display:none}
 
 /* Icon toggles */
-.icon-toggle{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:var(--chip-h);height:var(--chip-h);
-  border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)
-}
+.icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
-/* Back bigger & boxed */
-#backBtn.icon-toggle{ width:calc(var(--chip-h) + 6px); height:calc(var(--chip-h) + 6px); font-weight:900; font-size:clamp(22px,3.8vw,32px); line-height:1; }
 
-/* Total CPR */
+/* ---------- TOTAL CPR ---------- */
 .total{display:flex;flex-direction:column;align-items:center;margin:8px 0 10px}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* Layout */
+/* ---------- LAYOUT ---------- */
 .main{display:grid;gap:16px}
 @media (orientation:portrait){
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
   .timers{grid-area:timers; display:grid; gap:var(--timers-gap); justify-items:center; grid-template-columns:repeat(2,minmax(0,1fr));}
   @media (max-width:459.9px){ .timers{grid-template-columns:1fr} }
-  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch}
+  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(140px, 1fr)); justify-items:stretch}
   .extras{grid-area:extras; justify-items:center}
 }
 @media (orientation:landscape){
   .main{grid-template-areas:"total total total" "timers actions actions" "extras extras extras";
-    grid-template-columns:1fr minmax(280px, 420px) 1fr; align-items:start;}
-  .actions{grid-area:actions; display:flex; flex-direction:column; gap:var(--actions-gap); align-items:stretch}
+    grid-template-columns:1fr minmax(320px, 560px) 1fr; align-items:start;}
+  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr)); align-items:stretch; justify-items:stretch}
   .extras{grid-area:extras}
   .timer .digits{font-size:clamp(38px, 7vw, 96px)}
 }
 
-/* Cards */
+/* ---------- CARDS ---------- */
 .centered{display:grid; justify-items:center}
 .timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
@@ -167,46 +149,20 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* Icon-ctrl (Start/Pause inside cards) */
+/* Icon-ctrl (Start/Pause) */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
-.icon-ctrl{
-  display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;
-  border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);
-  transition:opacity .15s, filter .15s
-}
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
-.icon-ctrl[disabled]{opacity:.45; filter:grayscale(0.2)}
+.icon-ctrl[disabled]{opacity:.45; filter:grayscale(.1); cursor:not-allowed}
 
-/* Actions: always 2 buttons per row (ROSC/Stop, Shock/Amio, DSED/Export) */
-.actions .row{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap: var(--actions-gap);
-  justify-items:stretch;
-}
-
-/* Make buttons fill their grid cell and avoid wrapping to a new line */
-.actions .row .btn{
-  width:100%;
-  max-width:none;
-  min-width:0;
-  flex:none;            /* override any previous flex from older CSS */
-}
-
-.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);
-  color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow);transition:transform .05s}
+/* ---------- ACTION BUTTONS ---------- */
+.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow); width:100%}
 .btn:active{transform:translateY(1px)}
 .btn .ico{width:clamp(16px,2.6vw,22px);height:clamp(16px,2.6vw,22px)}
-/* Color variants */
-.btn.rosc   {background:linear-gradient(180deg,var(--rosc1),var(--rosc2)); color:var(--rosc-fg)}
-.btn.stop   {background:linear-gradient(180deg,var(--stop1),var(--stop2)); color:var(--stop-fg)}
-.btn.shock  {background:linear-gradient(180deg,var(--shock1),var(--shock2)); color:var(--shock-fg)}
-.btn.amio   {background:linear-gradient(180deg,var(--amio1),var(--amio2)); color:var(--amio-fg)}
-.btn.dsed   {background:linear-gradient(180deg,var(--dsed1),var(--dsed2)); color:var(--dsed-fg)}
-.btn.export {background:linear-gradient(180deg,var(--export1),var(--export2)); color:var(--export-fg)}
+/* "Disabled look" while still clickable to show alerts */
+.btn.is-disabled{opacity:.48; filter:grayscale(.2); cursor:not-allowed}
 
-/* Countdown */
+/* ---------- COUNTDOWN ---------- */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
@@ -215,23 +171,25 @@ a{color:inherit}
 #countdown.show{display:flex}
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 
-/* Adrenaline prompt */
+/* ---------- ADRENALINE PROMPT ---------- */
 #adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* Collapsible WAAFELSS (stays under actions) */
-details.card{position:relative; background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow)}
-summary.wa-summary{
-  list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
-  padding:12px; font-weight:900; font-size:clamp(18px,2.8vw,20px); user-select:none;
+/* ---------- EXTRAS (WAAFELSS + LOG) ---------- */
+.extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
+/* Collapsible WAAFELSS uses <details>. Keep card framing only on the inside content. */
+.wa-shell{width:min(860px, 100%)}
+.wa-shell details{border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
+.wa-shell summary{
+  list-style:none; cursor:pointer; user-select:none; padding:12px 16px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; gap:8px;
 }
-summary.wa-summary::-webkit-details-marker{display:none}
-.wa-chevron{width:18px; height:18px; transition:transform .18s ease}
-details[open] .wa-chevron{ transform:rotate(90deg) }
-.wa-divider{height:1px;background:var(--border);margin:4px 0 8px;display:none}
-details[open] .wa-divider{display:block}
-.wa-content{padding:0 var(--card-pad) var(--card-pad)}
+.wa-shell summary::marker{display:none}
+.wa-shell summary .caret{transition:transform .2s ease}
+.wa-shell details[open] summary .caret{transform:rotate(90deg)}
+.wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
+.wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
 .wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
 .wa-row input{width:clamp(110px,20vw,130px);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -240,20 +198,17 @@ details[open] .wa-divider{display:block}
 .wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
 .wval{font-weight:800}
 
-/* Log card */
-.log-card{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); width:min(860px,100%)}
-.log-title{padding:10px 14px; font-weight:900; border-bottom:1px solid var(--border); opacity:.9}
-.log{max-height:240px;overflow:auto;margin:0;padding:10px 22px; font-family:ui-monospace,Consolas,monospace; font-size:var(--log-font)}
+/* Log card with framed look */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
+.log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
-/* Print */
+/* ---------- PRINT ---------- */
 @media print{
-  .header,.controls-row,.actions{display:none!important}
+  .header,.controls-row,.actions,.wa-row, .wa-shell, .wa-content{display:none!important}
   body{background:#fff;color:#000}
-  .timer,.card,.log-card{border:none;box-shadow:none}
+  .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
-  details.card summary{display:none}
-  details.card .wa-content{display:block}
 }
 @page{ margin:0 }
 </style>
@@ -266,7 +221,6 @@ details[open] .wa-divider{display:block}
     <div class="controls-row" id="controlsRow">
       <div class="chip" id="backChip">
         <div class="chip-label"></div>
-        <!-- EDIT: Back icon -->
         <button id="backBtn" class="icon-toggle" title="Back">←</button>
       </div>
       <div class="chip" id="themeChip">
@@ -306,11 +260,9 @@ details[open] .wa-divider{display:block}
         <div id="cycleDigits" class="digits">00:00</div>
         <div id="countdown">10</div>
         <div class="icon-row">
-          <!-- EDIT: Start icon/text -->
           <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <!-- EDIT: Pause icon/text -->
           <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
@@ -335,79 +287,67 @@ details[open] .wa-divider{display:block}
 
     <!-- Actions (3 rows × 2 buttons) -->
     <div class="actions">
-      <div class="row">
-        <button id="roscb" class="btn rosc">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
-          ROSC
-        </button>
-        <button id="stopb" class="btn stop">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/></svg>
-          Stop
-        </button>
-      </div>
-      <div class="row">
-        <button id="shockb" class="btn shock">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2"/></svg>
-          Shock
-        </button>
-        <button id="amiob" class="btn amio">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 10h14" stroke="currentColor" stroke-width="2"/></svg>
-          Amiodarone
-        </button>
-      </div>
-      <div class="row">
-        <button id="dsedb" class="btn dsed" title="Log DSED">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
-          Log DSED
-        </button>
-        <button id="printPdf" class="btn export">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
-          Export PDF
-        </button>
-      </div>
+      <!-- Row 1 -->
+      <button id="roscb" class="btn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
+        ROSC
+      </button>
+      <button id="stopb" class="btn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/></svg>
+        Stop
+      </button>
+      <!-- Row 2 -->
+      <button id="shockb" class="btn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2"/></svg>
+        Shock
+      </button>
+      <button id="amiob" class="btn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 10h14" stroke="currentColor" stroke-width="2"/></svg>
+        Amiodarone
+      </button>
+      <!-- Row 3 -->
+      <button id="dsedb" class="btn" title="Log DSED">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
+        Log DSED
+      </button>
+      <button id="printPdf" class="btn is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
+        Export PDF
+      </button>
     </div>
-<!-- Small popover menu for PDF actions -->
-<div id="pdfMenu" style="position:absolute; display:none; z-index:9999;">
-  <div id="pdfMenuInner" style="
-    background:var(--card); border:1px solid var(--border); border-radius:12px;
-    box-shadow:var(--shadow); padding:8px; display:flex; gap:8px;
-  ">
-    <button id="pdfView" class="btn ghost" type="button">View PDF</button>
-    <button id="pdfSave" class="btn primary" type="button">Save PDF</button>
-  </div>
-</div>
 
-    <!-- Extras (WAAFELSS + Log) -->
-    <div class="extras" style="display:grid;gap:12px;justify-items:center">
-      <!-- WAAFELSS collapsible stays here under actions -->
-      <details id="waPanel" class="card" style="width:min(860px,100%)">
-        <summary class="wa-summary">
-          <span>WAAFELSS</span>
-          <svg class="wa-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l8 7-8 7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-        </summary>
-        <div class="wa-divider"></div>
-        <div class="wa-content">
-          <div class="wa-row">
-            <input id="age" type="number" min="0" placeholder="Enter Age">
-            <button id="mBtn" class="btn" style="background:var(--btn-bg);color:var(--btn-fg)" title="Months" disabled>Months</button>
-            <button id="yBtn" class="btn" style="background:var(--btn-bg);color:var(--btn-fg)" title="Years" disabled>Years</button>
+    <!-- Extras -->
+    <div class="extras">
+      <!-- Collapsible WAAFELSS (kept BELOW actions) -->
+      <div class="wa-shell">
+        <details>
+          <summary>
+            <span class="caret">▶</span>
+            <span>WAAFELSS</span>
+          </summary>
+          <div class="wa-content">
+            <div class="wa-title">WAAFELSS</div>
+            <div class="wa-row">
+              <input id="age" type="number" min="0" placeholder="Enter Age">
+              <button id="mBtn" class="btn" title="Months" disabled>Months</button>
+              <button id="yBtn" class="btn" title="Years" disabled>Years</button>
+            </div>
+            <div class="waffles-grid">
+              <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Weight</div><div id="wWeight" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Adrenaline</div><div id="wAdr" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Amiodarone</div><div id="wAmio" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Fluids</div><div id="wFluids" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">SGA</div><div id="wSGA" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">Energy</div><div id="wJoules" class="wval">—</div></div>
+              <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
+            </div>
           </div>
-          <div class="waffles-grid">
-            <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">Weight</div><div id="wWeight" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">Adrenaline</div><div id="wAdr" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">Amiodarone</div><div id="wAmio" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">Fluids</div><div id="wFluids" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">SGA</div><div id="wSGA" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">Energy</div><div id="wJoules" class="wval">—</div></div>
-            <div class="wrow"><div class="wtag">D10%</div><div id="wD10" class="wval">—</div></div>
-          </div>
-        </div>
-      </details>
+        </details>
+      </div>
 
-      <!-- Log with frame -->
-      <div class="log-card">
-        <div class="log-title">Event Log</div>
+      <!-- Log -->
+      <div class="card">
         <ul id="log" class="log"></ul>
       </div>
     </div>
@@ -419,7 +359,7 @@ details[open] .wa-divider{display:block}
 /* ===== THEME ===== */
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
-let themeMode = 'auto';
+let themeMode = 'auto'; // auto | light | dark
 function applyTheme(){
   root.removeAttribute('data-theme');
   if (themeMode==='light') root.setAttribute('data-theme','light');
@@ -441,7 +381,7 @@ const mql = window.matchMedia('(prefers-color-scheme: dark)');
 mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
 applyTheme();
 
-/* ===== NAV ===== */
+/* Back button behavior */
 const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
 const backBtn = document.getElementById('backBtn');
 if(backBtn){
@@ -465,27 +405,13 @@ function stamp(label){
   events.push({ts,label});
 }
 
-   // Dynamically load jsPDF + autoTable once (CDN). Safe to call multiple times.
-let __pdfLibLoaded = false;
-async function ensureJsPDF(){
-  if(__pdfLibLoaded) return;
-  const add = (src)=>new Promise((res,rej)=>{
-    const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);
-  });
-  // jsPDF core
-  await add('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
-  // autoTable plugin (tables)
-  await add('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js');
-  __pdfLibLoaded = true;
-}
-
 /* ===== WAKE LOCK ===== */
 let wakeLock=null;
 async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
 async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-/* ===== AUDIO ===== */
+/* ===== AUDIO (WebClip-safe unlock) ===== */
 let audioCtx;
 const buffers={}, files={
   beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -494,19 +420,57 @@ const buffers={}, files={
 function primeAudio(){
   if(!audioCtx){
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    audioCtx.resume();
-    (async()=>{ for(const [k,p] of Object.entries(files)){ try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
   }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(()=>{});
+  }
+  // 1ms near-silent oscillator to fully unlock in iOS WebClip
+  try{
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    g.gain.value = 0.0001;
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    setTimeout(()=>{ try{o.stop();}catch{} }, 1);
+  }catch{}
+  // Preload
+  (async()=>{ for(const [k,p] of Object.entries(files)){ if(buffers[k]) continue; try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
 }
-window.addEventListener('pointerdown', primeAudio, {once:true});
-window.addEventListener('keydown', primeAudio, {once:true});
-function play(name, vol=1){ const buf=buffers[name]; if(!audioCtx || !buf) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start(); }
+['pointerdown','touchstart','keydown','click'].forEach(ev=>{
+  window.addEventListener(ev, primeAudio, {once:true, passive:true});
+});
+async function ensureAudioReady(){
+  if(!audioCtx) primeAudio();
+  if(audioCtx && audioCtx.state==='suspended'){ try{ await audioCtx.resume(); }catch{} }
+}
+function play(name, vol=1){
+  const tryBuffer = () => {
+    const buf=buffers[name];
+    if(!audioCtx || !buf) return false;
+    const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
+    g.gain.value=vol;
+    src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
+    return true;
+  };
+  const beep = () => { // fallback tick
+    try{
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type='square'; o.frequency.value=800;
+      g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
+      o.start(); setTimeout(()=>{ try{o.stop();}catch{} }, 20);
+    }catch{}
+  };
+  ensureAudioReady().then(()=>{ if(!tryBuffer()) beep(); });
+}
 
 /* ===== METRONOME ===== */
 let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
-$('muteBtn').addEventListener('click',()=>{
+const muteBtnEl=$('muteBtn');
+muteBtnEl.addEventListener('click',()=>{
   beatMuted=!beatMuted;
-  const mx=document.getElementById('muteX'), wv=document.getElementById('wave');
+  const mx=document.getElementById('muteX');
+  const wv=document.getElementById('wave');
   if(mx) mx.style.opacity=beatMuted?'1':'0';
   if(wv) wv.style.opacity=beatMuted?'0':'1';
   if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
@@ -525,9 +489,11 @@ let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
 let cue20=false, cue90=false, cue120=false;
 let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
+
+// Visual reset for total digits but keep times for export
 let showTotalZero = true;
 
-/* ===== Countdown ===== */
+/* ===== COUNTDOWN ===== */
 function showCountdown(){
   if(counting) return;
   counting=true; countdownN=10;
@@ -538,25 +504,23 @@ function showCountdown(){
   countdownTimer = setInterval(()=>{
     countdownN--;
     if (countdownN>0){
-      box.textContent = countdownN;
+      box.textContent = countdownN; // 9..1
     } else {
       clearInterval(countdownTimer); countdownTimer=null;
       box.classList.remove('show'); card.classList.remove('cycle-hide');
       cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
-      // Start running → disable Start, enable Pause (visual)
-      $('cprStart').disabled = true;
-      $('cprPause').disabled = false;
+      // Start looks disabled, Pause enabled
+      $('cprStart').disabled = true; $('cprPause').disabled = false;
       counting=false;
     }
   },1000);
 }
-function now(){ return Date.now(); }
 
-/* ===== Animation loop ===== */
+/* ===== TICK ===== */
+function now(){ return Date.now(); }
 function tick(){
   const t=now();
-
-  // Total CPR display
+  // total
   if(showTotalZero){
     $('totalDigits').textContent='00:00';
   }else if(totalStart && !totalEnd){
@@ -568,7 +532,7 @@ function tick(){
     $('totalDigits').textContent='00:00';
   }
 
-  // Cycle 2:00 → countdown
+  // cycle
   let c=0;
   if(cprStart){
     if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
@@ -583,50 +547,40 @@ function tick(){
       cycleCount += 1;
       stamp(`Cycle ${cycleCount} finished`);
       cprRunning=false;
-      // running → paused state
-      $('cprStart').disabled = false;
-      $('cprPause').disabled = true;
+      $('cprStart').disabled=false; $('cprPause').disabled=true;
       showCountdown();
     }
-  }else if(!counting){
-    $('cycleDigits').textContent='00:00';
+  }else{
+    if(!counting) $('cycleDigits').textContent='00:00';
   }
 
-  // Adrenaline 4:00 loop (+stamp at each 4:00)
+  // adrenaline loop
   if(adrStart){
     let a=0;
     if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
     else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
     else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
     a = a|0;
-
     if(a>=240){
       $('adrDigits').textContent='04:00'; play('adr4');
-      adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`);
+      stamp('Adrenaline timer reached 4:00'); // NEW: log each due
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
       adrRunning = false;
-      // switch to paused look
-      $('adrStart').disabled = false;
-      $('adrPause').disabled = true;
       setTimeout(()=>{
         adrCard.classList.remove('adr-show','adr-hide');
         adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-        // resume running look
-        $('adrStart').disabled = true;
-        $('adrPause').disabled = false;
+        $('adrStart').disabled = true; $('adrPause').disabled = false;
       }, 2000);
       a=0;
     }
     $('adrDigits').textContent=fmt(a);
-  }else{
-    $('adrDigits').textContent='00:00';
-  }
+  }else $('adrDigits').textContent='00:00';
 
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
-/* ===== Controls (toggle disabled visuals) ===== */
+/* ===== CONTROLS ===== */
 $('cprStart').onclick = () => {
   primeAudio();
   if(!totalStart){
@@ -635,49 +589,45 @@ $('cprStart').onclick = () => {
   }
   if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=false; cue120=false; play('start'); }
   else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
-  cprRunning=true; $('cprPause').disabled=false; if(!beatMuted) startBeat();
-  // running look
-  $('cprStart').disabled = true;
+  cprRunning=true; $('cprPause').disabled=false; $('cprStart').disabled=true; if(!beatMuted) startBeat();
 };
 $('cprPause').onclick = () => {
   if(!cprRunning) return; primeAudio();
   cprRunning=false; cprPausedAt=now(); play('pause'); stamp('CPR Timer Paused'); stopBeat();
-  // paused look
-  $('cprStart').disabled = false;
-  $('cprPause').disabled = true;
+  $('cprPause').disabled=true; $('cprStart').disabled=false;
 };
+
 $('adrStart').onclick = () => {
   primeAudio(); if(!totalStart) $('cprStart').click();
-  if(!adrStart){
-    adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-    adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`);
-    stamp('Adrenaline Timer Started');
-  } else if(adrPausedAt){
-    adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed');
-  }
-  $('adrPause').disabled=false;
-  $('adrStart').disabled=true; // running look
+  if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
+  else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
+  $('adrPause').disabled=false; $('adrStart').disabled=true;
 };
 $('adrPause').onclick = () => {
   if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused');
-  $('adrStart').disabled=false; $('adrPause').disabled=true; // paused look
+  $('adrPause').disabled=true; $('adrStart').disabled=false;
 };
 
 function endSession(label){
   primeAudio();
   if(!totalStart) return;
-  if(!totalEnd) totalEnd = now();
+  if(!totalEnd) totalEnd = now(); // keep for export
   stamp(label);
+  // stop timers
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
+  $('cprStart').disabled=false; $('cprPause').disabled=true;
+
   if(adrRunning){ adrRunning=false; adrPausedAt=0; }
   adrStart=0; adrPausedAccum=0;
+  $('adrStart').disabled=false; $('adrPause').disabled=true;
+
   showTotalZero = true;
   stopBeat(); releaseWake();
-  // Reset button looks
-  $('cprStart').disabled=false; $('cprPause').disabled=true;
-  $('adrStart').disabled=false; $('adrPause').disabled=true;
+
+  // enable export
+  setExportEnabled(true);
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
 $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
@@ -685,127 +635,112 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== Export PDF (window.open with Blob URL → footer shows blob:) ===== */
-(function setupPdfMenu(){
-  const menu = document.getElementById('pdfMenu');
-  const menuInner = document.getElementById('pdfMenuInner');
-  const exportBtn = document.getElementById('printPdf');
-  const viewBtn = document.getElementById('pdfView');
-  const saveBtn = document.getElementById('pdfSave');
+/* ===== EXPORT PDF (blob URL, download + viewer; disabled until Stop/ROSC) ===== */
+function setExportEnabled(enabled){
+  const b = $('printPdf');
+  b.classList.toggle('is-disabled', !enabled);
+}
+setExportEnabled(false);
 
-  // Build PDF (returns a Blob)
-  async function buildPdfBlob(){
-    await ensureJsPDF();
-    const { jsPDF } = window.jspdf;
+function sessionEnded(){ return !!(totalStart && totalEnd); }
 
-    // Create doc (A4 portrait)
-    const doc = new jsPDF({ unit:'pt', format:'a4' });
+async function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('load '+src));
+    document.head.appendChild(s);
+  });
+}
+async function buildPdfBlob(){
+  if(!window.jspdf){
+    await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+  }
+  const { jsPDF } = window.jspdf || {};
+  if(!jsPDF) throw new Error('jsPDF failed');
 
-    // Theme-ish colors
-    const accent = [46,160,255]; // matches your table accent
-    const fg     = [30, 41, 59];
+  let autoTableLoaded = true;
+  if(!jsPDF.API.autoTable){
+    try{
+      await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js');
+    }catch{ autoTableLoaded=false; }
+  }
 
-    // Header
-    doc.setFont('helvetica','bold'); doc.setFontSize(18);
-    doc.setTextColor(fg[0],fg[1],fg[2]);
-    doc.text('CPR Session Report', 40, 52);
+  const doc = new jsPDF({ unit: 'pt' });
 
-    // KVs
-    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-    const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-    const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
 
-    doc.setFont('helvetica','normal'); doc.setFontSize(12);
-    let y = 80;
-    const kvs = [
-      ['Started', started],
-      ['Ended',   ended],
-      ['Total',   total],
-      ['Counts',  counts],
-    ];
-    kvs.forEach(([k,v])=>{
-      doc.setFont('helvetica','bold');   doc.text(k+':', 40, y);
-      doc.setFont('helvetica','normal'); doc.text(String(v), 120, y);
-      y += 18;
-    });
+  doc.setFont('helvetica','bold'); doc.setFontSize(18);
+  doc.text('CPR Session Report', 40, 48);
 
-    // Events table data
-    const rows = events.map(e => [ hhmmss(e.ts), e.label ]);
+  doc.setFont('helvetica','normal'); doc.setFontSize(12);
+  const kv = [['Started',started],['Ended',ended],['Total',total],['Counts',counts]];
+  let y = 74;
+  kv.forEach(([k,v])=>{
+    doc.setFont('helvetica','bold'); doc.text(`${k}:`, 40, y);
+    doc.setFont('helvetica','normal'); doc.text(String(v), 120, y);
+    y += 18;
+  });
 
-    // autoTable (striped look similar to your HTML)
+  const rows = events.map(e=>[hhmmss(e.ts), e.label]);
+  if(autoTableLoaded && doc.autoTable){
     doc.autoTable({
-      startY: y + 12,
       head: [['Time (24h)','Event']],
       body: rows,
-      theme: 'striped',
-      headStyles: { fillColor: accent, textColor: 255, fontStyle:'bold' },
-      styles:     { font:'helvetica', fontSize: 11, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [240,248,255] }, // very light
-      columnStyles: { 0: { cellWidth: 120 } }
+      startY: y+10,
+      styles: { fontSize: 11, cellPadding: 6 },
+      headStyles: { fillColor: [25,118,210], textColor: 255 },
+      alternateRowStyles: { fillColor: [232,244,253] },
     });
-
-    // Footer (same text you used in HTML report)
-    const pageCount = doc.getNumberOfPages();
-    for(let i=1; i<=pageCount; i++){
-      doc.setPage(i);
-      const w = doc.internal.pageSize.getWidth();
-      const h = doc.internal.pageSize.getHeight();
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.setTextColor(120,120,130);
-      doc.text('Ambulance App', w/2, h-18, { align:'center' });
-    }
-
-    // Return a Blob so we can open or save via blob: URL
-    return doc.output('blob');
+  }else{
+    y += 28;
+    doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16;
+    doc.setFont('helvetica','normal');
+    rows.forEach(r=>{
+      if (y > 760){ doc.addPage(); y=48; }
+      doc.text(`${r[0]}  |  ${r[1]}`, 40, y);
+      y += 16;
+    });
   }
 
-  // Position the popover under the Export button
-  function showMenu(){
-    const r = exportBtn.getBoundingClientRect();
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
-    const scrollX = window.scrollX || document.documentElement.scrollLeft;
-    menu.style.left = (scrollX + r.left + (r.width/2) - (menuInner.offsetWidth/2 || 100)) + 'px';
-    menu.style.top  = (scrollY + r.bottom + 8) + 'px';
-    menu.style.display = 'block';
-    // Click-away to close
-    const close = (ev)=>{
-      if(!menu.contains(ev.target) && ev.target !== exportBtn){
-        menu.style.display='none';
-        document.removeEventListener('click', close);
-      }
-    };
-    setTimeout(()=>document.addEventListener('click', close), 0);
+  // Footer inside the PDF (not a browser footer)
+  const pageCount = doc.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFontSize(10); doc.setTextColor(120);
+    doc.text('Ambulance App', 40, doc.internal.pageSize.getHeight()-24);
   }
 
-  exportBtn.onclick = (e)=>{ e.preventDefault(); showMenu(); };
+  return doc.output('blob');
+}
 
-  // View: open in a new tab (blob: URL shows in Safari footer)
-  viewBtn.onclick = async ()=>{
-    menu.style.display='none';
+$('printPdf').onclick = async () => {
+  if (!sessionEnded()){
+    alert('End CPR first: tap ROSC or Stop to finalize the report, then export the PDF.');
+    return;
+  }
+  try{
     const blob = await buildPdfBlob();
-    const url  = URL.createObjectURL(blob); // blob:… keeps your real URL hidden
-    window.open(url, '_blank');
-    // Do NOT revoke immediately; let the user view it. You can revoke it later if you track the window.
-  };
+    const url  = URL.createObjectURL(blob); // blob: URL preserved (no real site URL)
 
-  // Save: trigger a download (still blob:)
-  saveBtn.onclick = async ()=>{
-    menu.style.display='none';
-    const blob = await buildPdfBlob();
-    const url  = URL.createObjectURL(blob);
+    // Try file download
     const a = document.createElement('a');
     a.href = url;
     a.download = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Safe to revoke shortly after download click
-    setTimeout(()=>URL.revokeObjectURL(url), 2000);
-  };
-})();
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 
-/* ===== WAAFELSS enable/compute ===== */
+    // Fallback for iOS WebClip: also open viewer tab so user can Share → Save to Files
+    const w = window.open(url, '_blank');
+    setTimeout(()=>URL.revokeObjectURL(url), 30000);
+  }catch(err){
+    console.error(err);
+    alert('Could not generate PDF. Please try again.');
+  }
+};
+
+/* ===== WAAFELSS ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function months(n){
@@ -835,14 +770,16 @@ function renderW(o){
 }
 function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
 function checkAge(){ const empty = (age.value===''||age.value===null); mBtn.disabled=empty; yBtn.disabled=empty; }
-age.addEventListener('input',checkAge); checkAge();
+age?.addEventListener('input',checkAge); checkAge();
 
-mBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); };
-yBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); };
+mBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); });
+yBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); });
 
-/* ===== Self-tests ===== */
+/* ===== Self-tests (non-blocking) ===== */
 (function runSelfTests(){
-  console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
+  try{
+    console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
+  }catch{}
 })();
 })();
 </script>
