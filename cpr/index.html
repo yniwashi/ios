@@ -366,6 +366,16 @@ details[open] .wa-divider{display:block}
         </button>
       </div>
     </div>
+     <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap;margin-top:8px">
+  <button id="exportTxt" class="btn ghost">
+    ...
+    Export .txt
+  </button>
+  <button id="printPdf" class="btn primary">
+    ...
+    Export PDF
+  </button>
+</div>
 
     <!-- Extras (WAAFELSS + Log) -->
     <div class="extras" style="display:grid;gap:12px;justify-items:center">
@@ -453,6 +463,20 @@ function stamp(label){
   li.textContent=`${hhmmss(ts)} | ${label}`;
   logEl.prepend(li);
   events.push({ts,label});
+}
+
+   // Dynamically load jsPDF + autoTable once (CDN). Safe to call multiple times.
+let __pdfLibLoaded = false;
+async function ensureJsPDF(){
+  if(__pdfLibLoaded) return;
+  const add = (src)=>new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s);
+  });
+  // jsPDF core
+  await add('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+  // autoTable plugin (tables)
+  await add('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js');
+  __pdfLibLoaded = true;
 }
 
 /* ===== WAKE LOCK ===== */
@@ -662,57 +686,124 @@ $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiod
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
 /* ===== Export PDF (window.open with Blob URL → footer shows blob:) ===== */
-$('printPdf').onclick = () => {
-  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-  const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
-  <meta name="color-scheme" content="light dark">
-  <style>
-    :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--accent:#2ea0ff;--accent2:#6dd3ff}
-    @media (prefers-color-scheme: light){
-      :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--accent:#0b6b82;--accent2:#37a0c0}
+(function setupPdfMenu(){
+  const menu = document.getElementById('pdfMenu');
+  const menuInner = document.getElementById('pdfMenuInner');
+  const exportBtn = document.getElementById('printPdf');
+  const viewBtn = document.getElementById('pdfView');
+  const saveBtn = document.getElementById('pdfSave');
+
+  // Build PDF (returns a Blob)
+  async function buildPdfBlob(){
+    await ensureJsPDF();
+    const { jsPDF } = window.jspdf;
+
+    // Create doc (A4 portrait)
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+
+    // Theme-ish colors
+    const accent = [46,160,255]; // matches your table accent
+    const fg     = [30, 41, 59];
+
+    // Header
+    doc.setFont('helvetica','bold'); doc.setFontSize(18);
+    doc.setTextColor(fg[0],fg[1],fg[2]);
+    doc.text('CPR Session Report', 40, 52);
+
+    // KVs
+    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+    const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(12);
+    let y = 80;
+    const kvs = [
+      ['Started', started],
+      ['Ended',   ended],
+      ['Total',   total],
+      ['Counts',  counts],
+    ];
+    kvs.forEach(([k,v])=>{
+      doc.setFont('helvetica','bold');   doc.text(k+':', 40, y);
+      doc.setFont('helvetica','normal'); doc.text(String(v), 120, y);
+      y += 18;
+    });
+
+    // Events table data
+    const rows = events.map(e => [ hhmmss(e.ts), e.label ]);
+
+    // autoTable (striped look similar to your HTML)
+    doc.autoTable({
+      startY: y + 12,
+      head: [['Time (24h)','Event']],
+      body: rows,
+      theme: 'striped',
+      headStyles: { fillColor: accent, textColor: 255, fontStyle:'bold' },
+      styles:     { font:'helvetica', fontSize: 11, cellPadding: 6 },
+      alternateRowStyles: { fillColor: [240,248,255] }, // very light
+      columnStyles: { 0: { cellWidth: 120 } }
+    });
+
+    // Footer (same text you used in HTML report)
+    const pageCount = doc.getNumberOfPages();
+    for(let i=1; i<=pageCount; i++){
+      doc.setPage(i);
+      const w = doc.internal.pageSize.getWidth();
+      const h = doc.internal.pageSize.getHeight();
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.setTextColor(120,120,130);
+      doc.text('Ambulance App', w/2, h-18, { align:'center' });
     }
-    @page{ margin:0 }
-    body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
-    h1{margin:0 0 12px}
-    .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
-    .kvs span{color:var(--muted)}
-    table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
-    thead th{
-      text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
-      background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff
-    }
-    tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
-    tbody tr.even{background:rgba(46,160,255,0.06)}
-    tbody tr.odd{background:rgba(46,160,255,0.12)}
-    .total{font-weight:900}
-    footer{margin-top:16px;color:var(--muted);text-align:center}
-  </style></head><body>
-    <h1>CPR Session Report</h1>
-    <div class="kvs">
-      <span>Started</span><div>${started}</div>
-      <span>Ended</span><div>${ended}</div>
-      <span>Total</span><div class="total">${total}</div>
-      <span>Counts</span><div>${counts}</div>
-    </div>
-    <table>
-      <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <footer>Ambulance App</footer>
-    <script>onload=()=>{ print(); setTimeout(()=>close(),350) }<\/script>
-  </body></html>`;
-  const blob = new Blob([html], {type:'text/html'});
-  const url  = URL.createObjectURL(blob);
-  const w = window.open(url, '_blank'); // footer should show blob:…
-  if(!w){ return; }
-  const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
-  w.addEventListener?.('afterprint', tidy, {once:true});
-  setTimeout(()=>tidy(), 2000);
-};
+
+    // Return a Blob so we can open or save via blob: URL
+    return doc.output('blob');
+  }
+
+  // Position the popover under the Export button
+  function showMenu(){
+    const r = exportBtn.getBoundingClientRect();
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    menu.style.left = (scrollX + r.left + (r.width/2) - (menuInner.offsetWidth/2 || 100)) + 'px';
+    menu.style.top  = (scrollY + r.bottom + 8) + 'px';
+    menu.style.display = 'block';
+    // Click-away to close
+    const close = (ev)=>{
+      if(!menu.contains(ev.target) && ev.target !== exportBtn){
+        menu.style.display='none';
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(()=>document.addEventListener('click', close), 0);
+  }
+
+  exportBtn.onclick = (e)=>{ e.preventDefault(); showMenu(); };
+
+  // View: open in a new tab (blob: URL shows in Safari footer)
+  viewBtn.onclick = async ()=>{
+    menu.style.display='none';
+    const blob = await buildPdfBlob();
+    const url  = URL.createObjectURL(blob); // blob:… keeps your real URL hidden
+    window.open(url, '_blank');
+    // Do NOT revoke immediately; let the user view it. You can revoke it later if you track the window.
+  };
+
+  // Save: trigger a download (still blob:)
+  saveBtn.onclick = async ()=>{
+    menu.style.display='none';
+    const blob = await buildPdfBlob();
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Safe to revoke shortly after download click
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  };
+})();
 
 /* ===== WAAFELSS enable/compute ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
