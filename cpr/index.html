@@ -5,10 +5,10 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 c)
-   - PDF via Blob URL (hides real site URL in footer)
-   - Total CPR display resets on Stop/ROSC but exports keep times
-   - Theme & Mute chips: no card (from prior step)
+   CPR TIMER — Patch (2025-09-24 d)
+   - Export PDF via hidden iframe srcdoc (no site URL exposure)
+   - Theme Auto follows device + live updates
+   - Previous patches retained (no-card Theme/Mute, DSED, etc.)
    ========================================================== */
 
 :root{
@@ -71,7 +71,7 @@ a{color:inherit}
 .header{display:grid;gap:8px}
 .controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
 /* Chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
@@ -114,7 +114,7 @@ a{color:inherit}
 
 /* Cards */
 .centered{display:grid; justify-items:center}
-.timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
+.timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;width:min(520px,100%);box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
 .timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
 #cycleDigits{color:var(--cycle-accent-light)}
@@ -146,27 +146,27 @@ a{color:inherit}
 /* Countdown */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-  font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
-  color:var(--countdown-red); pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,.28);
+  font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:clamp(80px,14vw,160px);
+  color:var(--countdown-red);pointer-events:none;text-shadow:0 2px 10px rgba(0,0,0,.28);
 }
 #countdown.show{display:flex}
-.cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
+.cycle-hide .label,.cycle-hide #cycleDigits,.cycle-hide .icon-row{visibility:hidden}
 
 /* Adrenaline prompt */
-#adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
-#adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
-#adrTimer.adr-show #adrPrompt{ display:flex }
+#adrPrompt{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:clamp(38px,8vw,96px);color:var(--adr-color);text-align:center}
+#adrTimer.adr-hide .label,#adrTimer.adr-hide #adrDigits,#adrTimer.adr-hide .icon-row{visibility:hidden}
+#adrTimer.adr-show #adrPrompt{display:flex}
 
 /* Extras */
-.extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
+.extras{margin-top:8px;display:grid;gap:12px;justify-items:center}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad);width:min(860px,100%);box-shadow:var(--shadow)}
 .wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
 .wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
 .wa-row input{width:clamp(110px,20vw,130px);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (max-width:520px){.waffles-grid{grid-template-columns:1fr}}
 .wrow{display:flex;gap:8px;align-items:center}
-.wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+.wtag{min-width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:10px;color:var(--muted)}
 .wval{font-weight:800}
 
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
@@ -179,7 +179,7 @@ a{color:inherit}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
 }
-@page{ margin:0 } /* try to suppress Safari footer */
+@page{ margin:0 } /* suppress header/footer where possible */
 </style>
 <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f8fc" media="(prefers-color-scheme: light)">
@@ -324,16 +324,19 @@ a{color:inherit}
 
 <script>
 (() => {
-  /* THEME */
+  /* ===== THEME ===== */
   const root = document.documentElement;
   const themeBtn = document.getElementById('themeBtn');
+  const mqlDark = window.matchMedia('(prefers-color-scheme: dark)');
   let themeMode = 'auto'; // auto | light | dark
+
   function applyTheme(){
-    root.removeAttribute('data-theme');
-    if (themeMode==='light') root.setAttribute('data-theme','light');
-    if (themeMode==='dark')  root.setAttribute('data-theme','dark');
+    // For "auto", mirror system (and update live via listener)
+    const desired = (themeMode === 'auto') ? (mqlDark.matches ? 'dark' : 'light') : themeMode;
+    root.setAttribute('data-theme', desired);
     themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
     themeBtn.title = `Theme: ${themeBtn.textContent}`;
+    // set theme-color for browser UI
     const meta = document.querySelector('meta[name="theme-color"]') || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
     const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
     meta.setAttribute('content', bg || '#0b0d10');
@@ -342,6 +345,8 @@ a{color:inherit}
     themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
     applyTheme();
   });
+  // Live update when system theme changes if Auto
+  mqlDark.addEventListener?.('change', () => { if(themeMode==='auto') applyTheme(); });
   applyTheme();
 
   // Back button behavior
@@ -354,7 +359,7 @@ a{color:inherit}
     });
   }
 
-  /* HELPERS */
+  /* ===== HELPERS ===== */
   const $ = id => document.getElementById(id);
   const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
   const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
@@ -368,13 +373,13 @@ a{color:inherit}
     events.push({ts,label});
   }
 
-  /* WAKE LOCK */
+  /* ===== WAKE LOCK ===== */
   let wakeLock=null;
   async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
   async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-  /* AUDIO */
+  /* ===== AUDIO ===== */
   let audioCtx;
   const buffers={}, files={
     beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -391,7 +396,7 @@ a{color:inherit}
   window.addEventListener('keydown', primeAudio, {once:true});
   function play(name, vol=1){ const buf=buffers[name]; if(!audioCtx || !buf) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start(); }
 
-  /* METRONOME */
+  /* ===== METRONOME ===== */
   let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
   const muteBtnEl=$('muteBtn');
   muteBtnEl.addEventListener('click',()=>{
@@ -409,16 +414,14 @@ a{color:inherit}
   function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
   function restartBeat(){ stopBeat(); startBeat(); }
 
-  /* STATE */
+  /* ===== STATE ===== */
   let totalStart=0,totalEnd=0;
   let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
   let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
   let cue20=false, cue90=false, cue120=false;
   let cycleCount = 0;
   let counting=false, countdownTimer=null, countdownN=10;
-
-  // NEW: control visual reset without losing export times
-  let showTotalZero = true;
+  let showTotalZero = true;  // visual reset for Total CPR
 
   function showCountdown(){
     if(counting) return;
@@ -443,7 +446,7 @@ a{color:inherit}
   function now(){ return Date.now(); }
   function tick(){
     const t=now();
-    // total (respect visual reset)
+    // total
     if(showTotalZero){
       $('totalDigits').textContent='00:00';
     }else if(totalStart && !totalEnd){
@@ -476,7 +479,7 @@ a{color:inherit}
       if(!counting) $('cycleDigits').textContent='00:00';
     }
 
-    // adrenaline loop
+    // adrenaline
     if(adrStart){
       let a=0;
       if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
@@ -500,7 +503,7 @@ a{color:inherit}
   }
   requestAnimationFrame(tick);
 
-  /* CONTROLS */
+  /* ===== CONTROLS ===== */
   $('cprStart').onclick = () => {
     primeAudio();
     if(!totalStart){
@@ -528,23 +531,21 @@ a{color:inherit}
     if(!totalStart) return;
     if(!totalEnd) totalEnd = now(); // keep for export
     stamp(label);
-    // stop timers
     if(cprRunning){ cprRunning=false; cprPausedAt=0; }
     cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
     const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
     if(adrRunning){ adrRunning=false; adrPausedAt=0; }
     adrStart=0; adrPausedAccum=0;
-    // visually reset total digits but keep times for export
-    showTotalZero = true;
+    showTotalZero = true; // visual reset
     stopBeat(); releaseWake();
   }
   $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
   $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
   $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
-  $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+  $('amiob').onclick  = () => { window.__amio =(window.__amio||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
   $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-  /* EXPORTS */
+  /* ===== EXPORTS ===== */
   function lines(){
     const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
     const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
@@ -554,11 +555,8 @@ a{color:inherit}
     for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
     return arr;
   }
-  $('exportTxt').onclick = () => {
-    const blob = new Blob([lines().join('\n')], {type:'text/plain'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
-  };
+
+  // Hidden iframe print (no new tab, no site URL)
   $('printPdf').onclick = () => {
     const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
     const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
@@ -601,21 +599,31 @@ a{color:inherit}
         <tbody>${rows}</tbody>
       </table>
       <footer>Ambulance App</footer>
-      <script>onload=()=>{ print(); setTimeout(()=>close(),300) }<\/script>
+      <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>
     </body></html>`;
 
-    // Open as a Blob URL so Safari’s PDF footer won’t expose your real URL
-    const blob = new Blob([html], {type:'text/html'});
-    const url  = URL.createObjectURL(blob);
-    const w = window.open(url, '_blank');
-    if(!w){ return; }
-    // Cleanup after print
-    const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
-    w.addEventListener('afterprint', tidy, {once:true});
-    setTimeout(()=>tidy(), 2000); // fallback
+    // Create hidden iframe that never navigates your page
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.visibility = 'hidden';
+    // Use srcdoc so the "document URL" is about:blank (no domain)
+    iframe.srcdoc = html;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } finally {
+        setTimeout(()=>iframe.remove(), 1500);
+      }
+    };
   };
 
-  /* WAAFELSS (unchanged) */
+  /* ===== WAAFELSS (unchanged) ===== */
   const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
   function months(n){
