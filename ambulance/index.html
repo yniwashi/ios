@@ -164,10 +164,10 @@
     <symbol id="ico-pulse" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12h4l2-5l4 10l2-5h6"/></symbol>
   </svg>
 
-  <script>
-    /* =========================
+<script type="module">
+  /* =========================
        CONFIG — EDIT HERE
-       ========================= */
+    ========================= */
     const NEWS_MESSAGE = ""; // e.g., "New calculators available."
     const SHORTCUT_NAME = "Ambulance";
     const SEPARATOR     = "::";
@@ -301,7 +301,7 @@
     // ---------- Router / action loader ----------
     async function runAction(actionId, params = {}){
       try{
-        const mod = await import(`/tools/${actionId}.js`);
+        const mod = await import(`./tools/${actionId}.js`);
         const mountEl = document.getElementById("panel-body");
         mountEl.innerHTML = "";
         openPanel(params.title || actionId.toUpperCase());
