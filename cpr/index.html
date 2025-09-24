@@ -5,14 +5,13 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 f)
-   - WebClip audio unlock (multi-gesture + resume + oscillator fallback)
-   - Actions: 3 rows × 2 buttons, equal width
-   - Export PDF only, disabled until Stop/ROSC, blob: URL viewer/downloader
-   - WAAFELSS collapsible, stays below Actions
-   - Back button boxed + larger arrow
-   - Start/Pause "looks disabled" properly
-   - Adrenaline stamps on every 4:00 due
+   CPR TIMER — Patch (2025-09-24 g)
+   - WebClip PDF modal (no new tab) with Save button + visible download link
+   - Actions: 3 rows × 2 buttons, colored, equal width
+   - WAAFELSS collapsible below Actions; removed inner duplicate title
+   - WAAFELSS Months/Years buttons = same width/visual weight as Actions
+   - Start/Pause show disabled state
+   - Adrenaline logs each 4:00 due
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -21,23 +20,23 @@
   --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3;
   --card:#14181d; --border:#20262d;
 
-  --total-color:#f1f5f9;
-  --cycle-accent-light:#ff4d4d;
-  --cycle-accent-dark:#ffb347;
-  --cycle-shadow-light: rgba(255,77,77,.22);
-  --cycle-shadow-dark:  rgba(255,179,71,.24);
-  --countdown-red:#ff3333;
-  --adr-color:#2ea0ff;
-
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
-  --primary:#0f2e39; --primary-bd:#2e89a8; --primary-fg:#e6fbff;
-  --danger:#671d1d;  --danger-bd:#9a3333;  --danger-fg:#fff0f0;
+
+  /* Action button color tokens (tuned for both themes) */
+  --rosc-1:#D94B4B; --rosc-2:#9E2E2E; --rosc-bd:#B23A3A;
+  --stop-1:#C62828; --stop-2:#8E1E1E; --stop-bd:#A12222;
+  --shock-1:#F2B705; --shock-2:#B88406; --shock-bd:#D59B06;
+  --amio-1:#2EA0FF; --amio-2:#1976D2; --amio-bd:#1E88E5;
+  --dsed-1:#F7C948; --dsed-2:#B38600; --dsed-bd:#D1A20A;
+  --export-1:#6C63FF; --export-2:#4B46B8; --export-bd:#5B55D6;
+
+  --wa-m-1:#00BFA6; --wa-m-2:#008F79; --wa-m-bd:#00A68F; /* Months */
+  --wa-y-1:#9B6BFF; --wa-y-2:#6E49B8; --wa-y-bd:#8558E6; /* Years */
 
   --title-size: clamp(20px, 3.2vw, 36px);
   --subtitle-size: clamp(12px, 1.8vw, 16px);
   --total-size: clamp(40px, 6.2vw, 72px);
   --kpi-digits: clamp(42px, 7.5vw, 110px);
-  --icon-btn: clamp(40px, 6.4vw, 54px);
   --chip-h: clamp(36px, 5.2vw, 46px);
   --chip-pad-x: clamp(8px, 1.6vw, 12px);
   --chip-gap: clamp(6px, 1.2vw, 10px);
@@ -48,7 +47,15 @@
   --radius: 18px;
   --shadow: 0 6px 20px rgba(0,0,0,.22);
 
-  --log-font: clamp(12px, 1.6vw, 14px);
+  --log-font: clamp(12px, 1.5vw, 13px);
+
+  --total-color:#f1f5f9;
+  --cycle-accent-light:#ff4d4d;
+  --cycle-accent-dark:#ffb347;
+  --cycle-shadow-light: rgba(255,77,77,.22);
+  --cycle-shadow-dark:  rgba(255,179,71,.24);
+  --countdown-red:#ff3333;
+  --adr-color:#2ea0ff;
 
   --cycle-accent: var(--cycle-accent-dark);
   --cycle-shadow: var(--cycle-shadow-dark);
@@ -58,24 +65,25 @@
   --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
   --card:#ffffff; --border:#e5e7eb;
   --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
-  --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
-  --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
   --total-color:#111111;
   --cycle-accent: var(--cycle-accent-light);
   --cycle-shadow: var(--cycle-shadow-light);
+
+  /* Gentle tweaks for light mode contrast */
+  --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
+  --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
-/* Auto follows device unless explicitly overridden to dark */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     color-scheme: light;
     --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
     --card:#ffffff; --border:#e5e7eb;
     --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
-    --primary:#0b6b82; --primary-bd:#0b6b82; --primary-fg:#ffffff;
-    --danger:#b91c1c;  --danger-bd:#991b1b;  --danger-fg:#ffffff;
     --total-color:#111111;
     --cycle-accent: var(--cycle-accent-light);
     --cycle-shadow: var(--cycle-shadow-light);
+    --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
+    --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
   }
 }
 
@@ -97,16 +105,13 @@ a{color:inherit}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 
-/* Back, Theme, Mute: minimal wrappers */
+/* Back, Theme, Mute styles */
 #backChip{background:transparent;border:none;padding:0}
 #backChip .chip-label{display:none}
-/* Put Back inside a box like other toggles & make arrow bigger */
 #backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
 #themeChip{background:transparent;border:none;padding:0}
 #muteChip{background:transparent;border:none;padding:0}
 #muteChip .chip-label{display:none}
-
-/* Icon toggles */
 .icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
@@ -121,13 +126,13 @@ a{color:inherit}
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
   .timers{grid-area:timers; display:grid; gap:var(--timers-gap); justify-items:center; grid-template-columns:repeat(2,minmax(0,1fr));}
   @media (max-width:459.9px){ .timers{grid-template-columns:1fr} }
-  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(140px, 1fr)); justify-items:stretch}
+  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr));}
   .extras{grid-area:extras; justify-items:center}
 }
 @media (orientation:landscape){
   .main{grid-template-areas:"total total total" "timers actions actions" "extras extras extras";
-    grid-template-columns:1fr minmax(320px, 560px) 1fr; align-items:start;}
-  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr)); align-items:stretch; justify-items:stretch}
+    grid-template-columns:1fr minmax(360px, 560px) 1fr; align-items:start;}
+  .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(180px, 1fr));}
   .extras{grid-area:extras}
   .timer .digits{font-size:clamp(38px, 7vw, 96px)}
 }
@@ -140,7 +145,7 @@ a{color:inherit}
 #cycleDigits{color:var(--cycle-accent-light)}
 #adrDigits{color:#2ea0ff}
 
-/* Metronome flash */
+/* Flash on beat */
 #cycleTimer{ position:relative; }
 .cycle-flash{ animation: cycleFlash .18s ease-out 1; }
 @keyframes cycleFlash{
@@ -149,18 +154,23 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* Icon-ctrl (Start/Pause) */
+/* Start/Pause */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45; filter:grayscale(.1); cursor:not-allowed}
 
 /* ---------- ACTION BUTTONS ---------- */
-.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow); width:100%}
+.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(12px,1.8vw,14px) clamp(14px,2.2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow); width:100%}
 .btn:active{transform:translateY(1px)}
 .btn .ico{width:clamp(16px,2.6vw,22px);height:clamp(16px,2.6vw,22px)}
-/* "Disabled look" while still clickable to show alerts */
 .btn.is-disabled{opacity:.48; filter:grayscale(.2); cursor:not-allowed}
+.btn-rosc{ background:linear-gradient(180deg,var(--rosc-1),var(--rosc-2)); border-color:var(--rosc-bd) }
+.btn-stop{ background:linear-gradient(180deg,var(--stop-1),var(--stop-2)); border-color:var(--stop-bd) }
+.btn-shock{ background:linear-gradient(180deg,var(--shock-1),var(--shock-2)); border-color:var(--shock-bd); color:#1a1a1a }
+.btn-amio{ background:linear-gradient(180deg,var(--amio-1),var(--amio-2)); border-color:var(--amio-bd) }
+.btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
+.btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
 /* ---------- COUNTDOWN ---------- */
 #countdown{
@@ -178,7 +188,8 @@ a{color:inherit}
 
 /* ---------- EXTRAS (WAAFELSS + LOG) ---------- */
 .extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
-/* Collapsible WAAFELSS uses <details>. Keep card framing only on the inside content. */
+
+/* WAAFELSS collapsible */
 .wa-shell{width:min(860px, 100%)}
 .wa-shell details{border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
 .wa-shell summary{
@@ -189,23 +200,45 @@ a{color:inherit}
 .wa-shell summary .caret{transition:transform .2s ease}
 .wa-shell details[open] summary .caret{transform:rotate(90deg)}
 .wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
-.wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
-.wa-row{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:8px}
-.wa-row input{width:clamp(110px,20vw,130px);padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+/* Same 2-col layout for WA buttons */
+.wa-row{display:grid; grid-template-columns:repeat(2, minmax(160px, 1fr)); gap:var(--actions-gap); justify-items:stretch; margin-bottom:8px}
+.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+
+/* WA button colors */
+.btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
+.btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
+
 .waffles-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (max-width:520px){.waffles-grid{grid-template-columns:1fr}}
 .wrow{display:flex;gap:8px;align-items:center}
 .wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
 .wval{font-weight:800}
 
-/* Log card with framed look */
+/* Log card */
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
+/* ---------- PDF MODAL ---------- */
+#pdfModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; }
+#pdfBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.5) }
+#pdfCard{
+  position:relative; background:var(--card); border:1px solid var(--border);
+  border-radius:16px; box-shadow:var(--shadow); width:min(920px, 96vw); height:min(80vh, 860px);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+#pdfToolbar{ padding:10px; display:flex; gap:10px; justify-content:flex-end; border-bottom:1px solid var(--border) }
+#pdfFrame{ flex:1; width:100%; border:0; background:#fff }
+#pdfLinkRow{ padding:10px; display:flex; gap:10px; justify-content:space-between; align-items:center; border-top:1px solid var(--border); font-size:12px; color:var(--muted) }
+#pdfLinkRow a{ text-decoration:underline }
+
+/* Toolbar buttons (use export colors) */
+.btn-tb{ padding:10px 14px; border-radius:12px; border:1px solid var(--export-bd); color:#fff; font-weight:800; background:linear-gradient(180deg,var(--export-1),var(--export-2)); box-shadow:var(--shadow) }
+.btn-tb.secondary{ background:var(--btn-bg); color:var(--fg); border-color:var(--btn-bd) }
+
 /* ---------- PRINT ---------- */
 @media print{
-  .header,.controls-row,.actions,.wa-row, .wa-shell, .wa-content{display:none!important}
+  .header,.controls-row,.actions,.wa-shell,.wa-content{display:none!important}
   body{background:#fff;color:#000}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
@@ -288,29 +321,29 @@ a{color:inherit}
     <!-- Actions (3 rows × 2 buttons) -->
     <div class="actions">
       <!-- Row 1 -->
-      <button id="roscb" class="btn">
+      <button id="roscb" class="btn btn-rosc">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
         ROSC
       </button>
-      <button id="stopb" class="btn">
+      <button id="stopb" class="btn btn-stop">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/></svg>
         Stop
       </button>
       <!-- Row 2 -->
-      <button id="shockb" class="btn">
+      <button id="shockb" class="btn btn-shock">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2"/></svg>
         Shock
       </button>
-      <button id="amiob" class="btn">
+      <button id="amiob" class="btn btn-amio">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 10h14" stroke="currentColor" stroke-width="2"/></svg>
         Amiodarone
       </button>
       <!-- Row 3 -->
-      <button id="dsedb" class="btn" title="Log DSED">
+      <button id="dsedb" class="btn btn-dsed" title="Log DSED">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
         Log DSED
       </button>
-      <button id="printPdf" class="btn is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
         Export PDF
       </button>
@@ -326,11 +359,10 @@ a{color:inherit}
             <span>WAAFELSS</span>
           </summary>
           <div class="wa-content">
-            <div class="wa-title">WAAFELSS</div>
             <div class="wa-row">
               <input id="age" type="number" min="0" placeholder="Enter Age">
-              <button id="mBtn" class="btn" title="Months" disabled>Months</button>
-              <button id="yBtn" class="btn" title="Years" disabled>Years</button>
+              <button id="mBtn" class="btn btn-wa-m" title="Months" disabled>Months</button>
+              <button id="yBtn" class="btn btn-wa-y" title="Years" disabled>Years</button>
             </div>
             <div class="waffles-grid">
               <div class="wrow"><div class="wtag">Age</div><div id="wAge" class="wval">—</div></div>
@@ -350,6 +382,22 @@ a{color:inherit}
       <div class="card">
         <ul id="log" class="log"></ul>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Modal -->
+<div id="pdfModal" aria-hidden="true">
+  <div id="pdfBackdrop"></div>
+  <div id="pdfCard" role="dialog" aria-modal="true" aria-label="Exported PDF">
+    <div id="pdfToolbar">
+      <button id="pdfSaveBtn" class="btn-tb">Save PDF</button>
+      <button id="pdfCloseBtn" class="btn-tb secondary">Close</button>
+    </div>
+    <iframe id="pdfFrame" title="PDF Preview"></iframe>
+    <div id="pdfLinkRow">
+      <span>Tip: If the Save button is blocked, use this link:</span>
+      <a id="pdfDownloadLink" href="#" download>Download report</a>
     </div>
   </div>
 </div>
@@ -381,15 +429,12 @@ const mql = window.matchMedia('(prefers-color-scheme: dark)');
 mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
 applyTheme();
 
-/* Back button behavior */
+/* Back button */
 const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
-const backBtn = document.getElementById('backBtn');
-if(backBtn){
-  backBtn.addEventListener('click',()=>{
-    if (document.referrer && document.referrer !== location.href) history.back();
-    else location.href = HOME;
-  });
-}
+document.getElementById('backBtn')?.addEventListener('click',()=>{
+  if (document.referrer && document.referrer !== location.href) history.back();
+  else location.href = HOME;
+});
 
 /* ===== HELPERS ===== */
 const $ = id => document.getElementById(id);
@@ -411,7 +456,7 @@ async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await nav
 async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-/* ===== AUDIO (WebClip-safe unlock) ===== */
+/* ===== AUDIO (with WebClip unlock + fallback) ===== */
 let audioCtx;
 const buffers={}, files={
   beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -424,7 +469,6 @@ function primeAudio(){
   if (audioCtx.state === 'suspended') {
     audioCtx.resume().catch(()=>{});
   }
-  // 1ms near-silent oscillator to fully unlock in iOS WebClip
   try{
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
@@ -433,7 +477,6 @@ function primeAudio(){
     o.start();
     setTimeout(()=>{ try{o.stop();}catch{} }, 1);
   }catch{}
-  // Preload
   (async()=>{ for(const [k,p] of Object.entries(files)){ if(buffers[k]) continue; try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
 }
 ['pointerdown','touchstart','keydown','click'].forEach(ev=>{
@@ -452,7 +495,7 @@ function play(name, vol=1){
     src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
     return true;
   };
-  const beep = () => { // fallback tick
+  const beep = () => {
     try{
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
@@ -466,8 +509,7 @@ function play(name, vol=1){
 
 /* ===== METRONOME ===== */
 let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
-const muteBtnEl=$('muteBtn');
-muteBtnEl.addEventListener('click',()=>{
+$('muteBtn')?.addEventListener('click',()=>{
   beatMuted=!beatMuted;
   const mx=document.getElementById('muteX');
   const wv=document.getElementById('wave');
@@ -475,7 +517,7 @@ muteBtnEl.addEventListener('click',()=>{
   if(wv) wv.style.opacity=beatMuted?'0':'1';
   if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
 });
-$('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
+$('bpm')?.addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
 
 function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
 function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
@@ -489,8 +531,6 @@ let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
 let cue20=false, cue90=false, cue120=false;
 let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
-
-// Visual reset for total digits but keep times for export
 let showTotalZero = true;
 
 /* ===== COUNTDOWN ===== */
@@ -504,12 +544,11 @@ function showCountdown(){
   countdownTimer = setInterval(()=>{
     countdownN--;
     if (countdownN>0){
-      box.textContent = countdownN; // 9..1
+      box.textContent = countdownN;
     } else {
       clearInterval(countdownTimer); countdownTimer=null;
       box.classList.remove('show'); card.classList.remove('cycle-hide');
       cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
-      // Start looks disabled, Pause enabled
       $('cprStart').disabled = true; $('cprPause').disabled = false;
       counting=false;
     }
@@ -563,7 +602,7 @@ function tick(){
     a = a|0;
     if(a>=240){
       $('adrDigits').textContent='04:00'; play('adr4');
-      stamp('Adrenaline timer reached 4:00'); // NEW: log each due
+      stamp('Adrenaline timer reached 4:00');
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
       adrRunning = false;
       setTimeout(()=>{
@@ -596,7 +635,6 @@ $('cprPause').onclick = () => {
   cprRunning=false; cprPausedAt=now(); play('pause'); stamp('CPR Timer Paused'); stopBeat();
   $('cprPause').disabled=true; $('cprStart').disabled=false;
 };
-
 $('adrStart').onclick = () => {
   primeAudio(); if(!totalStart) $('cprStart').click();
   if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
@@ -611,9 +649,8 @@ $('adrPause').onclick = () => {
 function endSession(label){
   primeAudio();
   if(!totalStart) return;
-  if(!totalEnd) totalEnd = now(); // keep for export
+  if(!totalEnd) totalEnd = now();
   stamp(label);
-  // stop timers
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
@@ -625,8 +662,6 @@ function endSession(label){
 
   showTotalZero = true;
   stopBeat(); releaseWake();
-
-  // enable export
   setExportEnabled(true);
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
@@ -635,13 +670,11 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== EXPORT PDF (blob URL, download + viewer; disabled until Stop/ROSC) ===== */
+/* ===== EXPORT PDF (blob, modal viewer + Save) ===== */
 function setExportEnabled(enabled){
-  const b = $('printPdf');
-  b.classList.toggle('is-disabled', !enabled);
+  $('printPdf').classList.toggle('is-disabled', !enabled);
 }
 setExportEnabled(false);
-
 function sessionEnded(){ return !!(totalStart && totalEnd); }
 
 async function loadScript(src){
@@ -705,7 +738,8 @@ async function buildPdfBlob(){
     });
   }
 
-  // Footer inside the PDF (not a browser footer)
+  /* Footer text inside the PDF (we do NOT expose your site URL).
+     Browser footer (which used to show the real URL) is not used. */
   const pageCount = doc.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
     doc.setPage(i);
@@ -716,24 +750,44 @@ async function buildPdfBlob(){
   return doc.output('blob');
 }
 
+/* Modal helpers */
+const pdfModal = $('pdfModal'), pdfFrame=$('pdfFrame'), pdfSaveBtn=$('pdfSaveBtn'), pdfCloseBtn=$('pdfCloseBtn'), pdfDownloadLink=$('pdfDownloadLink');
+let lastPdfUrl = null, lastPdfName = null;
+function openPdfModal(url, filename){
+  lastPdfUrl = url; lastPdfName = filename;
+  pdfFrame.src = url;
+  pdfDownloadLink.href = url;
+  pdfDownloadLink.download = filename;
+  pdfModal.style.display='flex';
+  pdfModal.setAttribute('aria-hidden','false');
+}
+function closePdfModal(){
+  pdfModal.style.display='none';
+  pdfModal.setAttribute('aria-hidden','true');
+  pdfFrame.src = 'about:blank';
+  if(lastPdfUrl){ setTimeout(()=>URL.revokeObjectURL(lastPdfUrl), 30000); lastPdfUrl=null; }
+}
+
+$('pdfBackdrop').addEventListener('click', closePdfModal);
+pdfCloseBtn.addEventListener('click', closePdfModal);
+pdfSaveBtn.addEventListener('click', ()=>{
+  // Programmatic download; if iOS blocks, user can tap the visible link below.
+  const a=document.createElement('a');
+  a.href = lastPdfUrl;
+  a.download = lastPdfName || 'cpr_report.pdf';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
 $('printPdf').onclick = async () => {
-  if (!sessionEnded()){
-    alert('End CPR first: tap ROSC or Stop to finalize the report, then export the PDF.');
+  if ($('printPdf').classList.contains('is-disabled') || !sessionEnded()){
+    alert('Please finish the session first. Tap ROSC or Stop to finalize the report, then export the PDF.');
     return;
   }
   try{
     const blob = await buildPdfBlob();
-    const url  = URL.createObjectURL(blob); // blob: URL preserved (no real site URL)
-
-    // Try file download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-
-    // Fallback for iOS WebClip: also open viewer tab so user can Share → Save to Files
-    const w = window.open(url, '_blank');
-    setTimeout(()=>URL.revokeObjectURL(url), 30000);
+    const url  = URL.createObjectURL(blob); // blob: URL preserved
+    const filename = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
+    openPdfModal(url, filename);
   }catch(err){
     console.error(err);
     alert('Could not generate PDF. Please try again.');
@@ -775,8 +829,8 @@ age?.addEventListener('input',checkAge); checkAge();
 mBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); });
 yBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); });
 
-/* ===== Self-tests (non-blocking) ===== */
-(function runSelfTests(){
+/* ===== Self-check ===== */
+(function(){
   try{
     console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
   }catch{}
