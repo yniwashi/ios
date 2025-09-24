@@ -6,12 +6,7 @@
 
 <style>
 /* ==========================================================
-   CPR TIMER — compact, centered, responsive
-   - Timers always under TOTAL; side-by-side in landscape
-   - Denser vertical rhythm; smaller action buttons
-   - Landscape actions: 2×2 per side + a single bottom button centered
-   - Portrait actions: explicit order with Export PDF at the bottom-right
-   - Overlays (countdown / "Give Adrenaline") auto-center on digits
+   CPR TIMER — compact, centered, responsive (2025-09-25)
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -55,6 +50,7 @@
   --countdown-red:#ff3333;
   --adr-color:#2ea0ff;
 }
+/* Explicit light theme (when user selects "Light") */
 :root[data-theme="light"]{
   color-scheme: light;
   --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
@@ -63,6 +59,18 @@
   --total-color:#111111;
   --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
+}
+/* Auto mode: if no explicit data-theme, follow device (light) */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme]){
+    color-scheme: light;
+    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
+    --card:#ffffff; --border:#e5e7eb;
+    --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+    --total-color:#111111;
+    --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
+    --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
+  }
 }
 
 /* ---------- BASE ---------- */
@@ -87,7 +95,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
 /* ---------- TOTAL CPR ---------- */
-.total{grid-area:total;display:flex;flex-direction:column;align-items:center;margin:6px 0 8px}
+.total{grid-area:total;display:flex;flex-direction:column;align-items:center;margin:var(--gap-xs) 0 var(--gap-sm)}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:2px}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
@@ -95,7 +103,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .main{
   display:grid;
   row-gap: var(--gap-md);
-  column-gap: var(--gap-md);
+  column-gap: var(--gap-lg);
   grid-template-areas:
     "total"
     "cycle"
@@ -106,8 +114,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   grid-template-columns: 1fr;
   justify-items:center;
 }
-
-/* Landscape: denser rows, timers right under TOTAL */
+/* Landscape: timers right under TOTAL; buttons below timers */
 @media (orientation:landscape){
   .main{
     grid-template-areas:
@@ -116,20 +123,19 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
       "actionsL actionsR"
       "wa log";
     grid-template-columns: 1fr 1fr;
-    row-gap: 10px;                 /* tighter vertical spacing near TOTAL */
+    row-gap: var(--gap-sm);
     justify-items:center;
     align-items:start;
   }
 }
 
-/* ---------- TIMERS (minimal, perfectly centered) ---------- */
+/* ---------- TIMERS ---------- */
 .timer{
   position:relative;                 /* for overlays */
-  margin:0 auto 8px;                 /* tiny gap under each timer */
-  padding:0;
+  margin:0; padding:0;
   text-align:center;
   width:min(560px, 100%);
-  place-self:center;                 /* center inside grid cell */
+  place-self:center;
 }
 .timer .label{
   font-size:var(--subtitle-size);
@@ -150,46 +156,48 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 #cycleTimer{ grid-area:cycle }
 #adrTimer{   grid-area:adr }
 
-/* ---------- OVERLAYS (countdown / prompt) ---------- */
+/* Overlays (countdown / prompt) */
 .overlay-center{
   position:absolute;
   left:0; top:0;
   transform:translate(-50%,-50%);
   z-index:2; pointer-events:none;
-  display:flex; align-items:center; justify-content:center;
+  /* no display here; each overlay controls its own visibility */
+  align-items:center; justify-content:center;
   text-align:center;
 }
+#countdown{ display:none }
 #countdown.overlay-center{
   font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1;
   color:var(--countdown-red);
   font-size: clamp(80px, min(18vw, 22vh), 180px);
   text-shadow:0 2px 10px rgba(0,0,0,.28);
 }
+#countdown.show{ display:flex }
+#adrPrompt{ display:none } /* hidden by default */
 #adrPrompt.overlay-center{
   font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1.05;
   color:var(--adr-color);
   font-size: clamp(38px, min(10vw, 12vh), 96px);
 }
-#countdown{ display:none }             /* toggled by .show */
-#countdown.show{ display:flex }
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* ---------- Start/Pause row ---------- */
+/* Start/Pause */
 .icon-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(13px, 2vw, 16px);font-weight:700}
 .icon-ctrl svg{width:22px;height:22px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
 
-/* ---------- ACTION BUTTONS (compact) ---------- */
+/* ---------- ACTION BUTTONS ---------- */
 .btn{
   appearance:none; cursor:pointer;
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:10px 14px; border-radius:12px; border:1px solid var(--btn-bd);
+  padding:10px 12px; border-radius:12px; border:1px solid var(--btn-bd);
   color:#fff; font-weight:800; letter-spacing:.2px;
-  font-size: clamp(14px, 1.8vw, 16px);
-  box-shadow:var(--shadow); width:100%; max-width:420px; margin-inline:auto;
+  font-size: clamp(14px, 2vw, 16px);
+  box-shadow:var(--shadow); width:100%; max-width:360px; margin-inline:auto;
 }
 .btn .ico{width:18px;height:18px}
 .btn:active{transform:translateY(1px)}
@@ -201,23 +209,19 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* ---------- ACTIONS (Portrait: 2 cols × 3 rows, explicit order) ---------- */
+/* PORTRAIT actions: explicit order — Export at the bottom */
 .actions-wrap{
   grid-area:actions;
   display:grid; gap:var(--gap-sm);
   grid-template-columns:repeat(2, minmax(140px, 1fr));
   justify-items:stretch;
 
-  /* PORTRAIT ORDER: Export PDF bottom-right (swap with Amiodarone) */
   grid-template-areas:
     "stop rosc"
     "amio shock"
     "dsed export";
 }
-/* flatten wrappers so all 6 buttons participate in the same grid in portrait */
 .actions-left, .actions-right{display:contents}
-
-/* Map each button to its portrait area */
 #stopb    { grid-area: stop; }
 #roscb    { grid-area: rosc; }
 #amiob    { grid-area: amio; }
@@ -225,31 +229,16 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 #dsedb    { grid-area: dsed; }
 #printPdf { grid-area: export; }
 
-/* ---------- ACTIONS (Landscape: two 2×2 stacks + bottom button centered) ---------- */
+/* LANDSCAPE: two 2×2 stacks under each timer; bottom button centered */
 @media (orientation:landscape){
   .actions-wrap{display:contents}
-
-  .actions-left{
-    /* put this stack under the CYCLE timer */
-    grid-area:actionsL;
+  .actions-left, .actions-right{
     display:grid; gap:var(--gap-sm);
     grid-template-columns:repeat(2, minmax(140px,1fr));
     justify-items:center;
-    align-self:start; /* stay just below the timer row */
   }
-
-  .actions-right{
-    /* put this stack under the ADRENALINE timer */
-    grid-area:actionsR;
-    display:grid; gap:var(--gap-sm);
-    grid-template-columns:repeat(2, minmax(140px,1fr));
-    justify-items:center;
-    align-self:start;
-  }
-
   .span-2{ grid-column:1 / -1; justify-self:center; max-width:280px }
 }
-
 
 /* ---------- WAAFELSS & LOG ---------- */
 .extras-wa{grid-area:wa}
@@ -358,7 +347,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
     <div class="actions-wrap">
       <!-- Left stack (under Cycle in landscape) -->
       <div class="actions-left">
-        <button id="stopb" class="btn btn-stop"> 
+        <button id="stopb" class="btn btn-stop">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
           </svg> Stop
@@ -369,7 +358,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
           ROSC
         </button>
 
-        <button id="printPdf" class="btn btn-export is-disabled span-2" title="Export PDF (enabled after Stop/ROSC)">
+        <button id="printPdf" class="btn btn-export span-2 is-disabled" title="Export PDF (enabled after Stop/ROSC)">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
           </svg> Export PDF
@@ -434,65 +423,32 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   </main>
 </div>
 
-
-
-
-
 <script>
 (() => {
 /* ===== THEME ===== */
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
-
-// Start with system preference
 let themeMode = 'auto'; // auto | light | dark
-
 function applyTheme(){
-  root.removeAttribute('data-theme');
-  if (themeMode === 'light') {
-    root.setAttribute('data-theme','light');
-  } else if (themeMode === 'dark') {
-    root.setAttribute('data-theme','dark');
-  } else if (themeMode === 'auto') {
-    // Follow system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      root.setAttribute('data-theme','dark');
-    } else {
-      root.setAttribute('data-theme','light');
-    }
-  }
-
-  // Button text
-  themeBtn.textContent = themeMode[0].toUpperCase() + themeMode.slice(1);
+  root.removeAttribute('data-theme');               // allow device when auto
+  if (themeMode==='light') root.setAttribute('data-theme','light');
+  if (themeMode==='dark')  root.setAttribute('data-theme','dark');
+  themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
   themeBtn.title = `Theme: ${themeBtn.textContent}`;
-
-  // Update theme-color meta
   const meta = document.querySelector('meta[name="theme-color"]')
-    || (() => {
-         const m=document.createElement('meta');
-         m.setAttribute('name','theme-color');
-         document.head.appendChild(m);
-         return m;
-       })();
+    || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
   requestAnimationFrame(()=>{
     const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#0b0d10';
     meta.setAttribute('content', bg);
   });
 }
-
-// Toggle button cycles Auto → Light → Dark
 themeBtn.addEventListener('click', () => {
-  themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
+  themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
   applyTheme();
 });
-
-// Watch for system changes while in auto mode
-const mql = window.matchMedia('(prefers-color-scheme: dark)');
-mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
-
-// Initial apply
+window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
 applyTheme();
-
 
 /* Back */
 const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
@@ -562,7 +518,6 @@ $('muteBtn')?.addEventListener('click',()=>{
   if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
 });
 $('bpm')?.addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
-
 function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
 function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
 function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
@@ -657,23 +612,29 @@ function tick(){
     $('cycleDigits').textContent='00:00';
   }
 
-  // adrenaline loop
-if(a>=240){
-  $('adrDigits').textContent='04:00'; play('adr4');
- // log next dose administered automatically at 4:00
- adrCount++;
- stamp(`Adrenaline no. ${adrCount} Administered`);
-  const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
-  alignOverlays();
-  adrRunning = false;
-  setTimeout(()=>{
-    adrCard.classList.remove('adr-show','adr-hide');
-    adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-    $('adrStart').disabled = true; $('adrPause').disabled = false;
-  }, 2000);
-  a=0;
-}
+  // adrenaline loop (auto-dose every 4:00)
+  if(adrStart){
+    let a=0;
+    if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
+    else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
+    else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
+    a = a|0;
+    if(a>=240){
+      $('adrDigits').textContent='04:00'; play('adr4');
 
+      // show prompt briefly and log next dose
+      const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
+      adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`);
+      alignOverlays();
+      adrRunning = false;
+
+      setTimeout(()=>{
+        adrCard.classList.remove('adr-show','adr-hide');
+        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+        $('adrStart').disabled = true; $('adrPause').disabled = false;
+      }, 2000);
+      a=0;
+    }
     $('adrDigits').textContent=fmt(a);
   }else $('adrDigits').textContent='00:00';
 
@@ -700,8 +661,13 @@ $('cprPause').onclick = () => {
 };
 $('adrStart').onclick = () => {
   primeAudio(); if(!totalStart) $('cprStart').click();
-  if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
-  else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
+  if(!adrStart){
+    adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+    adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`);
+    stamp('Adrenaline Timer Started');
+  } else if(adrPausedAt){
+    adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed');
+  }
   $('adrPause').disabled=false; $('adrStart').disabled=true;
 };
 $('adrPause').onclick = () => {
@@ -730,14 +696,13 @@ function endSession(label){
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
 $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
 $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
-$('amiob').onclick  = () => { window.__amio =(window.__amio||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+$('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
 /* ===== EXPORT PDF ===== */
 function setExportEnabled(enabled){ $('printPdf').classList.toggle('is-disabled', !enabled); }
 setExportEnabled(false);
 function sessionEnded(){ return !!(totalStart && totalEnd); }
-
 async function loadScript(src){
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
@@ -847,13 +812,6 @@ function updateButtonsEnabled(){ const n=parseAgeInt(); const enable=isPositiveW
 age?.addEventListener('input', updateButtonsEnabled); updateButtonsEnabled();
 mBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button — the Months calculator is for 0–12 months."); return; } renderW(months(n)); });
 yBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=15){ alert("Our guideline defines pediatric patients up to 14 years."); return; } renderW(years(n)); });
-
-/* ===== Tiny utility: tag span-2 on landscape-only buttons ===== */
-function tagSpanButtons(){
-  document.getElementById('printPdf')?.classList.add('span-2');
-  document.getElementById('dsedb')?.classList.add('span-2');
-}
-tagSpanButtons();
 
 /* self-check */
 (function(){ try{ console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially'); }catch{} })();
