@@ -5,20 +5,14 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 d)
-   - Back button: boxed like Mute, larger arrow
-   - Adrenaline: stamp on every 4:00 cycle
-   - Added clear customization comments (icons/labels/colors)
-   - Keeps: Blob-print (no real URL), Auto theme follows device
+   CPR TIMER — Patch (2025-09-24 e)
+   - PDF export via hidden <iframe> (more reliable in iOS WebClip)
+   - Removed Export .txt (button + code)
+   - Previous tweaks preserved (Blob-URL privacy, UI, logging)
    ========================================================== */
 
 /* ===== Button theme cheatsheet (EDIT): =====
-   Use .btn variants:
-     .btn.primary  -> teal gradient
-     .btn.danger   -> red gradient
-     .btn.ghost    -> neutral
-   Change a button’s look by swapping the class in HTML.
-   To globally tweak colors, edit vars below (—primary, —danger, etc.)
+   Change .btn classes (.primary / .danger / .ghost) or tweak vars below.
 */
 
 :root{
@@ -70,7 +64,7 @@
   --cycle-shadow: var(--cycle-shadow-light);
 }
 
-/* Auto mode: follow device preference (keeps Auto truly automatic) */
+/* Auto mode: follow device preference */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     color-scheme: light;
@@ -85,20 +79,20 @@
   }
 }
 
-/* ===== Base ===== */
+/* Base */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
 .container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 a{color:inherit}
 
-/* ===== Header ===== */
+/* Header */
 .header{display:grid;gap:8px}
 .controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
 .brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
-/* ===== Control chips ===== */
+/* Chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
@@ -112,7 +106,7 @@ a{color:inherit}
 #muteChip{background:transparent;border:none;padding:0}
 #muteChip .chip-label{display:none}
 
-/* ===== Icon toggles (small square buttons) ===== */
+/* Icon toggles */
 .icon-toggle{
   display:inline-flex;align-items:center;justify-content:center;
   width:var(--chip-h);height:var(--chip-h);
@@ -120,19 +114,18 @@ a{color:inherit}
 }
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
-/* Back button tweaks: make arrow a bit bigger */
+/* Back button tweaks */
 #backBtn.icon-toggle{
-  /* EDIT: change size here if you want the back button larger/smaller */
   width:calc(var(--chip-h) + 6px); height:calc(var(--chip-h) + 6px);
   font-weight:900; font-size:clamp(22px,3.8vw,32px); line-height:1;
 }
 
-/* ===== Total CPR ===== */
+/* Total CPR */
 .total{display:flex;flex-direction:column;align-items:center;margin:8px 0 10px}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* ===== Layout ===== */
+/* Layout */
 .main{display:grid;gap:16px}
 @media (orientation:portrait){
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
@@ -149,7 +142,7 @@ a{color:inherit}
   .timer .digits{font-size:clamp(38px, 7vw, 96px)}
 }
 
-/* ===== Cards ===== */
+/* Cards */
 .centered{display:grid; justify-items:center}
 .timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
@@ -166,13 +159,13 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* ===== Icon-ctrl (Start/Pause buttons inside timers) ===== */
+/* Icon-ctrl */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg)}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.55}
 
-/* ===== Action buttons ===== */
+/* Action buttons */
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow)}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:linear-gradient(180deg,var(--primary),#07303c);border-color:var(--primary-bd);color:var(--primary-fg)}
@@ -180,7 +173,7 @@ a{color:inherit}
 .btn.ghost{background:var(--btn-bg)}
 .btn .ico{width:clamp(16px,2.6vw,22px);height:clamp(16px,2.6vw,22px)}
 
-/* ===== Countdown ===== */
+/* Countdown */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
@@ -189,12 +182,12 @@ a{color:inherit}
 #countdown.show{display:flex}
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 
-/* ===== Adrenaline prompt ===== */
+/* Adrenaline prompt */
 #adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* ===== Extras ===== */
+/* Extras */
 .extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
 .wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
@@ -209,7 +202,7 @@ a{color:inherit}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
-/* ===== Print ===== */
+/* Print */
 @media print{
   .header,.controls-row,.actions,.wa-row{display:none!important}
   body{background:#fff;color:#000}
@@ -227,22 +220,21 @@ a{color:inherit}
     <div class="controls-row" id="controlsRow">
       <div class="chip" id="backChip">
         <div class="chip-label"></div>
-        <!-- EDIT: Back icon — replace the arrow character or wrap an SVG -->
+        <!-- EDIT: Back icon -->
         <button id="backBtn" class="icon-toggle" title="Back">←</button>
       </div>
       <div class="chip" id="themeChip">
         <div class="chip-label">Theme</div>
-        <!-- EDIT: Button label text shows current mode; logic in JS -->
         <button id="themeBtn" class="icon-toggle" title="Theme: Auto">Auto</button>
       </div>
       <div class="chip" id="bpmChip">
         <div class="chip-label">BPM</div>
-        <!-- EDIT: Input placeholder/limits if needed -->
+        <!-- EDIT: BPM field constraints -->
         <input id="bpm" type="number" min="60" max="160" step="1" placeholder="110">
       </div>
       <div class="chip" id="muteChip">
         <div class="chip-label">Mute</div>
-        <!-- EDIT: Mute icon — swap paths for a different icon -->
+        <!-- EDIT: Mute icon -->
         <button id="muteBtn" class="icon-toggle" title="Beat mute/unmute" aria-pressed="false">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/>
@@ -270,11 +262,11 @@ a{color:inherit}
         <div id="cycleDigits" class="digits">00:00</div>
         <div id="countdown">10</div>
         <div class="icon-row">
-          <!-- EDIT: Swap SVG (icon) or change text "Start" -->
+          <!-- EDIT: Start icon/text -->
           <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <!-- EDIT: Pause button icon/text -->
+          <!-- EDIT: Pause icon/text -->
           <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
@@ -302,7 +294,6 @@ a{color:inherit}
     <!-- Actions -->
     <div class="actions">
       <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
-        <!-- EDIT: Change color by swapping .danger / .primary / .ghost -->
         <button id="roscb" class="btn danger">
           <!-- EDIT: ROSC icon -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
@@ -334,11 +325,6 @@ a{color:inherit}
       </div>
 
       <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap;margin-top:8px">
-        <button id="exportTxt" class="btn ghost">
-          <!-- EDIT: Export .txt icon/text -->
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke="currentColor" stroke-width="2"/></svg>
-          Export .txt
-        </button>
         <button id="printPdf" class="btn primary">
           <!-- EDIT: Export PDF icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
@@ -498,7 +484,6 @@ function showCountdown(){
     }
   },1000);
 }
-
 function now(){ return Date.now(); }
 
 /* ===== Animation loop ===== */
@@ -548,14 +533,10 @@ function tick(){
 
     if(a>=240){
       $('adrDigits').textContent='04:00'; play('adr4');
-
-      // NEW: stamp every time 4:00 is reached
-      adrCount++;                          // EDIT: if you prefer "Due" not "Administered", change text below
+      adrCount++; // stamp each 4:00
       stamp(`Adrenaline no. ${adrCount} Administered`);
-
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
       adrRunning = false;
-      // show prompt for 2s, then restart a fresh 4:00
       setTimeout(()=>{
         adrCard.classList.remove('adr-show','adr-hide');
         adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
@@ -590,8 +571,7 @@ $('adrStart').onclick = () => {
   primeAudio(); if(!totalStart) $('cprStart').click();
   if(!adrStart){
     adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-    adrCount++;                         // Dose #1 on manual start
-    stamp(`Adrenaline no. ${adrCount} Administered`);
+    adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`);
     stamp('Adrenaline Timer Started');
   } else if(adrPausedAt){
     adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed');
@@ -605,13 +585,11 @@ function endSession(label){
   if(!totalStart) return;
   if(!totalEnd) totalEnd = now(); // keep for export
   stamp(label);
-  // stop timers
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
   if(adrRunning){ adrRunning=false; adrPausedAt=0; }
   adrStart=0; adrPausedAccum=0;
-  // visually reset total digits but keep times for export
   showTotalZero = true;
   stopBeat(); releaseWake();
 }
@@ -621,27 +599,14 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== Export helpers ===== */
-function lines(){
-  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-  const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`Total: ${total}`,counts,``,`Events:`];
-  for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
-  return arr;
-}
-$('exportTxt').onclick = () => {
-  const blob = new Blob([lines().join('\n')], {type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
-};
+/* ===== Export: PDF via hidden iframe (no tab switch) ===== */
 $('printPdf').onclick = () => {
   const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
   const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
   const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
   const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
   const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
+
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
   <meta name="color-scheme" content="light dark">
   <style>
@@ -678,23 +643,30 @@ $('printPdf').onclick = () => {
       <tbody>${rows}</tbody>
     </table>
     <footer>Ambulance App</footer>
-    <script>onload=()=>{ print(); setTimeout(()=>close(),300) }<\/script>
+    <script>onload=()=>{ print(); setTimeout(()=>close(),500) }<\/script>
   </body></html>`;
-  const blob = new Blob([html], {type:'text/html'});
-  const url  = URL.createObjectURL(blob);
-  const w = window.open(url, '_blank'); if(!w){ return; }
-  const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
-  w.addEventListener('afterprint', tidy, {once:true});
-  setTimeout(()=>tidy(), 2000);
+
+  // Use a hidden iframe so iOS WebClip doesn't bounce back
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0'; iframe.style.bottom = '0';
+  iframe.style.width = '0'; iframe.style.height = '0';
+  iframe.style.border = '0'; iframe.style.visibility='hidden';
+  // srcdoc keeps your real URL out of the PDF footer; on iOS it often shows about:blank or blob:
+  iframe.srcdoc = html;
+  document.body.appendChild(iframe);
+  iframe.onload = () => {
+    try{
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }catch{}
+    // cleanup after a moment
+    setTimeout(()=>{ try{ document.body.removeChild(iframe); }catch{} }, 1500);
+  };
 };
 
 /* ===== Self-tests ===== */
 (function runSelfTests(){
-  const arr = lines();
-  console.assert(Array.isArray(arr), 'lines returns array');
-  console.assert(arr[0]==='CPR SESSION REPORT','first line header');
-  const j=arr.join('\n');
-  console.assert((j.match(/\n/g)||[]).length >= Math.max(0,arr.length-1),'joined with newlines');
   console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
 })();
 })();
