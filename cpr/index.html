@@ -6,11 +6,12 @@
 <style>
 /* ==========================================================
    CPR TIMER — Patch (2025-09-24 h)
-   - Export PDF gated by exportReady flag; blob URL; modal viewer
-   - Multi-page PDF via jsPDF + AutoTable (with graceful fallback)
-   - Actions: 3 rows × 2 buttons, equal width, themed colors
-   - WAAFELSS collapsible below Actions; WA buttons same style/width
-   - Start/Pause reflect disabled state; adrenaline logs at 4:00
+   - WebClip-friendly PDF modal with Share + Save + visible download link
+   - Blob URL preserved; footer text "Ambulance App" embedded in PDF pages
+   - Actions: 3 rows × 2 buttons, equal width, colored
+   - WAAFELSS collapsible below Actions; no inner duplicate title
+   - WAAFELSS buttons match Actions in width/weight
+   - Start/Pause show disabled state; Adrenaline logs each 4:00
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -21,12 +22,12 @@
 
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
 
-  /* Action button color tokens (adjust as you like) */
+  /* Action button color tokens (you can tweak these) */
   --rosc-1:#D94B4B; --rosc-2:#9E2E2E; --rosc-bd:#B23A3A;
   --stop-1:#C62828; --stop-2:#8E1E1E; --stop-bd:#A12222;
-  --shock-1:#F2B705; --shock-2:#B88406; --shock-bd:#D59B06;
-  --amio-1:#2EA0FF; --amio-2:#1976D2; --amio-bd:#1E88E5;
-  --dsed-1:#F7C948; --dsed-2:#B38600; --dsed-bd:#D1A20A;
+  --shock-1:#F2B705; --shock-2:#B88406; --shock-bd:#D59B06; /* yellow-ish */
+  --amio-1:#2EA0FF; --amio-2:#1976D2; --amio-bd:#1E88E5; /* sky blue */
+  --dsed-1:#F7C948; --dsed-2:#B38600; --dsed-bd:#D1A20A;   /* alt yellow */
   --export-1:#6C63FF; --export-2:#4B46B8; --export-bd:#5B55D6;
 
   --wa-m-1:#00BFA6; --wa-m-2:#008F79; --wa-m-bd:#00A68F; /* Months */
@@ -46,8 +47,8 @@
   --radius: 18px;
   --shadow: 0 6px 20px rgba(0,0,0,.22);
 
-  /* Log font (tweak here) */
-  --log-font: clamp(12px, 1.3vw, 13px);
+  /* Log font size (shrink if lines wrap too much) */
+  --log-font: clamp(12px, 1.4vw, 13px);
 
   --total-color:#f1f5f9;
   --cycle-accent-light:#ff4d4d;
@@ -69,7 +70,7 @@
   --cycle-accent: var(--cycle-accent-light);
   --cycle-shadow: var(--cycle-shadow-light);
 
-  /* Light tweaks */
+  /* Tweaks for light mode contrast */
   --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
@@ -105,7 +106,7 @@ a{color:inherit}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 
-/* Back, Theme, Mute styles */
+/* Back, Theme, Mute styles (Back in a box + bigger arrow) */
 #backChip{background:transparent;border:none;padding:0}
 #backChip .chip-label{display:none}
 #backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
@@ -154,7 +155,7 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* Start/Pause */
+/* Start/Pause buttons (visual disabled state) */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
@@ -189,7 +190,7 @@ a{color:inherit}
 /* ---------- EXTRAS (WAAFELSS + LOG) ---------- */
 .extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
 
-/* WAAFELSS collapsible */
+/* WAAFELSS collapsible (below actions) */
 .wa-shell{width:min(860px, 100%)}
 .wa-shell details{border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
 .wa-shell summary{
@@ -214,7 +215,7 @@ a{color:inherit}
 .wtag{min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
 .wval{font-weight:800}
 
-/* Log card */
+/* Log card (framed) */
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
@@ -232,7 +233,7 @@ a{color:inherit}
 #pdfLinkRow{ padding:10px; display:flex; gap:10px; justify-content:space-between; align-items:center; border-top:1px solid var(--border); font-size:12px; color:var(--muted) }
 #pdfLinkRow a{ text-decoration:underline }
 
-/* Toolbar buttons */
+/* Toolbar buttons (use export colors) */
 .btn-tb{ padding:10px 14px; border-radius:12px; border:1px solid var(--export-bd); color:#fff; font-weight:800; background:linear-gradient(180deg,var(--export-1),var(--export-2)); box-shadow:var(--shadow) }
 .btn-tb.secondary{ background:var(--btn-bg); color:var(--fg); border-color:var(--btn-bd) }
 
@@ -343,7 +344,7 @@ a{color:inherit}
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
         Log DSED
       </button>
-      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)" aria-disabled="true">
+      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
         Export PDF
       </button>
@@ -351,7 +352,7 @@ a{color:inherit}
 
     <!-- Extras -->
     <div class="extras">
-      <!-- Collapsible WAAFELSS (below Actions) -->
+      <!-- Collapsible WAAFELSS (kept BELOW actions) -->
       <div class="wa-shell">
         <details>
           <summary>
@@ -391,13 +392,17 @@ a{color:inherit}
   <div id="pdfBackdrop"></div>
   <div id="pdfCard" role="dialog" aria-modal="true" aria-label="Exported PDF">
     <div id="pdfToolbar">
+      <button id="pdfShareBtn" class="btn-tb">Share</button>
       <button id="pdfSaveBtn" class="btn-tb">Save PDF</button>
       <button id="pdfCloseBtn" class="btn-tb secondary">Close</button>
     </div>
     <iframe id="pdfFrame" title="PDF Preview"></iframe>
     <div id="pdfLinkRow">
-      <span>Tip: If the Save button is blocked, use this link:</span>
-      <a id="pdfDownloadLink" href="#" download>Download report</a>
+      <span>Tip: If Share is blocked, use this link:</span>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a id="pdfDownloadLink" href="#" download>Download report</a>
+        <a id="pdfOpenSafari" href="#" rel="noopener">Open in Safari</a>
+      </div>
     </div>
   </div>
 </div>
@@ -456,7 +461,7 @@ async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await nav
 async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-/* ===== AUDIO (WebClip-friendly) ===== */
+/* ===== AUDIO (WebClip-friendly unlock + fallback beep) ===== */
 let audioCtx;
 const buffers={}, files={
   beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -472,7 +477,8 @@ function primeAudio(){
   try{
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    g.gain.value = 0.0001; o.connect(g).connect(audioCtx.destination);
+    g.gain.value = 0.0001;
+    o.connect(g).connect(audioCtx.destination);
     o.start(); setTimeout(()=>{ try{o.stop();}catch{} }, 1);
   }catch{}
   (async()=>{ for(const [k,p] of Object.entries(files)){ if(buffers[k]) continue; try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
@@ -489,13 +495,16 @@ function play(name, vol=1){
     const buf=buffers[name];
     if(!audioCtx || !buf) return false;
     const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
-    g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
+    g.gain.value=vol;
+    src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
     return true;
   };
   const beep = () => {
     try{
-      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-      o.type='square'; o.frequency.value=800; g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type='square'; o.frequency.value=800;
+      g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
       o.start(); setTimeout(()=>{ try{o.stop();}catch{} }, 20);
     }catch{}
   };
@@ -527,9 +536,6 @@ let cue20=false, cue90=false, cue120=false;
 let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
 let showTotalZero = true;
-
-/* NEW: explicit export gate */
-let exportReady = false;
 
 /* ===== COUNTDOWN ===== */
 function showCountdown(){
@@ -618,18 +624,8 @@ function tick(){
 requestAnimationFrame(tick);
 
 /* ===== CONTROLS ===== */
-function setExportEnabled(enabled){
-  const btn = $('printPdf');
-  btn.classList.toggle('is-disabled', !enabled);
-  btn.setAttribute('aria-disabled', String(!enabled));
-  exportReady = !!enabled;
-}
-
 $('cprStart').onclick = () => {
   primeAudio();
-  // any (re)start means you shouldn't export yet
-  setExportEnabled(false);
-
   if(!totalStart){
     totalStart=now(); totalEnd=0; showTotalZero=false;
     stamp('CPR Timer Started'); requestWake();
@@ -657,9 +653,8 @@ $('adrPause').onclick = () => {
 function endSession(label){
   primeAudio();
   if(!totalStart) return;
-  if(!totalEnd) totalEnd = now(); // keep for export
+  if(!totalEnd) totalEnd = now();           // mark end for export
   stamp(label);
-  // stop timers
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
@@ -669,11 +664,8 @@ function endSession(label){
   adrStart=0; adrPausedAccum=0;
   $('adrStart').disabled=false; $('adrPause').disabled=true;
 
-  // visual zero only
   showTotalZero = true;
   stopBeat(); releaseWake();
-
-  // allow exporting
   setExportEnabled(true);
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
@@ -682,7 +674,13 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== EXPORT PDF (blob, modal viewer + Save) ===== */
+/* ===== EXPORT PDF (blob, modal viewer + Share + Save) ===== */
+function setExportEnabled(enabled){
+  $('printPdf').classList.toggle('is-disabled', !enabled);
+}
+setExportEnabled(false);
+function sessionEnded(){ return !!(totalStart && totalEnd); }
+
 async function loadScript(src){
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
@@ -732,21 +730,20 @@ async function buildPdfBlob(){
       styles: { fontSize: 11, cellPadding: 6 },
       headStyles: { fillColor: [25,118,210], textColor: 255 },
       alternateRowStyles: { fillColor: [232,244,253] },
-      margin: { left: 40, right: 40 },
+      margin: { left: 40, right: 40 }
     });
   }else{
     y += 28;
     doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16;
     doc.setFont('helvetica','normal');
-    const pageH = doc.internal.pageSize.getHeight();
     rows.forEach(r=>{
-      if (y > pageH - 48){ doc.addPage(); y=48; }
+      if (y > 760){ doc.addPage(); y=48; }
       doc.text(`${r[0]}  |  ${r[1]}`, 40, y);
       y += 16;
     });
   }
 
-  /* Footer text inside the PDF (no real URL exposed) */
+  /* Footer text inside the PDF (we do NOT expose your site URL). */
   const pageCount = doc.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
     doc.setPage(i);
@@ -758,13 +755,21 @@ async function buildPdfBlob(){
 }
 
 /* Modal helpers */
-const pdfModal = $('pdfModal'), pdfFrame=$('pdfFrame'), pdfSaveBtn=$('pdfSaveBtn'), pdfCloseBtn=$('pdfCloseBtn'), pdfDownloadLink=$('pdfDownloadLink');
+const pdfModal = $('pdfModal'),
+      pdfFrame = $('pdfFrame'),
+      pdfSaveBtn = $('pdfSaveBtn'),
+      pdfCloseBtn = $('pdfCloseBtn'),
+      pdfDownloadLink = $('pdfDownloadLink'),
+      pdfShareBtn = $('pdfShareBtn'),
+      pdfOpenSafari = $('pdfOpenSafari');
+
 let lastPdfUrl = null, lastPdfName = null;
 function openPdfModal(url, filename){
   lastPdfUrl = url; lastPdfName = filename;
-  pdfFrame.src = url;                      // Blob URL shown (keeps blob: in footer)
-  pdfDownloadLink.href = url;              // Visible direct-download link for WebClip
+  pdfFrame.src = url;
+  pdfDownloadLink.href = url;
   pdfDownloadLink.download = filename;
+  pdfOpenSafari.onclick = (e)=>{ e.preventDefault(); window.open(url, '_blank'); };
   pdfModal.style.display='flex';
   pdfModal.setAttribute('aria-hidden','false');
 }
@@ -774,6 +779,7 @@ function closePdfModal(){
   pdfFrame.src = 'about:blank';
   if(lastPdfUrl){ setTimeout(()=>URL.revokeObjectURL(lastPdfUrl), 30000); lastPdfUrl=null; }
 }
+
 $('pdfBackdrop').addEventListener('click', closePdfModal);
 pdfCloseBtn.addEventListener('click', closePdfModal);
 pdfSaveBtn.addEventListener('click', ()=>{
@@ -783,11 +789,32 @@ pdfSaveBtn.addEventListener('click', ()=>{
   a.download = lastPdfName || 'cpr_report.pdf';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
+pdfShareBtn.addEventListener('click', async () => {
+  if (!lastPdfUrl) return;
+  try {
+    const blob = await fetch(lastPdfUrl).then(r => r.blob());
+    const filename = lastPdfName || 'cpr_report.pdf';
+    const file = new File([blob], filename, { type: 'application/pdf' });
 
-/* Export button */
-setExportEnabled(false);
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'CPR Session Report',
+        text: 'Generated by Ambulance App'
+      });
+      // Optionally close after sharing:
+      // closePdfModal();
+    } else {
+      alert('Sharing is not available here. Use “Save PDF” or the download link below.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Could not open the share sheet. Please use “Save PDF” or the download link below.');
+  }
+});
+
 $('printPdf').onclick = async () => {
-  if (!exportReady) {
+  if ($('printPdf').classList.contains('is-disabled') || !sessionEnded()){
     alert('Please finish the session first. Tap ROSC or Stop to finalize the report, then export the PDF.');
     return;
   }
