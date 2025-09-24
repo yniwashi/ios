@@ -5,11 +5,21 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 c)
-   - PDF via Blob URL (hides real site URL in footer)
-   - Total CPR display resets on Stop/ROSC but exports keep times
-   - Theme & Mute chips: no card (from prior step)
+   CPR TIMER — Patch (2025-09-24 d)
+   - Back button: boxed like Mute, larger arrow
+   - Adrenaline: stamp on every 4:00 cycle
+   - Added clear customization comments (icons/labels/colors)
+   - Keeps: Blob-print (no real URL), Auto theme follows device
    ========================================================== */
+
+/* ===== Button theme cheatsheet (EDIT): =====
+   Use .btn variants:
+     .btn.primary  -> teal gradient
+     .btn.danger   -> red gradient
+     .btn.ghost    -> neutral
+   Change a button’s look by swapping the class in HTML.
+   To globally tweak colors, edit vars below (—primary, —danger, etc.)
+*/
 
 :root{
   color-scheme: light dark;
@@ -60,7 +70,7 @@
   --cycle-shadow: var(--cycle-shadow-light);
 }
 
-   /* Auto mode: follow device preference */
+/* Auto mode: follow device preference (keeps Auto truly automatic) */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     color-scheme: light;
@@ -75,42 +85,54 @@
   }
 }
 
-/* Base */
+/* ===== Base ===== */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
 .container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 a{color:inherit}
 
-/* Header */
+/* ===== Header ===== */
 .header{display:grid;gap:8px}
 .controls-row{display:flex;align-items:center;gap:var(--chip-gap);justify-content:space-between;flex-wrap:nowrap}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
-/* Chips */
+/* ===== Control chips ===== */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
 .chip input[type=number]{width:clamp(64px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 
-/* Back, Theme, Mute: no card */
+/* Back chip visible label off, but button boxed like mute */
 #backChip{background:transparent;border:none;padding:0}
 #backChip .chip-label{display:none}
-#backBtn.icon-toggle{border:none;background:transparent}
+
+/* Theme & Mute chips: cardless so only the buttons show */
 #themeChip{background:transparent;border:none;padding:0}
 #muteChip{background:transparent;border:none;padding:0}
 #muteChip .chip-label{display:none}
 
-/* Icon toggles */
-.icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
+/* ===== Icon toggles (small square buttons) ===== */
+.icon-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--chip-h);height:var(--chip-h);
+  border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)
+}
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
-/* Total CPR */
+/* Back button tweaks: make arrow a bit bigger */
+#backBtn.icon-toggle{
+  /* EDIT: change size here if you want the back button larger/smaller */
+  width:calc(var(--chip-h) + 6px); height:calc(var(--chip-h) + 6px);
+  font-weight:900; font-size:clamp(22px,3.8vw,32px); line-height:1;
+}
+
+/* ===== Total CPR ===== */
 .total{display:flex;flex-direction:column;align-items:center;margin:8px 0 10px}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* Layout */
+/* ===== Layout ===== */
 .main{display:grid;gap:16px}
 @media (orientation:portrait){
   .main{grid-template-areas:"total" "timers" "actions" "extras"; grid-template-columns:1fr}
@@ -127,7 +149,7 @@ a{color:inherit}
   .timer .digits{font-size:clamp(38px, 7vw, 96px)}
 }
 
-/* Cards */
+/* ===== Cards ===== */
 .centered{display:grid; justify-items:center}
 .timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
@@ -144,13 +166,13 @@ a{color:inherit}
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
 
-/* Icon-ctrl */
+/* ===== Icon-ctrl (Start/Pause buttons inside timers) ===== */
 .icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg)}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.55}
 
-/* Action buttons */
+/* ===== Action buttons ===== */
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow)}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:linear-gradient(180deg,var(--primary),#07303c);border-color:var(--primary-bd);color:var(--primary-fg)}
@@ -158,7 +180,7 @@ a{color:inherit}
 .btn.ghost{background:var(--btn-bg)}
 .btn .ico{width:clamp(16px,2.6vw,22px);height:clamp(16px,2.6vw,22px)}
 
-/* Countdown */
+/* ===== Countdown ===== */
 #countdown{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
@@ -167,12 +189,12 @@ a{color:inherit}
 #countdown.show{display:flex}
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 
-/* Adrenaline prompt */
+/* ===== Adrenaline prompt ===== */
 #adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* Extras */
+/* ===== Extras ===== */
 .extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:var(--card-pad); width:min(860px, 100%); box-shadow:var(--shadow)}
 .wa-title{font-size:clamp(18px,2.8vw,20px);font-weight:900;text-align:center;margin-bottom:8px}
@@ -187,14 +209,14 @@ a{color:inherit}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
-/* Print */
+/* ===== Print ===== */
 @media print{
   .header,.controls-row,.actions,.wa-row{display:none!important}
   body{background:#fff;color:#000}
   .timer,.card{border:none;box-shadow:none}
   .digits{color:#000}
 }
-@page{ margin:0 } /* try to suppress Safari footer */
+@page{ margin:0 }
 </style>
 <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f8fc" media="(prefers-color-scheme: light)">
@@ -205,18 +227,22 @@ a{color:inherit}
     <div class="controls-row" id="controlsRow">
       <div class="chip" id="backChip">
         <div class="chip-label"></div>
+        <!-- EDIT: Back icon — replace the arrow character or wrap an SVG -->
         <button id="backBtn" class="icon-toggle" title="Back">←</button>
       </div>
       <div class="chip" id="themeChip">
         <div class="chip-label">Theme</div>
+        <!-- EDIT: Button label text shows current mode; logic in JS -->
         <button id="themeBtn" class="icon-toggle" title="Theme: Auto">Auto</button>
       </div>
       <div class="chip" id="bpmChip">
         <div class="chip-label">BPM</div>
+        <!-- EDIT: Input placeholder/limits if needed -->
         <input id="bpm" type="number" min="60" max="160" step="1" placeholder="110">
       </div>
       <div class="chip" id="muteChip">
         <div class="chip-label">Mute</div>
+        <!-- EDIT: Mute icon — swap paths for a different icon -->
         <button id="muteBtn" class="icon-toggle" title="Beat mute/unmute" aria-pressed="false">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/>
@@ -244,9 +270,11 @@ a{color:inherit}
         <div id="cycleDigits" class="digits">00:00</div>
         <div id="countdown">10</div>
         <div class="icon-row">
+          <!-- EDIT: Swap SVG (icon) or change text "Start" -->
           <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
+          <!-- EDIT: Pause button icon/text -->
           <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
@@ -259,9 +287,11 @@ a{color:inherit}
         <div id="adrDigits" class="digits">00:00</div>
         <div id="adrPrompt">Give Adrenaline</div>
         <div class="icon-row">
+          <!-- EDIT: Start/Resume icon/text -->
           <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
+          <!-- EDIT: Pause icon/text -->
           <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
@@ -272,11 +302,14 @@ a{color:inherit}
     <!-- Actions -->
     <div class="actions">
       <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
+        <!-- EDIT: Change color by swapping .danger / .primary / .ghost -->
         <button id="roscb" class="btn danger">
+          <!-- EDIT: ROSC icon -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="2"/></svg>
           ROSC
         </button>
         <button id="stopb" class="btn danger">
+          <!-- EDIT: Stop icon -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/></svg>
           Stop
         </button>
@@ -284,14 +317,17 @@ a{color:inherit}
 
       <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap">
         <button id="shockb" class="btn ghost">
+          <!-- EDIT: Shock icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2"/></svg>
           Shock
         </button>
         <button id="amiob" class="btn primary">
+          <!-- EDIT: Amiodarone icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 10h14" stroke="currentColor" stroke-width="2"/></svg>
           Amiodarone
         </button>
         <button id="dsedb" class="btn ghost" title="Log DSED">
+          <!-- EDIT: DSED icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
           Log DSED
         </button>
@@ -299,10 +335,12 @@ a{color:inherit}
 
       <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap;margin-top:8px">
         <button id="exportTxt" class="btn ghost">
+          <!-- EDIT: Export .txt icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke="currentColor" stroke-width="2"/></svg>
           Export .txt
         </button>
         <button id="printPdf" class="btn primary">
+          <!-- EDIT: Export PDF icon/text -->
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
           Export PDF
         </button>
@@ -314,6 +352,7 @@ a{color:inherit}
       <div class="card">
         <div class="wa-title">WAAFELSS</div>
         <div class="wa-row">
+          <!-- EDIT: Input label/name placeholder -->
           <input id="age" type="number" min="0" placeholder="Enter Age">
           <button id="mBtn" class="btn ghost" title="Months" disabled>Months</button>
           <button id="yBtn" class="btn ghost" title="Years" disabled>Years</button>
@@ -343,17 +382,12 @@ a{color:inherit}
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
 let themeMode = 'auto'; // auto | light | dark
-
 function applyTheme(){
-  // remove explicit override first (this enables Auto to follow media query)
   root.removeAttribute('data-theme');
   if (themeMode==='light') root.setAttribute('data-theme','light');
   if (themeMode==='dark')  root.setAttribute('data-theme','dark');
-
   themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
   themeBtn.title = `Theme: ${themeBtn.textContent}`;
-
-  // update browser UI color after CSS vars settle
   const meta = document.querySelector('meta[name="theme-color"]')
     || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
   requestAnimationFrame(()=>{
@@ -361,332 +395,308 @@ function applyTheme(){
     meta.setAttribute('content', bg);
   });
 }
-
 themeBtn.addEventListener('click', () => {
   themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
   applyTheme();
 });
-
-// If device theme changes while in Auto, follow it
 const mql = window.matchMedia('(prefers-color-scheme: dark)');
 mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
 applyTheme();
 
-  // Back button behavior
-  const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
-  const backBtn = document.getElementById('backBtn');
-  if(backBtn){
-    backBtn.addEventListener('click',()=>{
-      if (document.referrer && document.referrer !== location.href) history.back();
-      else location.href = HOME;
-    });
-  }
-
-  /* HELPERS */
-  const $ = id => document.getElementById(id);
-  const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-  const logEl = $('log');
-  const events = [];
-  function stamp(label){
-    const ts=new Date();
-    const li=document.createElement('li');
-    li.textContent=`${hhmmss(ts)} | ${label}`;
-    logEl.prepend(li);
-    events.push({ts,label});
-  }
-
-  /* WAKE LOCK */
-  let wakeLock=null;
-  async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
-  async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
-  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
-
-  /* AUDIO */
-  let audioCtx;
-  const buffers={}, files={
-    beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
-    adr4:'adr4.wav', total20:'total20.wav', cpr90:'cpr90.wav', cpr120:'cpr120.wav', rosc:'rosc.wav'
-  };
-  function primeAudio(){
-    if(!audioCtx){
-      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      audioCtx.resume();
-      (async()=>{ for(const [k,p] of Object.entries(files)){ try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
-    }
-  }
-  window.addEventListener('pointerdown', primeAudio, {once:true});
-  window.addEventListener('keydown', primeAudio, {once:true});
-  function play(name, vol=1){ const buf=buffers[name]; if(!audioCtx || !buf) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start(); }
-
-  /* METRONOME */
-  let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
-  const muteBtnEl=$('muteBtn');
-  muteBtnEl.addEventListener('click',()=>{
-    beatMuted=!beatMuted;
-    const mx=document.getElementById('muteX');
-    const wv=document.getElementById('wave');
-    if(mx) mx.style.opacity=beatMuted?'1':'0';
-    if(wv) wv.style.opacity=beatMuted?'0':'1';
-    if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
+/* ===== NAV: Back button ===== */
+const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
+const backBtn = document.getElementById('backBtn');
+if(backBtn){
+  backBtn.addEventListener('click',()=>{
+    if (document.referrer && document.referrer !== location.href) history.back();
+    else location.href = HOME; // EDIT: change HOME above
   });
-  $('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
+}
 
-  function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
-  function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
-  function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
-  function restartBeat(){ stopBeat(); startBeat(); }
+/* ===== HELPERS ===== */
+const $ = id => document.getElementById(id);
+const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
+const hhmmss = d => d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+const logEl = $('log');
+const events = [];
+function stamp(label){
+  const ts=new Date();
+  const li=document.createElement('li');
+  li.textContent=`${hhmmss(ts)} | ${label}`;
+  logEl.prepend(li);
+  events.push({ts,label});
+}
 
-  /* STATE */
-  let totalStart=0,totalEnd=0;
-  let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
-  let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
-  let cue20=false, cue90=false, cue120=false;
-  let cycleCount = 0;
-  let counting=false, countdownTimer=null, countdownN=10;
+/* ===== WAKE LOCK ===== */
+let wakeLock=null;
+async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');}}catch{}}
+async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-  // NEW: control visual reset without losing export times
-  let showTotalZero = true;
+/* ===== AUDIO ===== */
+let audioCtx;
+const buffers={}, files={
+  // EDIT: swap audio filenames if you want different sounds
+  beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
+  adr4:'adr4.wav', total20:'total20.wav', cpr90:'cpr90.wav', cpr120:'cpr120.wav', rosc:'rosc.wav'
+};
+function primeAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    audioCtx.resume();
+    (async()=>{ for(const [k,p] of Object.entries(files)){ try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
+  }
+}
+window.addEventListener('pointerdown', primeAudio, {once:true});
+window.addEventListener('keydown', primeAudio, {once:true});
+function play(name, vol=1){ const buf=buffers[name]; if(!audioCtx || !buf) return; const src=audioCtx.createBufferSource(), g=audioCtx.createGain(); g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start(); }
 
-  function showCountdown(){
-    if(counting) return;
-    counting=true; countdownN=10;
-    const box=$('countdown'); const card=$('cycleTimer');
-    box.textContent=countdownN; box.classList.add('show');
-    card.classList.add('cycle-hide');
-    stopBeat();
-    countdownTimer = setInterval(()=>{
-      countdownN--;
-      if (countdownN>0){
-        box.textContent = countdownN; // 9..1
-      } else {
-        clearInterval(countdownTimer); countdownTimer=null;
-        box.classList.remove('show'); card.classList.remove('cycle-hide');
-        cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
-        counting=false;
-      }
-    },1000);
+/* ===== METRONOME ===== */
+let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
+$('muteBtn').addEventListener('click',()=>{
+  beatMuted=!beatMuted;
+  const mx=document.getElementById('muteX');
+  const wv=document.getElementById('wave');
+  if(mx) mx.style.opacity=beatMuted?'1':'0';
+  if(wv) wv.style.opacity=beatMuted?'0':'1';
+  if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
+});
+$('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
+
+function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
+function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
+function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
+function restartBeat(){ stopBeat(); startBeat(); }
+
+/* ===== STATE ===== */
+let totalStart=0,totalEnd=0;
+let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
+let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
+let cue20=false, cue90=false, cue120=false;
+let cycleCount = 0;
+let counting=false, countdownTimer=null, countdownN=10;
+// visual reset for Total CPR without losing export times
+let showTotalZero = true;
+
+/* ===== Countdown (10s) ===== */
+function showCountdown(){
+  if(counting) return;
+  counting=true; countdownN=10;
+  const box=$('countdown'); const card=$('cycleTimer');
+  box.textContent=countdownN; box.classList.add('show');
+  card.classList.add('cycle-hide');
+  stopBeat();
+  countdownTimer = setInterval(()=>{
+    countdownN--;
+    if (countdownN>0){
+      box.textContent = countdownN; // 9..1
+    } else {
+      clearInterval(countdownTimer); countdownTimer=null;
+      box.classList.remove('show'); card.classList.remove('cycle-hide');
+      cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
+      counting=false;
+    }
+  },1000);
+}
+
+function now(){ return Date.now(); }
+
+/* ===== Animation loop ===== */
+function tick(){
+  const t=now();
+
+  // Total CPR display
+  if(showTotalZero){
+    $('totalDigits').textContent='00:00';
+  }else if(totalStart && !totalEnd){
+    $('totalDigits').textContent=fmt((t-totalStart)/1000);
+    if(!cue20 && (t-totalStart)>=20*60000){ cue20=true; play('total20'); }
+  }else if(totalStart && totalEnd){
+    $('totalDigits').textContent=fmt((totalEnd-totalStart)/1000);
+  }else{
+    $('totalDigits').textContent='00:00';
   }
 
-  function now(){ return Date.now(); }
-  function tick(){
-    const t=now();
-    // total (respect visual reset)
-    if(showTotalZero){
-      $('totalDigits').textContent='00:00';
-    }else if(totalStart && !totalEnd){
-      $('totalDigits').textContent=fmt((t-totalStart)/1000);
-      if(!cue20 && (t-totalStart)>=20*60000){ cue20=true; play('total20'); }
-    }else if(totalStart && totalEnd){
-      $('totalDigits').textContent=fmt((totalEnd-totalStart)/1000);
-    }else{
-      $('totalDigits').textContent='00:00';
+  // Cycle 2:00 → countdown
+  let c=0;
+  if(cprStart){
+    if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
+    else if(cprPausedAt) c=(cprPausedAt-cprStart-cprPausedAccum)/1000;
+    else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
+    c = c|0;
+    if(!counting){ $('cycleDigits').textContent=fmt(c); }
+
+    if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
+    if(!cue120 && c>=120){
+      cue120=true; play('cpr120');
+      cycleCount += 1;
+      stamp(`Cycle ${cycleCount} finished`);
+      cprRunning=false;
+      showCountdown();
     }
-
-    // cycle
-    let c=0;
-    if(cprStart){
-      if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
-      else if(cprPausedAt) c=(cprPausedAt-cprStart-cprPausedAccum)/1000;
-      else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
-      c = c|0;
-      if(!counting){ $('cycleDigits').textContent=fmt(c); }
-
-      if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
-      if(!cue120 && c>=120){
-        cue120=true; play('cpr120');
-        cycleCount += 1;
-        stamp(`Cycle ${cycleCount} finished`);
-        cprRunning=false;
-        showCountdown();
-      }
-    }else{
-      if(!counting) $('cycleDigits').textContent='00:00';
-    }
-
-    // adrenaline loop
-    if(adrStart){
-      let a=0;
-      if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
-      else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
-      else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
-      a = a|0;
-      if(a>=240){
-        $('adrDigits').textContent='04:00'; play('adr4');
-        const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
-        adrRunning = false;
-        setTimeout(()=>{
-          adrCard.classList.remove('adr-show','adr-hide');
-          adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-        }, 2000);
-        a=0;
-      }
-      $('adrDigits').textContent=fmt(a);
-    }else $('adrDigits').textContent='00:00';
-
-    requestAnimationFrame(tick);
+  }else if(!counting){
+    $('cycleDigits').textContent='00:00';
   }
+
+  // Adrenaline 4:00 loop
+  if(adrStart){
+    let a=0;
+    if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
+    else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
+    else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
+    a = a|0;
+
+    if(a>=240){
+      $('adrDigits').textContent='04:00'; play('adr4');
+
+      // NEW: stamp every time 4:00 is reached
+      adrCount++;                          // EDIT: if you prefer "Due" not "Administered", change text below
+      stamp(`Adrenaline no. ${adrCount} Administered`);
+
+      const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
+      adrRunning = false;
+      // show prompt for 2s, then restart a fresh 4:00
+      setTimeout(()=>{
+        adrCard.classList.remove('adr-show','adr-hide');
+        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+      }, 2000);
+      a=0;
+    }
+    $('adrDigits').textContent=fmt(a);
+  }else{
+    $('adrDigits').textContent='00:00';
+  }
+
   requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
 
-  /* CONTROLS */
-  $('cprStart').onclick = () => {
-    primeAudio();
-    if(!totalStart){
-      totalStart=now(); totalEnd=0; showTotalZero=false;
-      stamp('CPR Timer Started'); requestWake();
+/* ===== Controls ===== */
+$('cprStart').onclick = () => {
+  primeAudio();
+  if(!totalStart){
+    totalStart=now(); totalEnd=0; showTotalZero=false;
+    stamp('CPR Timer Started'); requestWake();
+  }
+  if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=false; cue120=false; play('start'); }
+  else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
+  cprRunning=true; $('cprPause').disabled=false; if(!beatMuted) startBeat();
+};
+$('cprPause').onclick = () => {
+  if(!cprRunning) return; primeAudio();
+  cprRunning=false; cprPausedAt=now(); play('pause'); stamp('CPR Timer Paused'); stopBeat();
+};
+$('adrStart').onclick = () => {
+  primeAudio(); if(!totalStart) $('cprStart').click();
+  if(!adrStart){
+    adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+    adrCount++;                         // Dose #1 on manual start
+    stamp(`Adrenaline no. ${adrCount} Administered`);
+    stamp('Adrenaline Timer Started');
+  } else if(adrPausedAt){
+    adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed');
+  }
+  $('adrPause').disabled=false;
+};
+$('adrPause').onclick = () => { if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused'); };
+
+function endSession(label){
+  primeAudio();
+  if(!totalStart) return;
+  if(!totalEnd) totalEnd = now(); // keep for export
+  stamp(label);
+  // stop timers
+  if(cprRunning){ cprRunning=false; cprPausedAt=0; }
+  cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
+  const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
+  if(adrRunning){ adrRunning=false; adrPausedAt=0; }
+  adrStart=0; adrPausedAccum=0;
+  // visually reset total digits but keep times for export
+  showTotalZero = true;
+  stopBeat(); releaseWake();
+}
+$('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
+$('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
+$('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
+$('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+$('dsedb').onclick  = () => { stamp('DSED Delivered'); };
+
+/* ===== Export helpers ===== */
+function lines(){
+  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+  const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`Total: ${total}`,counts,``,`Events:`];
+  for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
+  return arr;
+}
+$('exportTxt').onclick = () => {
+  const blob = new Blob([lines().join('\n')], {type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
+};
+$('printPdf').onclick = () => {
+  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+  const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--card:#14181d;--accent:#2ea0ff;--accent2:#6dd3ff}
+    @media (prefers-color-scheme: light){
+      :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--card:#f3f4f6;--accent:#0b6b82;--accent2:#37a0c0}
     }
-    if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=false; cue120=false; play('start'); }
-    else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
-    cprRunning=true; $('cprPause').disabled=false; if(!beatMuted) startBeat();
-  };
-  $('cprPause').onclick = () => {
-    if(!cprRunning) return; primeAudio();
-    cprRunning=false; cprPausedAt=now(); play('pause'); stamp('CPR Timer Paused'); stopBeat();
-  };
-  $('adrStart').onclick = () => {
-    primeAudio(); if(!totalStart) $('cprStart').click();
-    if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
-    else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
-    $('adrPause').disabled=false;
-  };
-  $('adrPause').onclick = () => { if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused'); };
+    @page{ margin:0 }
+    body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+    h1{margin:0 0 12px}
+    .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
+    .kvs span{color:var(--muted)}
+    table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
+    thead th{
+      text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
+      background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff
+    }
+    tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
+    tbody tr.even{background:rgba(46,160,255,0.06)}
+    tbody tr.odd{background:rgba(46,160,255,0.12)}
+    tbody tr:hover{outline:2px solid var(--accent);outline-offset:-2px}
+    .total{font-weight:900}
+    footer{margin-top:16px;color:var(--muted);text-align:center}
+  </style></head><body>
+    <h1>CPR Session Report</h1>
+    <div class="kvs">
+      <span>Started</span><div>${started}</div>
+      <span>Ended</span><div>${ended}</div>
+      <span>Total</span><div class="total">${total}</div>
+      <span>Counts</span><div>${counts}</div>
+    </div>
+    <table>
+      <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <footer>Ambulance App</footer>
+    <script>onload=()=>{ print(); setTimeout(()=>close(),300) }<\/script>
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank'); if(!w){ return; }
+  const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
+  w.addEventListener('afterprint', tidy, {once:true});
+  setTimeout(()=>tidy(), 2000);
+};
 
-  function endSession(label){
-    primeAudio();
-    if(!totalStart) return;
-    if(!totalEnd) totalEnd = now(); // keep for export
-    stamp(label);
-    // stop timers
-    if(cprRunning){ cprRunning=false; cprPausedAt=0; }
-    cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
-    const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
-    if(adrRunning){ adrRunning=false; adrPausedAt=0; }
-    adrStart=0; adrPausedAccum=0;
-    // visually reset total digits but keep times for export
-    showTotalZero = true;
-    stopBeat(); releaseWake();
-  }
-  $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
-  $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
-  $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
-  $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
-  $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
-
-  /* EXPORTS */
-  function lines(){
-    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-    const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-    const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-    const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`Total: ${total}`,counts,``,`Events:`];
-    for(const e of events) arr.push(`${hhmmss(e.ts)} | ${e.label}`);
-    return arr;
-  }
-  $('exportTxt').onclick = () => {
-    const blob = new Blob([lines().join('\n')], {type:'text/plain'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
-  };
-  $('printPdf').onclick = () => {
-    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-    const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
-    const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-    const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
-    <meta name="color-scheme" content="light dark">
-    <style>
-      :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--card:#14181d;--accent:#2ea0ff;--accent2:#6dd3ff}
-      @media (prefers-color-scheme: light){
-        :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--card:#f3f4f6;--accent:#0b6b82;--accent2:#37a0c0}
-      }
-      @page{ margin:0 }
-      body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
-      h1{margin:0 0 12px}
-      .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
-      .kvs span{color:var(--muted)}
-      table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
-      thead th{
-        text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
-        background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff
-      }
-      tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
-      tbody tr.even{background:rgba(46,160,255,0.06)}
-      tbody tr.odd{background:rgba(46,160,255,0.12)}
-      tbody tr:hover{outline:2px solid var(--accent);outline-offset:-2px}
-      .total{font-weight:900}
-      footer{margin-top:16px;color:var(--muted);text-align:center}
-    </style></head><body>
-      <h1>CPR Session Report</h1>
-      <div class="kvs">
-        <span>Started</span><div>${started}</div>
-        <span>Ended</span><div>${ended}</div>
-        <span>Total</span><div class="total">${total}</div>
-        <span>Counts</span><div>${counts}</div>
-      </div>
-      <table>
-        <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <footer>Ambulance App</footer>
-      <script>onload=()=>{ print(); setTimeout(()=>close(),300) }<\/script>
-    </body></html>`;
-
-    // Open as a Blob URL so Safari’s PDF footer won’t expose your real URL
-    const blob = new Blob([html], {type:'text/html'});
-    const url  = URL.createObjectURL(blob);
-    const w = window.open(url, '_blank');
-    if(!w){ return; }
-    // Cleanup after print
-    const tidy = () => { URL.revokeObjectURL(url); try{ w.close(); }catch{} };
-    w.addEventListener('afterprint', tidy, {once:true});
-    setTimeout(()=>tidy(), 2000); // fallback
-  };
-
-  /* WAAFELSS (unchanged) */
-  const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
-  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-  function months(n){
-    const weight=n*0.5+4, adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
-    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
-    const sga=(weight<=5)?'Size 1':'Size 1.5';
-    return {age:`${n} months`,weight,adr,amio,minF,maxF,sga,joules,d10};
-  }
-  function years(n){
-    let weight,sga; if(n<=5){weight=n*2+8; sga=(weight>=10&&weight<=24)?'Size 2':(weight>=25&&weight<=35)?'Size 2.5':'';}
-    else{weight=n*3+7; sga=(weight>=25&&weight<=35)?'Size 2.5':'Consider adult SGA sizes';}
-    const adr=+(weight*0.01).toFixed(2), amio=+(weight*5).toFixed(1);
-    const minF=Math.round(weight*10), maxF=Math.round(weight*20);
-    const joules=Math.round(clamp(weight*4,0,360)), d10=+(clamp(weight*2.5,0,50)).toFixed(1);
-    return {age:`${n} years`,weight,adr,amio,minF,maxF,sga,joules,d10};
-  }
-  function renderW(o){
-    $('wAge').textContent=o.age;
-    $('wWeight').textContent=`${o.weight.toFixed(1)} kg`;
-    $('wAdr').textContent=`${o.adr} mg`;
-    $('wAmio').textContent=`${o.amio} mg`;
-    $('wFluids').textContent=`${o.minF}–${o.maxF} mL`;
-    $('wSGA').textContent=o.sga||'—';
-    $('wJoules').textContent=`${o.joules} J`;
-    $('wD10').textContent=`${o.d10} mL`;
-  }
-  function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
-  function checkAge(){ const empty = (age.value===''||age.value===null); mBtn.disabled=empty; yBtn.disabled=empty; }
-  age.addEventListener('input',checkAge); checkAge();
-
-  mBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); };
-  yBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); };
-
-  /* Self-tests */
-  (function runSelfTests(){
-    const arr = lines();
-    console.assert(Array.isArray(arr), 'lines returns array');
-    console.assert(arr[0]==='CPR SESSION REPORT','first line header');
-    const j=arr.join('\n');
-    console.assert((j.match(/\n/g)||[]).length >= Math.max(0,arr.length-1),'joined with newlines');
-    console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
-  })();
+/* ===== Self-tests ===== */
+(function runSelfTests(){
+  const arr = lines();
+  console.assert(Array.isArray(arr), 'lines returns array');
+  console.assert(arr[0]==='CPR SESSION REPORT','first line header');
+  const j=arr.join('\n');
+  console.assert((j.match(/\n/g)||[]).length >= Math.max(0,arr.length-1),'joined with newlines');
+  console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
+})();
 })();
 </script>
 </body>
