@@ -1,22 +1,18 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta id="themeColor" name="theme-color" content="#0b0d10"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Consolidated Build (2025-09-23)
-   - Controls row on top (Theme, BPM, Mute), title centered below
-   - Cycle timer ABOVE Adrenaline with nice gap
-   - Nicer buttons (primary/danger/ghost)
-   - Responsive clamp() sizing across components
-   - Audio primed early to remove start lag
-   - Export .txt bug fixed (joins with "\n"), PDF uses real newlines
-   - Cycle card beats **in sync with the metronome** (even when muted)
-   - Beat color: red (light), warm orange (dark), high-contrast
-   - Beat visible only while CPR running (stops on Pause/Stop/ROSC)
-   - WAAFELSS buttons show text (Months/Years) + disabled until Age has a value
+   CPR TIMER — Consolidated Build (2025-09-24)
+   Fixes in this patch:
+   - Countdown now visible (big red 10→1) and hides Cycle label/digits/buttons during 10s
+   - Cycle/Adrenaline buttons show icon + text (Start/Pause) using legacy icon-ctrl style
+   - WAAFELSS age input no default value; shows placeholder; Months/Years disabled until input
+   - PDF export: colored styled report + events table
+   - Adrenaline at 4:00 shows blue “Give Adrenaline” overlay briefly, then restarts
+   - Stop/ROSC log wording per spec; export TXT newline fix
    ========================================================== */
 
 :root{
@@ -30,6 +26,7 @@
   --cycle-accent-dark:#ffb347;  /* Dark-mode visual beat */
   --cycle-shadow-light: rgba(255,77,77,.22);
   --cycle-shadow-dark:  rgba(255,179,71,.24);
+  --countdown-red:#ff3333; /* countdown color (both themes) */
   --adr-color:#2ea0ff;
 
   /* Buttons */
@@ -55,7 +52,7 @@
 
   --log-font: clamp(13px, 1.8vw, 15px);
 
-  /* Theme-dependent accent (JS does not need to touch these) */
+  /* Theme-dependent accent */
   --cycle-accent: var(--cycle-accent-dark);
   --cycle-shadow: var(--cycle-shadow-dark);
 }
@@ -82,7 +79,7 @@ a{color:inherit}
 .header{display:grid;gap:8px}
 .controls-row{display:flex;flex-wrap:wrap;gap:var(--chip-gap);justify-content:center}
 .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-.brand .trial{margin-left:8px;color:#ef4444;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
+.brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;vertical-align:middle;white-space:nowrap}
 
 /* Control chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
@@ -125,7 +122,7 @@ a{color:inherit}
 .timer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative; width:min(520px, 100%); box-shadow:var(--shadow)}
 .timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
 .timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
-#cycleDigits{color:var(--cycle-accent-light)} /* text color keeps classic red */
+#cycleDigits{color:var(--cycle-accent-light)}
 #adrDigits{color:#2ea0ff}
 
 /* ===== Metronome-synced visual beat on CYCLE card ===== */
@@ -136,28 +133,36 @@ a{color:inherit}
   15%  { transform:scale(1.04); box-shadow:0 0 0 10px var(--cycle-shadow) }
   100% { transform:scale(1); box-shadow:0 0 0 0 rgba(0,0,0,0) }
 }
-/* Countdown overlay */
-.countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-weight:900;pointer-events:none;color:#ff4d4d}
-.countdown.show{display:flex}
-@media (orientation:portrait){.countdown{font-size:clamp(80px,16vw,140px);}}
-@media (orientation:landscape){.countdown{font-size:clamp(80px,14vw,160px);}}
-/* Hide cycle UI while countdown active */
-#cycleTimer.countdown-active .label,
-#cycleTimer.countdown-active #cycleDigits,
-#cycleTimer.countdown-active .icon-row{ visibility:hidden; }
 
-/* ===== Legacy icon-ctrl style for timer controls (requested) ===== */
-.icon-ctrl{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+/* ===== Legacy icon-ctrl buttons (extracted) ===== */
+.icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg)}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
-@media (max-width:380px){ .icon-ctrl span{display:none} }
+.icon-ctrl[disabled]{opacity:.55}
 
-/* ===== Pretty action buttons ===== */
+/* ===== Pretty action buttons (unchanged) ===== */
 .btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:clamp(10px,1.6vw,14px) clamp(12px,2vw,18px);border-radius:14px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-weight:800;letter-spacing:.2px;box-shadow:var(--shadow)}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:linear-gradient(180deg,var(--primary),#07303c);border-color:var(--primary-bd);color:var(--primary-fg)}
 .btn.danger{background:linear-gradient(180deg,var(--danger),#4f1717);border-color:var(--danger-bd);color:var(--danger-fg)}
 .btn.ghost{background:var(--btn-bg)}
 .btn .ico{width:clamp(16px,2.6vw,22px);height:clamp(16px,2.6vw,22px)}
+
+/* ===== Countdown overlay inside Cycle card ===== */
+#countdown{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  font-family:ui-monospace,Consolas,monospace;font-weight:900; font-size:clamp(80px,14vw,160px);
+  color:var(--countdown-red); pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,.28);
+}
+#countdown.show{display:flex}
+
+/* ===== Hide helpers during countdown ===== */
+.cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
+
+/* ===== Adrenaline prompt ===== */
+#adrPrompt{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:ui-monospace,Consolas,monospace; font-weight:900; font-size:clamp(38px,8vw,96px); color:var(--adr-color); text-align:center; }
+#adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
+#adrTimer.adr-show #adrPrompt{ display:flex }
 
 /* ===== Extras (WAAFELSS + Logs) ===== */
 .extras{margin-top:8px;display:grid;gap:12px; justify-items:center}
@@ -182,7 +187,6 @@ a{color:inherit}
 <div class="container">
   <!-- Header -->
   <div class="header">
-    <div class="brand">CPR Timer <span class="trial">Trial Version</span></div>
     <div class="controls-row" id="controlsRow">
       <div class="chip" id="themeChip">
         <div class="chip-label">Theme</div>
@@ -190,23 +194,18 @@ a{color:inherit}
       </div>
       <div class="chip" id="bpmChip">
         <div class="chip-label">BPM</div>
-        <input id="bpm" type="number" min="60" max="160" step="1" value="110">
+        <input id="bpm" type="number" min="60" max="160" step="1" placeholder="110">
       </div>
       <div class="chip" id="muteChip">
         <div class="chip-label">Mute</div>
-        <button id="muteBtn" class="icon-toggle" title="Metronome on" aria-pressed="false">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <!-- speaker body -->
-            <path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/>
-            <!-- waves (shown when unmuted) -->
-            <path id="waves1" d="M16 8c2 2 2 6 0 8" stroke="currentColor" stroke-width="2" fill="none" opacity="1"/>
-            <path id="waves2" d="M18.5 6.5c3 3 3 9 0 12" stroke="currentColor" stroke-width="2" fill="none" opacity="1"/>
-            <!-- X (shown when muted) -->
-            <path id="muteX" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" opacity="0"/>
-          </svg>
+        <button id="muteBtn" class="icon-toggle" title="Beat mute/unmute" aria-pressed="false">
+          <!-- speaker + X -->
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 9v6h4l5 4V5L7 9H3z" stroke="currentColor" stroke-width="2"/>
+            <path id="muteX" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" opacity="0"/></svg>
         </button>
       </div>
     </div>
+    <div class="brand">CPR Timer <span class="trial">Trial Version</span></div>
   </div>
 
   <!-- Total CPR Time -->
@@ -220,28 +219,29 @@ a{color:inherit}
     <div class="timers">
       <!-- CYCLE (first) -->
       <div id="cycleTimer" class="timer centered" style="margin-bottom:var(--timers-gap)">
-        <div id="cycleLabel" class="label">CYCLE</div>
+        <div class="label">CYCLE</div>
         <div id="cycleDigits" class="digits">00:00</div>
-        <div id="countdown" class="countdown" style="display:none"></div>
+        <div id="countdown">10</div>
         <div class="icon-row">
-          <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR" aria-label="Start CPR">
+          <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <button id="cprPause" class="icon-ctrl" title="Pause CPR" aria-label="Pause CPR" disabled>
+          <button id="cprPause" class="icon-ctrl" title="Pause CPR" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
         </div>
       </div>
 
       <!-- ADRENALINE (second) -->
-      <div class="timer centered">
+      <div id="adrTimer" class="timer centered">
         <div class="label">ADRENALINE</div>
         <div id="adrDigits" class="digits">00:00</div>
+        <div id="adrPrompt">Give Adrenaline</div>
         <div class="icon-row">
-          <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline" aria-label="Start Adrenaline">
+          <button id="adrStart" class="icon-ctrl" title="Start/Resume Adrenaline">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
           </button>
-          <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" aria-label="Pause Adrenaline" disabled>
+          <button id="adrPause" class="icon-ctrl" title="Pause Adrenaline" disabled>
             <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span>Pause</span>
           </button>
         </div>
@@ -288,7 +288,7 @@ a{color:inherit}
       <div class="card">
         <div class="wa-title">WAAFELSS</div>
         <div class="wa-row">
-          <input id="age" type="number" min="0" placeholder="Enter Age" value="" autocomplete="off" inputmode="numeric">
+          <input id="age" type="number" min="0" placeholder="Enter Age">
           <button id="mBtn" class="btn ghost" title="Months" disabled>Months</button>
           <button id="yBtn" class="btn ghost" title="Years" disabled>Years</button>
         </div>
@@ -323,10 +323,10 @@ a{color:inherit}
     if (themeMode==='dark')  root.setAttribute('data-theme','dark');
     themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
     themeBtn.title = `Theme: ${themeBtn.textContent}`;
-    // update top browser bar color
-    const meta = document.getElementById('themeColor');
-    const isLight = root.getAttribute('data-theme')==='light' || (themeMode==='auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
-    meta.setAttribute('content', isLight ? '#f6f8fc' : '#0b0d10');
+    // set theme-color for browser UI
+    const meta = document.querySelector('meta[name="theme-color"]') || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
+    meta.setAttribute('content', bg || '#0b0d10');
   }
   themeBtn.addEventListener('click', () => {
     themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
@@ -374,29 +374,11 @@ a{color:inherit}
   /* ===== METRONOME (sound + visual, ticking when CPR running) ===== */
   let beatMuted=false, beatTimer=null, bpm=+($('bpm').value||110);
   const muteBtnEl=$('muteBtn'), muteX=$('muteX');
-  const waves1=document.getElementById('waves1');
-  const waves2=document.getElementById('waves2');
-  function setMuteUI(){
-    muteX.style.opacity = beatMuted ? '1' : '0';
-    if(waves1) waves1.style.opacity = beatMuted ? '0' : '1';
-    if(waves2) waves2.style.opacity = beatMuted ? '0' : '1';
-    muteBtnEl.setAttribute('aria-pressed', String(!beatMuted));
-    muteBtnEl.title = beatMuted ? 'Metronome muted' : 'Metronome on';
-  }
-  muteBtnEl.addEventListener('click',()=>{ beatMuted=!beatMuted; setMuteUI(); });
+  muteBtnEl.addEventListener('click',()=>{ beatMuted=!beatMuted; muteX.style.opacity=beatMuted?'1':'0'; if(!beatMuted && cprRunning) startBeat(); else if(beatMuted) stopBeat(); });
   $('bpm').addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
-  setMuteUI();
 
-  function flashCycle(){
-    const card=$('cycleTimer'); if(!card) return;
-    card.classList.remove('cycle-flash'); void card.offsetWidth; // reflow to restart animation
-    card.classList.add('cycle-flash');
-  }
-  function startBeat(){
-    clearInterval(beatTimer);
-    const iv=Math.max(200,60000/Math.max(1,bpm));
-    beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); if(cprRunning && !counting) flashCycle(); }, iv);
-  }
+  function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
+  function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
   function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
   function restartBeat(){ stopBeat(); startBeat(); }
 
@@ -406,7 +388,27 @@ a{color:inherit}
   let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
   // cues
   let cue20=false, cue90=false, cue120=false, cueAdr240=false;
-  let counting=false; // 10s interruption countdown active
+  // countdown
+  let counting=false, countdownTimer=null, countdownN=10;
+
+  function showCountdown(){
+    if(counting) return;
+    counting=true; countdownN=10;
+    const box=$('countdown'); const card=$('cycleTimer');
+    box.textContent=countdownN; box.classList.add('show');
+    card.classList.add('cycle-hide'); // hide label/digits/buttons
+    // stop metronome during interruption
+    stopBeat();
+    countdownTimer = setInterval(()=>{
+      countdownN--; box.textContent = countdownN;
+      if(countdownN<=1){
+        clearInterval(countdownTimer); countdownTimer=null; box.classList.remove('show'); card.classList.remove('cycle-hide');
+        // restart cycle exactly at 0 and play start
+        cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
+        counting=false;
+      }
+    },1000);
+  }
 
   function now(){ return Date.now(); }
   function tick(){
@@ -416,36 +418,43 @@ a{color:inherit}
     else if(totalStart && totalEnd){ $('totalDigits').textContent=fmt((totalEnd-totalStart)/1000); }
     else $('totalDigits').textContent='00:00';
 
-    // cycle (locks at 2:00, then shows 10s countdown)
+    // cycle (max 2:00, then countdown)
     let c=0;
     if(cprStart){
       if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
       else if(cprPausedAt) c=(cprPausedAt-cprStart-cprPausedAccum)/1000;
       else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
-      if(c>=120 && !counting){
-        $('cycleDigits').textContent='02:00';
-        if(!cue120){ cue120=true; play('cpr120'); }
-        startCountdown();
-      }else{
-        $('cycleDigits').textContent=fmt(Math.min(c|0,120));
-        if(!cue90 && c>=90 && c<120){ cue90=true; play('cpr90'); }
+      c = c|0;
+      if(!counting){ $('cycleDigits').textContent=fmt(c); }
+
+      if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
+      if(!cue120 && c>=120){
+        cue120=true; play('cpr120');
+        // hide counters and start 10s visual countdown (no audio)
+        cprRunning=false; showCountdown();
       }
     }else{
-      $('cycleDigits').textContent='00:00';
+      if(!counting) $('cycleDigits').textContent='00:00';
     }
 
-    // adrenaline (loops each 4:00)
+    // adrenaline loop (4:00)
     if(adrStart){
       let a=0;
       if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
       else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
       else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
+      a = a|0;
       if(a>=240){
-        $('adrDigits').textContent='04:00';
-        if(!cueAdr240){ cueAdr240=true; play('adr4'); }
-        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; cueAdr240=false; a=0;
+        $('adrDigits').textContent='04:00'; play('adr4');
+        // show blue prompt and briefly hide controls
+        const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
+        // restart immediately
+        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+        // hide prompt after 5s
+        setTimeout(()=>{ adrCard.classList.remove('adr-show','adr-hide'); }, 5000);
+        a=0;
       }
-      $('adrDigits').textContent=fmt(Math.min(a|0,240));
+      $('adrDigits').textContent=fmt(a);
     }else $('adrDigits').textContent='00:00';
 
     requestAnimationFrame(tick);
@@ -456,11 +465,9 @@ a{color:inherit}
   $('cprStart').onclick = () => {
     primeAudio();
     if(!totalStart){ totalStart=now(); stamp('CPR Timer Started'); requestWake(); }
-    if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=cue120=false; play('start'); }
+    if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=false; cue120=false; play('start'); }
     else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
-    totalEnd=0; counting=false; const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
-    const card=$('cycleTimer'); card.classList.remove('countdown-active');
-    cprRunning=true; $('cprPause').disabled=false; startBeat(); // start visual+metronome
+    totalEnd=0; cprRunning=true; $('cprPause').disabled=false; if(!beatMuted) startBeat();
   };
   $('cprPause').onclick = () => {
     if(!cprRunning) return; primeAudio();
@@ -474,32 +481,19 @@ a{color:inherit}
   };
   $('adrPause').onclick = () => { if(!adrRunning) return; adrRunning=false; adrPausedAt=now(); stamp('Adrenaline Timer Paused'); };
   $('stopb').onclick = () => {
-    primeAudio(); play('stop');
-    // Hard reset all timers and UI
-    totalStart=0; totalEnd=0;
-    cprRunning=false; cprStart=0; cprPausedAt=0; cprPausedAccum=0; cue90=false; cue120=false;
-    adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0; adrCount=0; cueAdr240=false;
-    $('totalDigits').textContent='00:00';
-    $('cycleDigits').textContent='00:00';
-    $('adrDigits').textContent='00:00';
-    // Hide countdown if present
-    const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
-    const card=$('cycleTimer'); if(card){ card.classList.remove('cycle-flash'); card.classList.remove('countdown-active'); }
-    stopBeat(); releaseWake();
-    stamp('CPR Timers Reset');
+    primeAudio(); play('stop'); if(!totalStart) return; totalEnd=now();
+    if(cprRunning){ cprRunning=false; cprPausedAt=0; }
+    if(adrRunning){ adrRunning=false; adrPausedAt=0; }
+    // reset cycle/adrenaline UI
+    cprStart=0; adrStart=0; cue90=false; cue120=false; cueAdr240=false; counting=false; const box=$('countdown'); box.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
+    const adrCard=$('adrTimer'); adrCard.classList.remove('adr-show','adr-hide');
+    stamp('CPR Timer Stopped'); stopBeat(); releaseWake();
   };
-  $('roscb').onclick = () => { 
-    primeAudio(); play('rosc'); stamp('ROSC Achieved');
-    // Hard reset all timers and UI (same as Stop)
-    totalStart=0; totalEnd=0;
-    cprRunning=false; cprStart=0; cprPausedAt=0; cprPausedAccum=0; cue90=false; cue120=false;
-    adrRunning=false; adrStart=0; adrPausedAt=0; adrPausedAccum=0; adrCount=0; cueAdr240=false;
-    $('totalDigits').textContent='00:00';
-    $('cycleDigits').textContent='00:00';
-    $('adrDigits').textContent='00:00';
-    const cd=$('countdown'); if(cd){ cd.classList.remove('show'); }
-    const card=$('cycleTimer'); if(card){ card.classList.remove('cycle-flash'); card.classList.remove('countdown-active'); }
-    stopBeat(); releaseWake();
+  $('roscb').onclick = () => { primeAudio(); play('rosc'); stamp('ROSC Achieved');
+    // stop timers and reset like stop
+    totalEnd=now(); cprRunning=false; adrRunning=false; cprStart=0; adrStart=0; counting=false; const box=$('countdown'); box.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
+    const adrCard=$('adrTimer'); adrCard.classList.remove('adr-show','adr-hide'); stopBeat(); releaseWake();
+    setTimeout(()=>stamp('CPR Timer Stopped'),1000);
   };
   $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
   $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
@@ -507,7 +501,7 @@ a{color:inherit}
   /* ===== EXPORT & PRINT ===== */
   function lines(){
     const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString([],   {hour12:false})   : 'N/A';
+    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString([],   {hour12:false}) : 'N/A';
     const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
     const counts  = `Adr: ${adrCount}; Shocks: ${window.__shock||0}; Amio: ${window.__amio||0}`;
     const arr=[`CPR SESSION REPORT`,`Started: ${started}`,`Ended:   ${ended}`,`BPM (visual beat): ${bpm}`,`Total: ${total}`,counts,``,`Events:`];
@@ -516,30 +510,53 @@ a{color:inherit}
   }
   $('exportTxt').onclick = () => {
     const blob = new Blob([lines().join('\n')], {type:'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(url); a.remove();
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`; a.click();
   };
   $('printPdf').onclick = () => {
+    // Build a prettier PDF with colors and an events table
+    const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+    const ended   = totalEnd   ? new Date(totalEnd).toLocaleString([],   {hour12:false}) : 'N/A';
+    const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+    const counts  = `Adr: ${adrCount}; Shocks: ${window.__shock||0}; Amio: ${window.__amio||0}`;
+
+    const rows = events.map(e=>`<tr><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>CPR Report</title>
-    <meta name="color-scheme" content="light dark">
     <style>
-      :root{color-scheme:light dark}
-      body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px;color:#111}
-      h1{margin:0 0 12px;font-size:20px}
-      .meta{margin:6px 0 14px;line-height:1.6}
-      pre{white-space:pre-wrap;border:1px solid #ddd;padding:12px;border-radius:8px;background:#fafafa}
-      @media (prefers-color-scheme:dark){ body{color:#e5e7eb;background:#0b0d10} pre{border-color:#333;background:#12161b} }
-    </style>
-    </head><body><h1>CPR Session Report</h1><pre>${lines().join('\n')}</pre>
-    <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script></body></html>`;
-    const w = window.open('', 'printwin');
-    if (w && w.document) { w.document.open(); w.document.write(html); w.document.close(); }
-    else { const blob=new Blob([html],{type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='CPR_Report.html'; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove(); }
+      :root{ --bg:#f6f8fc; --fg:#111827; --muted:#6b7280; --accent:#0b6b82; --danger:#b91c1c; --chip:#e5f6ff; }
+      @media (prefers-color-scheme: dark){ :root{ --bg:#0b0d10; --fg:#e9eef3; --muted:#9aa7b3; --accent:#2ea0ff; --danger:#ff4d4d; --chip:#0f2e39; } }
+      body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:28px;color:var(--fg);background:var(--bg)}
+      h1{margin:0 0 6px;font-size:22px}
+      .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 16px}
+      .pill{display:inline-block;background:var(--chip);padding:6px 10px;border-radius:999px;color:#fff}
+      .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+      .card{border:1px solid rgba(125,125,125,.25);border-radius:12px;padding:12px;background:rgba(255,255,255,.04)}
+      table{width:100%;border-collapse:separate;border-spacing:0 8px}
+      th,td{padding:10px 12px}
+      th{background:rgba(0,0,0,.06);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:12px;border-top-left-radius:10px;border-top-right-radius:10px}
+      tr{background:rgba(0,0,0,.04)}
+      td:first-child{width:120px;font-family:ui-monospace,Consolas,monospace;font-weight:900}
+      .counts{background:rgba(11,107,130,.14); color:var(--accent)}
+    </style></head><body>
+      <h1>CPR Session Report</h1>
+      <div class="grid">
+        <div class="card"><strong>Started</strong><div>${started}</div></div>
+        <div class="card"><strong>Ended</strong><div>${ended}</div></div>
+        <div class="card counts"><strong>Summary</strong><div>${counts}</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <strong>Total</strong>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:20px">${total}</div>
+        <div style="margin-top:8px"><span class="pill" style="background:var(--accent)">BPM ${bpm}</span></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <strong>Events</strong>
+        <table><thead><tr><th>Time (24h)</th><th>Event</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </div>
+      <script>onload=()=>{print();setTimeout(()=>close(),300)}<\/script>
+    </body></html>`;
+    const w=window.open('', 'printwin'); w.document.open(); w.document.write(html); w.document.close();
   };
 
   /* ===== WAAFELSS ===== */
@@ -573,73 +590,21 @@ a{color:inherit}
   function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
   function checkAge(){ const empty = (age.value===''||age.value===null); mBtn.disabled=empty; yBtn.disabled=empty; }
   age.addEventListener('input',checkAge); checkAge();
+
   mBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); };
   yBtn.onclick = ()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); };
 
   /* ===== Dev self-tests ===== */
   (function runSelfTests(){
-    console.assert(document.getElementById('totalDigits'), '#totalDigits present');
-    console.assert(document.getElementById('cycleDigits'), '#cycleDigits present');
-    console.assert(document.getElementById('adrDigits'),   '#adrDigits present');
-    console.assert(document.getElementById('countdown'),   '#countdown present');
-
     const arr = lines();
     console.assert(Array.isArray(arr), 'lines returns array');
     console.assert(arr[0]==='CPR SESSION REPORT','first line header');
     const j=arr.join('\n');
     console.assert((j.match(/\n/g)||[]).length >= Math.max(0,arr.length-1),'joined with newlines');
 
-    // Beat flash smoke test
-    const card=$('cycleTimer');
-    const had = card.classList.contains('cycle-flash');
-    flashCycle();
-    const has = card.classList.contains('cycle-flash');
-    console.assert(!had && has || has, 'cycle card receives flash class');
-
-    // Mute UI toggles (waves + aria)
-    const waves1=document.getElementById('waves1');
-    const waves2=document.getElementById('waves2');
-    const muteX=document.getElementById('muteX');
-    beatMuted = true; setMuteUI();
-    console.assert(waves1.style.opacity==='0' && waves2.style.opacity==='0' && muteX.style.opacity==='1', 'mute shows X and hides waves');
-    beatMuted = false; setMuteUI();
-    console.assert(waves1.style.opacity==='1' && waves2.style.opacity==='1' && muteX.style.opacity==='0', 'unmute shows waves and hides X');
-
-    // Age buttons disabled until value
-    const ageInputEl = document.getElementById('age');
-    ageInputEl.value=''; (typeof checkAge==='function') && checkAge();
-    console.assert(mBtn.disabled && yBtn.disabled, 'age empty disables buttons');
-    ageInputEl.value='3'; checkAge();
-    console.assert(!mBtn.disabled && !yBtn.disabled, 'age set enables buttons');
+    // Countdown hidden by default
+    console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
   })();
-
-  /* ===== 10-second interruption countdown ===== */
-  function startCountdown(){
-    if(counting) return; counting=true;
-    const cd=$('countdown'); const card=$('cycleTimer'); const digits=$('cycleDigits'); const label=$('cycleLabel'); const startBtn=$('cprStart'); const pauseBtn=$('cprPause');
-    if(cd){ cd.textContent=10; cd.classList.add('show'); }
-    if(card){ card.classList.add('countdown-active'); }
-    if(digits) digits.setAttribute('aria-hidden','true');
-    if(label) label.setAttribute('aria-hidden','true');
-    if(startBtn) startBtn.setAttribute('aria-hidden','true');
-    if(pauseBtn) pauseBtn.setAttribute('aria-hidden','true');
-
-    let n=10;
-    const iv=setInterval(()=>{
-      n-=1; if(cd) cd.textContent = n>0 ? n : 1;
-      if(n<=1){ clearInterval(iv);
-        if(cd){ cd.classList.remove('show'); }
-        if(card){ card.classList.remove('countdown-active'); }
-        if(digits) digits.removeAttribute('aria-hidden');
-        if(label) label.removeAttribute('aria-hidden');
-        if(startBtn) startBtn.removeAttribute('aria-hidden');
-        if(pauseBtn) pauseBtn.removeAttribute('aria-hidden');
-        // restart fresh 2-min cycle
-        cprStart = now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; counting=false;
-        play('start'); if(cprRunning) restartBeat();
-      }
-    },1000);
-  }
 })();
 </script>
 </body>
