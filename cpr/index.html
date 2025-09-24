@@ -5,13 +5,12 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 g)
-   - WebClip PDF modal (no new tab) with Save button + visible download link
-   - Actions: 3 rows × 2 buttons, colored, equal width
-   - WAAFELSS collapsible below Actions; removed inner duplicate title
-   - WAAFELSS Months/Years buttons = same width/visual weight as Actions
-   - Start/Pause show disabled state
-   - Adrenaline logs each 4:00 due
+   CPR TIMER — Patch (2025-09-24 h)
+   - Export PDF gated by exportReady flag; blob URL; modal viewer
+   - Multi-page PDF via jsPDF + AutoTable (with graceful fallback)
+   - Actions: 3 rows × 2 buttons, equal width, themed colors
+   - WAAFELSS collapsible below Actions; WA buttons same style/width
+   - Start/Pause reflect disabled state; adrenaline logs at 4:00
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -22,7 +21,7 @@
 
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
 
-  /* Action button color tokens (tuned for both themes) */
+  /* Action button color tokens (adjust as you like) */
   --rosc-1:#D94B4B; --rosc-2:#9E2E2E; --rosc-bd:#B23A3A;
   --stop-1:#C62828; --stop-2:#8E1E1E; --stop-bd:#A12222;
   --shock-1:#F2B705; --shock-2:#B88406; --shock-bd:#D59B06;
@@ -47,7 +46,8 @@
   --radius: 18px;
   --shadow: 0 6px 20px rgba(0,0,0,.22);
 
-  --log-font: clamp(12px, 1.5vw, 13px);
+  /* Log font (tweak here) */
+  --log-font: clamp(12px, 1.3vw, 13px);
 
   --total-color:#f1f5f9;
   --cycle-accent-light:#ff4d4d;
@@ -69,7 +69,7 @@
   --cycle-accent: var(--cycle-accent-light);
   --cycle-shadow: var(--cycle-shadow-light);
 
-  /* Gentle tweaks for light mode contrast */
+  /* Light tweaks */
   --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
@@ -232,7 +232,7 @@ a{color:inherit}
 #pdfLinkRow{ padding:10px; display:flex; gap:10px; justify-content:space-between; align-items:center; border-top:1px solid var(--border); font-size:12px; color:var(--muted) }
 #pdfLinkRow a{ text-decoration:underline }
 
-/* Toolbar buttons (use export colors) */
+/* Toolbar buttons */
 .btn-tb{ padding:10px 14px; border-radius:12px; border:1px solid var(--export-bd); color:#fff; font-weight:800; background:linear-gradient(180deg,var(--export-1),var(--export-2)); box-shadow:var(--shadow) }
 .btn-tb.secondary{ background:var(--btn-bg); color:var(--fg); border-color:var(--btn-bd) }
 
@@ -343,7 +343,7 @@ a{color:inherit}
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2"/></svg>
         Log DSED
       </button>
-      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)" aria-disabled="true">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h10v4H7zM7 7V3h10v4M6 13h12a3 3 0 0 0 0-6H6a3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/></svg>
         Export PDF
       </button>
@@ -351,7 +351,7 @@ a{color:inherit}
 
     <!-- Extras -->
     <div class="extras">
-      <!-- Collapsible WAAFELSS (kept BELOW actions) -->
+      <!-- Collapsible WAAFELSS (below Actions) -->
       <div class="wa-shell">
         <details>
           <summary>
@@ -456,7 +456,7 @@ async function requestWake(){try{ if('wakeLock' in navigator){wakeLock=await nav
 async function releaseWake(){try{ if(wakeLock){await wakeLock.release(); wakeLock=null;}}catch{}}
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (cprRunning||adrRunning)) requestWake(); });
 
-/* ===== AUDIO (with WebClip unlock + fallback) ===== */
+/* ===== AUDIO (WebClip-friendly) ===== */
 let audioCtx;
 const buffers={}, files={
   beat:'beat.wav', start:'start.wav', pause:'pause.wav', stop:'stop.wav',
@@ -472,10 +472,8 @@ function primeAudio(){
   try{
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    g.gain.value = 0.0001;
-    o.connect(g).connect(audioCtx.destination);
-    o.start();
-    setTimeout(()=>{ try{o.stop();}catch{} }, 1);
+    g.gain.value = 0.0001; o.connect(g).connect(audioCtx.destination);
+    o.start(); setTimeout(()=>{ try{o.stop();}catch{} }, 1);
   }catch{}
   (async()=>{ for(const [k,p] of Object.entries(files)){ if(buffers[k]) continue; try{ const b=await fetch(p).then(r=>r.arrayBuffer()); buffers[k]=await audioCtx.decodeAudioData(b);}catch{} } })();
 }
@@ -491,16 +489,13 @@ function play(name, vol=1){
     const buf=buffers[name];
     if(!audioCtx || !buf) return false;
     const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
-    g.gain.value=vol;
-    src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
+    g.gain.value=vol; src.buffer=buf; src.connect(g).connect(audioCtx.destination); src.start();
     return true;
   };
   const beep = () => {
     try{
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type='square'; o.frequency.value=800;
-      g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.type='square'; o.frequency.value=800; g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
       o.start(); setTimeout(()=>{ try{o.stop();}catch{} }, 20);
     }catch{}
   };
@@ -532,6 +527,9 @@ let cue20=false, cue90=false, cue120=false;
 let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
 let showTotalZero = true;
+
+/* NEW: explicit export gate */
+let exportReady = false;
 
 /* ===== COUNTDOWN ===== */
 function showCountdown(){
@@ -620,8 +618,18 @@ function tick(){
 requestAnimationFrame(tick);
 
 /* ===== CONTROLS ===== */
+function setExportEnabled(enabled){
+  const btn = $('printPdf');
+  btn.classList.toggle('is-disabled', !enabled);
+  btn.setAttribute('aria-disabled', String(!enabled));
+  exportReady = !!enabled;
+}
+
 $('cprStart').onclick = () => {
   primeAudio();
+  // any (re)start means you shouldn't export yet
+  setExportEnabled(false);
+
   if(!totalStart){
     totalStart=now(); totalEnd=0; showTotalZero=false;
     stamp('CPR Timer Started'); requestWake();
@@ -649,8 +657,9 @@ $('adrPause').onclick = () => {
 function endSession(label){
   primeAudio();
   if(!totalStart) return;
-  if(!totalEnd) totalEnd = now();
+  if(!totalEnd) totalEnd = now(); // keep for export
   stamp(label);
+  // stop timers
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
@@ -660,8 +669,11 @@ function endSession(label){
   adrStart=0; adrPausedAccum=0;
   $('adrStart').disabled=false; $('adrPause').disabled=true;
 
+  // visual zero only
   showTotalZero = true;
   stopBeat(); releaseWake();
+
+  // allow exporting
   setExportEnabled(true);
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
@@ -671,188 +683,124 @@ $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiod
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
 /* ===== EXPORT PDF (blob, modal viewer + Save) ===== */
-// ===================== EXPORTS (WebClip-safe) =====================
-(() => {
-  // --- tiny helper to escape PDF text ---
-  const pdfEscape = s => String(s)
-    .replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
-
-  // --- build a very simple single-page PDF (Helvetica, text layout) ---
-  function makeSimplePdf({started, ended, total, counts, events}) {
-    const lines = [
-      'CPR Session Report',
-      '',
-      `Started: ${started}`,
-      `Ended:   ${ended}`,
-      `Total:   ${total}`,
-      `Counts:  ${counts}`,
-      '',
-      'Time (24h)        Event',
-      '----------------  ----------------------------------------------',
-      ...events.map(e => {
-        const t = e.ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-        return `${t}  ${e.label}`;
-      }),
-      '',
-      'Ambulance App'
-    ];
-
-    // Page geometry (points). iPhone-friendly single page.
-    const width = 595.28;   // A4 width
-    const height = 841.89;  // A4 height
-    const left = 48, top = height - 72, leading = 16;
-
-    // Build content stream (text commands)
-    let content = `BT /F1 12 Tf 0 0 0 rg ${left} ${top} Td\n`;
-    lines.forEach((ln, i) => {
-      if (i === 0) content += '/F1 20 Tf 0 0 0 rg ('+pdfEscape(ln)+') Tj\n/F1 12 Tf\n';
-      else content += '('+pdfEscape(ln)+') Tj\n';
-      content += `0 -${leading} Td\n`;
-    });
-    content += 'ET';
-
-    // Objects
-    const o = [];
-    o[1] = `1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj`;
-    o[2] = `2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj`;
-    o[3] = `3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj`;
-    o[4] = `4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj`;
-    const contentBytes = new TextEncoder().encode(content);
-    o[5] = `5 0 obj << /Length ${contentBytes.length} >> stream\n${content}\nendstream endobj`;
-
-    // xref
-    let pdf = `%PDF-1.4\n`;
-    const xref = [];
-    const index = [0];
-    for (let i=1;i<=5;i++){
-      index[i] = pdf.length;
-      pdf += o[i] + '\n';
-    }
-    const xrefStart = pdf.length;
-    pdf += `xref\n0 6\n0000000000 65535 f \n`;
-    for (let i=1;i<=5;i++){
-      pdf += (String(index[i]).padStart(10,'0') + ' 00000 n \n');
-    }
-    pdf += `trailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-
-    return new Blob([pdf], {type:'application/pdf'});
-  }
-
-  // Collect report lines (you already have helpers)
-  function collectReportLines() {
-    const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-    const started = window.totalStart ? new Date(window.totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-    const ended   = window.totalEnd ? new Date(window.totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-    const total   = (window.totalStart && window.totalEnd) ? fmt((window.totalEnd-window.totalStart)/1000) : '—';
-    const counts  = `Adrenaline: ${window.adrCount||0}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-    return {started, ended, total, counts};
-  }
-
-  // Build the same HTML preview you already use (kept blob-only, footer text)
-  function buildPreviewHTML(rowsHTML, header) {
-    return `<!doctype html><html><head><meta charset="utf-8">
-      <meta name="color-scheme" content="light dark">
-      <title>CPR Report</title>
-      <style>
-        :root{--bg:#0b0d10;--fg:#e9eef3;--muted:#9aa7b3;--accent:#2ea0ff;--accent2:#6dd3ff}
-        @media (prefers-color-scheme: light){
-          :root{--bg:#ffffff;--fg:#111827;--muted:#4b5563;--accent:#0b6b82;--accent2:#37a0c0}
-        }
-        body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
-        h1{margin:0 0 12px}
-        .kvs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:8px 0 14px}
-        .kvs span{color:var(--muted)}
-        table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb;overflow:hidden;border-radius:10px}
-        thead th{text-align:left;padding:10px 12px;border-bottom:2px solid #e5e7eb;
-          background:linear-gradient(180deg,var(--accent),var(--accent2));color:#ffffff}
-        tbody td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
-        tbody tr.even{background:rgba(46,160,255,0.06)}
-        tbody tr.odd{background:rgba(46,160,255,0.12)}
-        .total{font-weight:900}
-        footer{margin-top:16px;color:var(--muted);text-align:center}
-      </style></head><body>
-        <h1>CPR Session Report</h1>
-        <div class="kvs">
-          <span>Started</span><div>${header.started}</div>
-          <span>Ended</span><div>${header.ended}</div>
-          <span>Total</span><div class="total">${header.total}</div>
-          <span>Counts</span><div>${header.counts}</div>
-        </div>
-        <table>
-          <thead><tr><th style="width:140px">Time (24h)</th><th>Event</th></tr></thead>
-          <tbody>${rowsHTML}</tbody>
-        </table>
-        <footer>Ambulance App</footer>
-      </body></html>`;
-  }
-
-  // Hook up Export PDF button (kept disabled until Stop/ROSC elsewhere in your code)
-  const exportBtn = document.getElementById('printPdf');
-
-  // Called when user taps Export PDF
-  window.__showPdf = function(events, hhmmss) {
-    // Build HTML preview table
-    const rows = events.map((e,i)=>`<tr class="${i%2?'odd':'even'}"><td>${hhmmss(e.ts)}</td><td>${e.label.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td></tr>`).join('');
-    const header = collectReportLines();
-    const html = buildPreviewHTML(rows, header);
-
-    // 1) Preview in our overlay using a blob URL (no real URL leaks)
-    const htmlBlob = new Blob([html], {type:'text/html'});
-    const htmlURL  = URL.createObjectURL(htmlBlob);
-    const frame    = document.getElementById('pdfFrame');   // your existing iframe in the modal
-    frame.src = htmlURL;
-
-    // 2) Build a *real PDF* (text-only layout) for saving via Share Sheet
-    const pdfBlob  = makeSimplePdf({
-      started: header.started, ended: header.ended, total: header.total, counts: header.counts,
-      events
-    });
-    const fileName = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-
-    // Wire the Save button to Web Share with files (works inside WebClip)
-    const saveBtn = document.getElementById('pdfSave');
-    saveBtn.onclick = async () => {
-      try{
-        if (navigator.canShare && navigator.canShare({files:[new File([pdfBlob], fileName, {type:'application/pdf'})]})) {
-          await navigator.share({ files: [ new File([pdfBlob], fileName, {type:'application/pdf'}) ] });
-        } else {
-          // Fallback: force a direct download (some iOS versions still honor this)
-          const a=document.createElement('a');
-          a.href = URL.createObjectURL(pdfBlob);
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-        }
-      }catch(err){ /* user cancelled or share not available */ }
-    };
-
-    // Also update the text link (“Download report”) to the PDF blob as a backup
-    const dl = document.getElementById('pdfDirectLink');
-    if (dl){
-      dl.href = URL.createObjectURL(pdfBlob);
-      dl.download = fileName;
-    }
-
-    // open modal
-    document.getElementById('pdfOverlay').style.display='block';
-
-    // cleanup blob url when closing
-    const close = () => { URL.revokeObjectURL(htmlURL); document.getElementById('pdfOverlay').style.display='none'; };
-    document.getElementById('pdfClose').onclick = close;
-    document.getElementById('pdfBackdrop').onclick = close;
-  };
-
-  // Gate: if user taps Export PDF before Stop/ROSC, show message
-  exportBtn?.addEventListener('click', () => {
-    if (!window.totalEnd) {
-      alert('Finish the CPR session first. Tap Stop or ROSC to close the timers, then export the report.');
-      return;
-    }
-    // __events and __hhmmss were defined elsewhere in your code (events array + hhmmss formatter)
-    window.__showPdf(window.events, window.hhmmss);
+async function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('load '+src));
+    document.head.appendChild(s);
   });
-})();
+}
+async function buildPdfBlob(){
+  if(!window.jspdf){
+    await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+  }
+  const { jsPDF } = window.jspdf || {};
+  if(!jsPDF) throw new Error('jsPDF failed');
+
+  let autoTableLoaded = true;
+  if(!jsPDF.API.autoTable){
+    try{
+      await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js');
+    }catch{ autoTableLoaded=false; }
+  }
+
+  const doc = new jsPDF({ unit: 'pt' });
+
+  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
+  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
+  const total   = (totalStart && totalEnd) ? fmt((totalEnd-totalStart)/1000) : '—';
+  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(18);
+  doc.text('CPR Session Report', 40, 48);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(12);
+  const kv = [['Started',started],['Ended',ended],['Total',total],['Counts',counts]];
+  let y = 74;
+  kv.forEach(([k,v])=>{
+    doc.setFont('helvetica','bold'); doc.text(`${k}:`, 40, y);
+    doc.setFont('helvetica','normal'); doc.text(String(v), 120, y);
+    y += 18;
+  });
+
+  const rows = events.map(e=>[hhmmss(e.ts), e.label]);
+  if(autoTableLoaded && doc.autoTable){
+    doc.autoTable({
+      head: [['Time (24h)','Event']],
+      body: rows,
+      startY: y+10,
+      styles: { fontSize: 11, cellPadding: 6 },
+      headStyles: { fillColor: [25,118,210], textColor: 255 },
+      alternateRowStyles: { fillColor: [232,244,253] },
+      margin: { left: 40, right: 40 },
+    });
+  }else{
+    y += 28;
+    doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16;
+    doc.setFont('helvetica','normal');
+    const pageH = doc.internal.pageSize.getHeight();
+    rows.forEach(r=>{
+      if (y > pageH - 48){ doc.addPage(); y=48; }
+      doc.text(`${r[0]}  |  ${r[1]}`, 40, y);
+      y += 16;
+    });
+  }
+
+  /* Footer text inside the PDF (no real URL exposed) */
+  const pageCount = doc.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFontSize(10); doc.setTextColor(120);
+    doc.text('Ambulance App', 40, doc.internal.pageSize.getHeight()-24);
+  }
+
+  return doc.output('blob');
+}
+
+/* Modal helpers */
+const pdfModal = $('pdfModal'), pdfFrame=$('pdfFrame'), pdfSaveBtn=$('pdfSaveBtn'), pdfCloseBtn=$('pdfCloseBtn'), pdfDownloadLink=$('pdfDownloadLink');
+let lastPdfUrl = null, lastPdfName = null;
+function openPdfModal(url, filename){
+  lastPdfUrl = url; lastPdfName = filename;
+  pdfFrame.src = url;                      // Blob URL shown (keeps blob: in footer)
+  pdfDownloadLink.href = url;              // Visible direct-download link for WebClip
+  pdfDownloadLink.download = filename;
+  pdfModal.style.display='flex';
+  pdfModal.setAttribute('aria-hidden','false');
+}
+function closePdfModal(){
+  pdfModal.style.display='none';
+  pdfModal.setAttribute('aria-hidden','true');
+  pdfFrame.src = 'about:blank';
+  if(lastPdfUrl){ setTimeout(()=>URL.revokeObjectURL(lastPdfUrl), 30000); lastPdfUrl=null; }
+}
+$('pdfBackdrop').addEventListener('click', closePdfModal);
+pdfCloseBtn.addEventListener('click', closePdfModal);
+pdfSaveBtn.addEventListener('click', ()=>{
+  // Programmatic download; if iOS blocks, user can tap the visible link below.
+  const a=document.createElement('a');
+  a.href = lastPdfUrl;
+  a.download = lastPdfName || 'cpr_report.pdf';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* Export button */
+setExportEnabled(false);
+$('printPdf').onclick = async () => {
+  if (!exportReady) {
+    alert('Please finish the session first. Tap ROSC or Stop to finalize the report, then export the PDF.');
+    return;
+  }
+  try{
+    const blob = await buildPdfBlob();
+    const url  = URL.createObjectURL(blob); // blob: URL preserved
+    const filename = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
+    openPdfModal(url, filename);
+  }catch(err){
+    console.error(err);
+    alert('Could not generate PDF. Please try again.');
+  }
+};
 
 /* ===== WAAFELSS ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
