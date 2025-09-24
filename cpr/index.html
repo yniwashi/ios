@@ -6,11 +6,12 @@
 
 <style>
 /* ==========================================================
-   CPR TIMER — Compact & Centered (Portrait + Landscape)
-   - Tight Total CPR header
-   - Minimal timer chrome (no cards), large digits
-   - Smaller action buttons; dense spacing
-   - Robust overlay centering (countdown / Give Adrenaline)
+   CPR TIMER — compact, centered, responsive (2025-09-24j)
+   - Timers always under TOTAL; side-by-side in landscape
+   - Dense vertical rhythm; smaller action buttons
+   - Landscape actions are 2×2 per side, bottom button centered
+   - Overlays (countdown / "Give Adrenaline") auto-center on digits
+   - Theme "Auto" follows device again
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -30,30 +31,29 @@
   --wa-m-1:#f26bfb; --wa-m-2:#e129ed; --wa-m-bd:#e52ff1;
   --wa-y-1:#00BFA6; --wa-y-2:#008F79; --wa-y-bd:#00A68F;
 
-  /* Sizes tuned to keep things in view on phones */
-  --title-size: clamp(18px, 2.6vw, 32px);
-  --subtitle-size: clamp(12px, 1.6vw, 15px);
-  --total-size: clamp(36px, 6vw, 64px);
-  --kpi-digits: clamp(56px, 11vw, 132px);
+  --title-size: clamp(20px, 3.2vw, 36px);
+  --subtitle-size: clamp(12px, 1.8vw, 16px);
+  --total-size: clamp(40px, 6vw, 64px);
+  --kpi-digits: clamp(56px, 10vw, 140px);
 
-  /* Tighter gaps to keep buttons on-screen */
-  --gap-xs: clamp(6px, 1vw, 8px);
-  --gap-sm: clamp(8px, 1.4vw, 10px);
-  --gap-md: clamp(10px, 1.8vw, 14px);
-  --gap-lg: clamp(12px, 2.6vw, 18px);
+  --chip-h: clamp(34px, 5.2vw, 44px);
+  --chip-pad-x: clamp(8px, 1.6vw, 12px);
 
-  --chip-h: clamp(32px, 4.8vw, 42px);
-  --chip-pad-x: clamp(8px, 1.4vw, 12px);
+  --gap-xs: 6px;
+  --gap-sm: 10px;
+  --gap-md: 14px;
+  --gap-lg: 18px;
 
-  --container-pad: clamp(8px, 2vw, 14px);
+  --card-pad: clamp(10px, 2vw, 14px);
+  --container-pad: clamp(10px, 2.4vw, 16px);
 
   --radius: 14px;
-  --shadow: 0 6px 18px rgba(0,0,0,.22);
+  --shadow: 0 6px 20px rgba(0,0,0,.22);
 
   --total-color:#f1f5f9;
   --cycle-accent-light:#ff4d4d;
-  --cycle-accent-dark:#ffb347;
-  --countdown-red:#ff3333; --adr-color:#2ea0ff;
+  --countdown-red:#ff3333;
+  --adr-color:#2ea0ff;
 }
 :root[data-theme="light"]{
   color-scheme: light;
@@ -61,7 +61,8 @@
   --card:#ffffff; --border:#e5e7eb;
   --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
   --total-color:#111111;
-  --cycle-accent-light:#ef4444;
+  --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
+  --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
 
 /* ---------- BASE ---------- */
@@ -71,29 +72,30 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 
 /* ---------- HEADER ---------- */
-.header{display:grid;gap:var(--gap-xs)}
-.controls-row{display:flex;align-items:center;gap:var(--gap-xs);justify-content:space-between}
-.brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center;margin-top:var(--gap-xs)}
+.header{display:grid;gap:8px}
+.controls-row{display:flex;align-items:center;gap:var(--chip-pad-x);justify-content:space-between}
+.brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
 .brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
-/* Chips */
+/* chips */
 .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
-.chip input[type=number]{width:clamp(56px,10vw,90px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
+.chip input[type=number]{width:clamp(60px,10vw,86px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 #backChip,#themeChip,#muteChip{background:transparent;border:none;padding:0}
 #backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
 .icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
-.icon-toggle svg{width:clamp(18px,3.2vw,26px);height:clamp(18px,3.2vw,26px)}
+.icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
-/* ---------- TOTAL CPR (tight) ---------- */
+/* ---------- TOTAL CPR ---------- */
 .total{grid-area:total;display:flex;flex-direction:column;align-items:center;margin:var(--gap-xs) 0 var(--gap-sm)}
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:2px}
-.total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color);line-height:1}
+.total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
 /* ---------- MAIN GRID ---------- */
 .main{
   display:grid;
-  gap:var(--gap-lg);
+  row-gap: var(--gap-md);
+  column-gap: var(--gap-lg);
   grid-template-areas:
     "total"
     "cycle"
@@ -105,7 +107,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   justify-items:center;
 }
 
-/* Landscape: Total centered; timers side-by-side; actions split below */
+/* Landscape: denser rows, timers right under TOTAL */
 @media (orientation:landscape){
   .main{
     grid-template-areas:
@@ -114,59 +116,80 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
       "actionsL actionsR"
       "wa log";
     grid-template-columns: 1fr 1fr;
-    align-items:start;
+    row-gap: var(--gap-sm);      /* tighter vertical spacing */
     justify-items:center;
-    row-gap: var(--gap-md);
+    align-items:start;
   }
 }
 
-/* ---------- TIMERS (minimal) ---------- */
+/* ---------- TIMERS (minimal, perfectly centered) ---------- */
 .timer{
-  position:relative;             /* overlay anchor */
-  background:transparent;border:none;box-shadow:none;padding:0;margin:0 auto;
-  width:min(520px, 100%);
+  position:relative;                 /* for overlays */
+  margin:0; padding:0;
+  text-align:center;
+  width:min(560px, 100%);
+  place-self:center;                 /* double down on centering */
 }
 .timer .label{
-  font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px;text-align:center
+  font-size:var(--subtitle-size);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:900;
+  margin-bottom:6px;
 }
 .timer .digits{
-  font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;line-height:1;
-  font-size:var(--kpi-digits); text-align:left;
+  font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,Consolas,monospace;
+  font-weight:900; line-height:1;
+  font-size:var(--kpi-digits);
 }
-#cycleDigits{color:var(--cycle-accent-light)}
-#adrDigits{color:#2ea0ff}
+#cycleDigits{ color:var(--cycle-accent-light) }
+#adrDigits{   color:#2ea0ff }
+#cycleTimer{ grid-area:cycle }
+#adrTimer{   grid-area:adr }
 
-#cycleTimer{grid-area:cycle}
-#adrTimer{grid-area:adr}
-
-/* Start/Pause row (compact) */
-.icon-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
-.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(13px, 1.8vw, 16px);font-weight:700}
-.icon-ctrl svg{width:22px;height:22px;fill:currentColor}
-.icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
-
-/* ---------- OVERLAY CENTER (countdown / adrenaline prompt) ---------- */
+/* Overlay helpers (countdown / prompt) */
 .overlay-center{
-  position:absolute; left:0; top:0; transform:translate(-50%,-50%);
-  pointer-events:none; z-index:2; width:auto; height:auto;
-  display:flex; align-items:center; justify-content:center; text-align:center;
+  position:absolute;
+  left:0; top:0;
+  transform:translate(-50%,-50%);
+  z-index:2; pointer-events:none;
+  display:flex; align-items:center; justify-content:center;
+  text-align:center;
 }
-#countdown{ display:none; font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1; color:var(--countdown-red);
-  font-size: clamp(80px, min(18vw, 22vh), 180px); text-shadow:0 2px 10px rgba(0,0,0,.28);
+#countdown.overlay-center{
+  font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1;
+  color:var(--countdown-red);
+  font-size: clamp(80px, min(18vw, 22vh), 180px);
+  text-shadow:0 2px 10px rgba(0,0,0,.28);
 }
+#adrPrompt.overlay-center{
+  font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1.05;
+  color:var(--adr-color);
+  font-size: clamp(38px, min(10vw, 12vh), 96px);
+}
+#countdown{ display:none }             /* toggled by .show */
 #countdown.show{ display:flex }
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
-
-#adrPrompt{ display:none; font-family:ui-monospace,Consolas,monospace; font-weight:900; line-height:1.05; color:var(--adr-color);
-  font-size: clamp(36px, min(10vw, 12vh), 96px);
-}
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
-/* ---------- ACTION BUTTONS (smaller) ---------- */
-.btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);color:#fff;font-weight:800;letter-spacing:.2px;
-  font-size: clamp(14px, 1.8vw, 16px);box-shadow:var(--shadow); width:100%; max-width:360px; margin-inline:auto; min-height:42px}
+/* Start/Pause */
+.icon-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(13px, 2vw, 16px);font-weight:700}
+.icon-ctrl svg{width:22px;height:22px;fill:currentColor}
+.icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
+
+/* ---------- ACTION BUTTONS (compact) ---------- */
+.btn{
+  appearance:none; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:10px 12px; border-radius:12px; border:1px solid var(--btn-bd);
+  color:#fff; font-weight:800; letter-spacing:.2px;
+  font-size: clamp(14px, 2vw, 16px);
+  box-shadow:var(--shadow); width:100%; max-width:360px; margin-inline:auto;
+}
 .btn .ico{width:18px;height:18px}
 .btn:active{transform:translateY(1px)}
 .btn.is-disabled{opacity:.48;filter:grayscale(.2);cursor:not-allowed}
@@ -177,41 +200,45 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* Portrait: 2 columns × 3 rows (dense) */
+/* Portrait actions: 2 columns × 3 rows */
 .actions-wrap{
-  grid-area:actions; display:grid; gap:var(--gap-sm);
-  grid-template-columns:repeat(2, minmax(140px, 1fr)); justify-items:stretch;
+  grid-area:actions;
+  display:grid; gap:var(--gap-sm);
+  grid-template-columns:repeat(2, minmax(140px, 1fr));
+  justify-items:stretch;
 }
-.actions-left, .actions-right{display:contents}
+.actions-left, .actions-right{display:contents} /* flatten in portrait */
 
-/* Landscape: split under each timer (2 columns per side) */
+/* Landscape: two 2×2 stacks, single bottom button centered across two cols */
 @media (orientation:landscape){
   .actions-wrap{display:contents}
   .actions-left, .actions-right{
-    display:grid; gap:var(--gap-sm); grid-template-columns:repeat(2, minmax(140px,1fr)); justify-items:center
+    display:grid; gap:var(--gap-sm);
+    grid-template-columns:repeat(2, minmax(140px,1fr));
+    justify-items:center;
   }
-  .actions-left{grid-area:actionsL}
-  .actions-right{grid-area:actionsR}
+  /* span utility for the third button on each side */
+  .span-2{ grid-column:1 / -1; justify-self:center; max-width:280px }
 }
 
-/* ---------- EXTRAS ---------- */
+/* ---------- WAAFELSS & LOG ---------- */
 .extras-wa{grid-area:wa}
 .extras-log{grid-area:log}
 
-.wa-shell{width:min(520px, 100%); margin-inline:auto}
+.wa-shell{width:min(560px, 100%); margin-inline:auto}
 .wa-shell details{border:1px solid var(--border); border-radius:12px; background:var(--card); box-shadow:var(--shadow)}
 .wa-shell summary{list-style:none; cursor:pointer; user-select:none; padding:10px 12px; font-weight:900; display:flex; align-items:center; justify-content:center; gap:8px}
 .wa-shell summary::marker{display:none}
 .wa-shell summary .caret{transition:transform .2s ease}
 .wa-shell details[open] summary .caret{transform:rotate(90deg)}
-.wa-content{padding:10px 12px; border-top:1px solid var(--border)}
-.wa-row{display:grid; grid-template-columns:repeat(2, minmax(120px, 1fr)); gap:var(--gap-sm); margin-bottom:6px}
+.wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
+.wa-row{display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:var(--gap-sm); justify-items:stretch; margin-bottom:6px}
 .wa-row input{grid-column:1 / -1; width:100%; padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
 .btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px; width:min(520px, 100%); box-shadow:var(--shadow); margin-inline:auto}
-.log{max-height:220px;overflow:auto;margin:0;padding-left:18px;font-size:clamp(12px, 1.2vw, 13px)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:var(--card-pad); width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto}
+.log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:clamp(12px, 1.2vw, 13px)}
 .log li{margin:6px 0}
 
 /* ---------- PRINT ---------- */
@@ -265,14 +292,14 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
     <div id="totalDigits" class="digits">00:00</div>
   </div>
 
-  <!-- Main grid -->
+  <!-- Main -->
   <main class="main">
 
     <!-- Timers -->
     <section id="cycleTimer" class="timer">
       <div class="label">CYCLE</div>
       <div id="cycleDigits" class="digits">00:00</div>
-      <div id="countdown"></div>
+      <div id="countdown">10</div>
       <div class="icon-row">
         <button id="cprStart" class="icon-ctrl" title="Start/Resume CPR">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Start</span>
@@ -299,37 +326,45 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 
     <!-- Actions -->
     <div class="actions-wrap">
+      <!-- Left stack (under Cycle in landscape) -->
       <div class="actions-left">
-        <button id="stopb" class="btn btn-stop">
+        <button id="stopb" class="btn btn-stop"> 
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
           </svg> Stop
         </button>
+
         <button id="roscb" class="btn btn-rosc">
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
           ROSC
         </button>
-        <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+
+        <button id="printPdf" class="btn btn-export is-disabled span-2" title="Export PDF (enabled after Stop/ROSC)">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
           </svg> Export PDF
         </button>
       </div>
 
+      <!-- Right stack (under Adrenaline in landscape) -->
       <div class="actions-right">
         <button id="shockb" class="btn btn-shock">
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
           Shock
         </button>
+
         <button id="amiob" class="btn btn-amio">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-          </svg> Amiodarone
+          </svg>
+          Amiodarone
         </button>
-        <button id="dsedb" class="btn btn-dsed" title="Log DSED">
+
+        <button id="dsedb" class="btn btn-dsed span-2" title="Log DSED">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
-          </svg> Log DSED
+          </svg>
+          Log DSED
         </button>
       </div>
     </div>
@@ -374,8 +409,10 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 /* ===== THEME ===== */
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
-let themeMode = 'auto';
+let themeMode = 'auto'; // auto | light | dark
+
 function applyTheme(){
+  // remove explicit theme to allow device if auto
   root.removeAttribute('data-theme');
   if (themeMode==='light') root.setAttribute('data-theme','light');
   if (themeMode==='dark')  root.setAttribute('data-theme','dark');
@@ -446,7 +483,9 @@ function play(name, vol=1){
     return true;
   };
   const beep = () => {
-    try{ const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='square'; o.frequency.value=800; g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination); o.start(); setTimeout(()=>{try{o.stop();}catch{}},20);}catch{}
+    try{ const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+      o.type='square'; o.frequency.value=800; g.gain.value=0.08*vol; o.connect(g).connect(audioCtx.destination);
+      o.start(); setTimeout(()=>{try{o.stop();}catch{}},20);}catch{}
   };
   ensureAudioReady().then(()=>{ if(!tryBuffer()) beep(); });
 }
@@ -495,7 +534,6 @@ function alignOverlays(){
 }
 window.addEventListener('resize', alignOverlays);
 window.addEventListener('orientationchange', alignOverlays);
-window.addEventListener('load', alignOverlays);
 document.addEventListener('DOMContentLoaded', alignOverlays);
 
 /* ===== COUNTDOWN ===== */
@@ -509,8 +547,9 @@ function showCountdown(){
   stopBeat();
   countdownTimer = setInterval(()=>{
     countdownN--;
-    if (countdownN>0){ box.textContent = countdownN; }
-    else{
+    if (countdownN>0){
+      box.textContent = countdownN;
+    } else {
       clearInterval(countdownTimer); countdownTimer=null;
       box.classList.remove('show'); card.classList.remove('cycle-hide');
       cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false; cprRunning=true; play('start'); if(!beatMuted) startBeat();
@@ -524,6 +563,7 @@ function showCountdown(){
 function now(){ return Date.now(); }
 function tick(){
   const t=now();
+
   // total
   if(showTotalZero){
     $('totalDigits').textContent='00:00';
@@ -548,13 +588,13 @@ function tick(){
     if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
     if(!cue120 && c>=120){
       cue120=true; play('cpr120');
-      cycleCount += 1;
-      stamp(`Cycle ${cycleCount} finished`);
-      cprRunning=false;
-      $('cprStart').disabled=false; $('cprPause').disabled=true;
+      cycleCount += 1; stamp(`Cycle ${cycleCount} finished`);
+      cprRunning=false; $('cprStart').disabled=false; $('cprPause').disabled=true;
       showCountdown();
     }
-  }else{ if(!counting) $('cycleDigits').textContent='00:00'; }
+  }else if(!counting){
+    $('cycleDigits').textContent='00:00';
+  }
 
   // adrenaline loop
   if(adrStart){
@@ -580,6 +620,7 @@ function tick(){
   }else $('adrDigits').textContent='00:00';
 
   requestAnimationFrame(tick);
+  alignOverlays();
 }
 requestAnimationFrame(tick);
 
@@ -631,13 +672,14 @@ function endSession(label){
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
 $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
 $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock no. ${window.__shock} Delivered`); };
-$('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
+$('amiob').onclick  = () => { window.__amio =(window.__amio||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
 /* ===== EXPORT PDF ===== */
 function setExportEnabled(enabled){ $('printPdf').classList.toggle('is-disabled', !enabled); }
 setExportEnabled(false);
 function sessionEnded(){ return !!(totalStart && totalEnd); }
+
 async function loadScript(src){
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
@@ -674,7 +716,7 @@ async function buildPdfBlob(){
   let y = 74;
   kv.forEach(([k,v])=>{ doc.setFont('helvetica','bold'); doc.text(`${k}:`, 40, y); doc.setFont('helvetica','normal'); doc.text(String(v), 120, y); y += 18; });
 
-  const rows = events.map(e=>[hhmmss(e.ts), e.label]);
+  const rows = events.map(e=>[e.ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}), e.label]);
   if(autoTableLoaded && doc.autoTable){
     doc.autoTable({ head: [['Time (24h)','Event']], body: rows, startY: y+10, styles: { fontSize: 11, cellPadding: 6 }, headStyles: { fillColor: [25,118,210], textColor: 255 }, alternateRowStyles: { fillColor: [232,244,253] }, margin: { left: 40, right: 40 } });
   }else{
@@ -708,7 +750,7 @@ $('printPdf').onclick = async () => {
   } else { alert('Sharing is not available in this environment.'); }
 };
 
-/* ===== WAAFELSS (unchanged logic) ===== */
+/* ===== WAAFELSS ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function months(n){
@@ -736,7 +778,6 @@ function renderW(o){
   $('wJoules').textContent=`${o.joules} J`;
   $('wD10').textContent=`${o.d10} mL`;
 }
-/* Age input validation */
 function parseAgeInt(){ const raw=String(age.value??'').trim(); if(raw==='') return NaN; if(raw.includes('.')||raw.includes(',')) return NaN; const n=Number(raw); return Number.isInteger(n)?n:NaN; }
 function isPositiveWholeAge(n){ return Number.isInteger(n)&&n>0; }
 function validateAgeBasic(showAlert=true){
@@ -746,16 +787,18 @@ function validateAgeBasic(showAlert=true){
 }
 function updateButtonsEnabled(){ const n=parseAgeInt(); const enable=isPositiveWholeAge(n); mBtn.disabled=!enable; yBtn.disabled=!enable; }
 age?.addEventListener('input', updateButtonsEnabled); updateButtonsEnabled();
-mBtn?.addEventListener('click', ()=>{
-  const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return;
-  if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button — the Months calculator is for 0–12 months."); return; }
-  renderW(months(n));
-});
-yBtn?.addEventListener('click', ()=>{
-  const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return;
-  if(n>=15){ alert("Our guideline defines pediatric patients up to 14 years."); return; }
-  renderW(years(n));
-});
+mBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button — the Months calculator is for 0–12 months."); return; } renderW(months(n)); });
+yBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=15){ alert("Our guideline defines pediatric patients up to 14 years."); return; } renderW(years(n)); });
+
+/* ===== Tiny utility: tag span-2 on landscape-only buttons ===== */
+function tagSpanButtons(){
+  document.getElementById('printPdf')?.classList.add('span-2');
+  document.getElementById('dsedb')?.classList.add('span-2');
+}
+tagSpanButtons();
+
+/* self-check */
+(function(){ try{ console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially'); }catch{} })();
 })();
 </script>
 </body>
