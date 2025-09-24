@@ -366,15 +366,15 @@ details[open] .wa-divider{display:block}
         </button>
       </div>
     </div>
-     <div style="display:flex;gap:var(--actions-gap);justify-content:center;flex-wrap:wrap;margin-top:8px">
-  <button id="exportTxt" class="btn ghost">
-    ...
-    Export .txt
-  </button>
-  <button id="printPdf" class="btn primary">
-    ...
-    Export PDF
-  </button>
+<!-- Small popover menu for PDF actions -->
+<div id="pdfMenu" style="position:absolute; display:none; z-index:9999;">
+  <div id="pdfMenuInner" style="
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    box-shadow:var(--shadow); padding:8px; display:flex; gap:8px;
+  ">
+    <button id="pdfView" class="btn ghost" type="button">View PDF</button>
+    <button id="pdfSave" class="btn primary" type="button">Save PDF</button>
+  </div>
 </div>
 
     <!-- Extras (WAAFELSS + Log) -->
