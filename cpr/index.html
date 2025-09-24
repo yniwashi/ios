@@ -351,7 +351,7 @@ a{color:inherit}
           </summary>
           <div class="wa-content">
             <div class="wa-row">
-              <input id="age" type="number" min="0" placeholder="Enter Age">
+              <input id="age" type="number" min="1" step="1" inputmode="numeric" placeholder="Enter Age">
               <button id="mBtn" class="btn btn-wa-m" title="Months" disabled>Months</button>
               <button id="yBtn" class="btn btn-wa-y" title="Years" disabled>Years</button>
             </div>
@@ -800,14 +800,76 @@ function renderW(o){
   $('wJoules').textContent=`${o.joules} J`;
   $('wD10').textContent=`${o.d10} mL`;
 }
-function validAge(){ const n=+age.value; return !(isNaN(n) || n<0); }
-function checkAge(){ const empty = (age.value===''||age.value===null); mBtn.disabled=empty; yBtn.disabled=empty; }
-age?.addEventListener('input',checkAge); checkAge();
+/* ===== WAAFELSS: INPUT VALIDATION (REPLACE BLOCK A) ===== */
+function parseAgeInt() {
+  // Trim and parse as base-10 integer (reject decimals and junk)
+  const raw = String(age.value ?? '').trim();
+  if (raw === '') return NaN;
+  // Disallow decimals explicitly
+  if (raw.includes('.') || raw.includes(',')) return NaN;
+  const n = Number(raw);
+  if (!Number.isInteger(n)) return NaN;
+  return n;
+}
 
-mBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(months(+age.value)); });
-yBtn?.addEventListener('click',()=>{ if(!validAge()){ alert('Enter age first'); return; } renderW(years(+age.value)); });
+function isPositiveWholeAge(n) {
+  return Number.isInteger(n) && n > 0;
+}
 
-/* ===== Self-check ===== */
+function validateAgeBasic(showAlert = true) {
+  const n = parseAgeInt();
+  const ok = isPositiveWholeAge(n);
+  if (!ok && showAlert) {
+    alert(
+      "Please enter the patient's age as a whole number only.\n" +
+      "Age must be a positive integer — no zero, negatives, or decimals."
+    );
+  }
+  return ok ? n : NaN;
+}
+
+function updateButtonsEnabled() {
+  const n = parseAgeInt();
+  const enable = isPositiveWholeAge(n);
+  mBtn.disabled = !enable;
+  yBtn.disabled = !enable;
+}
+
+age?.addEventListener('input', updateButtonsEnabled);
+updateButtonsEnabled();
+
+
+/* ===== WAAFELSS: MONTHS / YEARS BUTTON GUARDS (REPLACE BLOCK B) ===== */
+mBtn?.addEventListener('click', () => {
+  const n = validateAgeBasic(true);
+  if (!isPositiveWholeAge(n)) return;
+
+  if (n >= 13) {
+    alert(
+      "This age is more than 12 months.\n" +
+      "Please use the Years button — the Months calculator is for 0–12 months."
+    );
+    return;
+  }
+
+  renderW(months(n));
+});
+
+yBtn?.addEventListener('click', () => {
+  const n = validateAgeBasic(true);
+  if (!isPositiveWholeAge(n)) return;
+
+  if (n >= 15) {
+    alert(
+      "Our guideline defines pediatric patients up to 14 years."
+    );
+    return;
+  }
+
+  renderW(years(n));
+});
+
+   /* ===== Self-check ===== */
 (function(){
   try{
     console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially');
