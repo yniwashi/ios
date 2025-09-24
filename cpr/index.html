@@ -417,30 +417,43 @@ a{color:inherit}
   // countdown
   let counting=false, countdownTimer=null, countdownN=10;
 
-  function showCountdown(){
-    if(counting) return;
-    counting=true; countdownN=10;
-    const box=$('countdown'); const card=$('cycleTimer');
-    box.textContent=countdownN; box.classList.add('show');
-    card.classList.add('cycle-hide');
-    stopBeat();
-    countdownTimer = setInterval(()=>{
-      // Show current number, then decide whether to end or decrement
-      if(countdownN===1){
-        // show "1" for a full second, then end and restart cycle
-        clearInterval(countdownTimer); countdownTimer=null;
-        setTimeout(()=>{
-          box.classList.remove('show'); card.classList.remove('cycle-hide');
-          cprStart = Date.now(); cprPausedAccum=0; cprPausedAt=0; cue90=false; cue120=false;
-          cprRunning=true; play('start'); if(!beatMuted) startBeat();
-          counting=false;
-        }, 0); // already displayed 1 for this second via the interval cadence
-      } else {
-        countdownN--; box.textContent = countdownN;
-      }
-    },1000);
-  }
+function showCountdown(){
+  if(counting) return;
+  counting = true;
+  countdownN = 10;
+  const box = document.getElementById('countdown');
+  const card = document.getElementById('cycleTimer');
 
+  box.textContent = countdownN;
+  box.classList.add('show');
+  card.classList.add('cycle-hide');
+  stopBeat();
+
+  // Tick down to 0; restart when it reaches 0
+  countdownTimer = setInterval(() => {
+    countdownN -= 1;
+    box.textContent = countdownN;
+
+    if (countdownN <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+
+      // hide overlay and restart cycle exactly after 1's full second elapsed
+      box.classList.remove('show');
+      card.classList.remove('cycle-hide');
+
+      cprStart = Date.now();
+      cprPausedAccum = 0;
+      cprPausedAt = 0;
+      cue90 = false;
+      cue120 = false;
+      cprRunning = true;
+      play('start');
+      if (!beatMuted) startBeat();
+      counting = false;
+    }
+  }, 1000);
+}
   function now(){ return Date.now(); }
   function tick(){
     const t=now();
