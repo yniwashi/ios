@@ -129,84 +129,93 @@ a{color:inherit}
   .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr));}
   .extras{grid-area:extras; justify-items:center}
 }
-/* ===== LANDSCAPE LAYOUT — REPLACE BLOCK (works with your original HTML) ===== */
+/* ===== LANDSCAPE LAYOUT (robust, no HTML changes) ===== */
 @media (orientation:landscape){
 
-  /* Bigger, landscape-only sizing */
+  /* Landscape-only scales */
   :root{
-    --side-min:      560px;                   /* each side column min width  */
-    --side-max:      860px;                   /* timer/card width cap        */
-    --kpi-digits:    clamp(90px, 12vw, 200px);/* BIGGER timer digits         */
-    --total-size:    clamp(60px, 9vw, 120px); /* bigger TOTAL CPR digits     */
+    --side-min:   560px;                     /* min width for each side column (Cycle/Adr) */
+    --side-max:   860px;                     /* cap to keep triplets equal to timer width  */
+    --kpi-digits: clamp(90px, 12vw, 200px);  /* BIGGER timer digits                        */
+    --total-size: clamp(60px, 9vw, 120px);   /* bigger TOTAL CPR digits                    */
     --subtitle-size: clamp(16px, 2.4vw, 22px);
-    --actions-gap:   clamp(8px, 1.4vw, 12px);
+    --lane-gap:   22px;
   }
 
-  /* Core grid: 2 equal columns (left = Cycle column, right = Adrenaline column) */
+  /* Main: 3 horizontal bands — Actions (3 rows), Timers, Extras */
   .main{
-    display:grid;
-    grid-template-columns:
-      minmax(var(--side-min), 1fr)
-      minmax(var(--side-min), 1fr);
+    display: grid;
+    grid-template-columns: minmax(var(--side-min), 1fr) minmax(var(--side-min), 1fr);
     grid-template-areas:
-      "actL1 actR1"   /* buttons row 1 above each timer */
-      "actL2 actR2"   /* buttons row 2 above each timer */
-      "actL3 actR3"   /* buttons row 3 above each timer */
-      "cycle adr"     /* the two timers                  */
-      "wa    log";    /* WAAFELSS (left) | Log (right)   */
-    align-items:start;
-    gap: 20px;
+      "actions-left  actions-right"
+      "timers-left   timers-right"
+      "extras-left   extras-right";
+    gap: var(--lane-gap);
+    align-items: start;
   }
 
-  /* Let children take areas directly */
-  .timers{ display: contents; }
-  .actions{ display: contents; }
-  .extras{  display: contents; }
+  /* --------- ACTIONS (we keep your 6 existing buttons) --------- */
+  .actions{
+    grid-area: actions-left / actions-right / actions-left / actions-right; /* span both columns */
+    display: grid;
+    grid-template-columns: minmax(var(--side-min), 1fr) minmax(var(--side-min), 1fr);
+    column-gap: var(--lane-gap);
+    row-gap: var(--actions-gap);
+    width: 100%;
+  }
 
-  /* Map timers into their cells and widen the cards */
-  #cycleTimer{ grid-area: cycle; }
-  #adrTimer{   grid-area: adr;   }
-  .timer{ width: min(var(--side-max), 100%); }
+  /* Each side becomes a 3-row stack above its timer */
+  .actions::before, .actions::after{ content:''; } /* grid helpers to create two columns */
 
-  /* Map WAAFELSS + Log into their cells */
-  .wa-shell{ grid-area: wa;  width: 100%; }
-  .card{     grid-area: log; width: 100%; }
+  /* Map the 6 buttons (using your DOM order) to rows/columns:
+     Left column (above Cycle): Stop (2), ROSC (1), Export (6)
+     Right column (above Adr):  Shock (3), Amio (4), DSED (5)  */
+  .actions > :nth-child(2){ grid-column: 1; grid-row: 1; } /* Stop   */
+  .actions > :nth-child(1){ grid-column: 1; grid-row: 2; } /* ROSC   */
+  .actions > :nth-child(6){ grid-column: 1; grid-row: 3; } /* Export */
 
-  /* Place the 6 existing action buttons into a 3×2 grid above the timers,
-     using your current DOM order (no HTML changes). Desired order:
-       Left (above cycle):   Stop, ROSC, Export
-       Right (above adrenal): Shock, Amio, DSED
-     Your button order in HTML is: [ROSC(1), Stop(2), Shock(3), Amio(4), DSED(5), Export(6)]
-     So we map by nth-child: */
-  .actions > :nth-child(2){ grid-area: actL1; } /* Stop  -> left row 1 */
-  .actions > :nth-child(1){ grid-area: actL2; } /* ROSC  -> left row 2 */
-  .actions > :nth-child(6){ grid-area: actL3; } /* Export-> left row 3 */
+  .actions > :nth-child(3){ grid-column: 2; grid-row: 1; } /* Shock  */
+  .actions > :nth-child(4){ grid-column: 2; grid-row: 2; } /* Amio   */
+  .actions > :nth-child(5){ grid-column: 2; grid-row: 3; } /* DSED   */
 
-  .actions > :nth-child(3){ grid-area: actR1; } /* Shock -> right row 1 */
-  .actions > :nth-child(4){ grid-area: actR2; } /* Amio  -> right row 2 */
-  .actions > :nth-child(5){ grid-area: actR3; } /* DSED  -> right row 3 */
-
-  /* Ensure each button row aligns to its side column and never exceeds timer width */
-  .main > .btn{
+  /* Keep each button the same width as its timer column and centered */
+  .actions > .btn{
     max-width: min(var(--side-max), 100%);
     justify-self: center;
-  }
-
-  /* Make action buttons a bit tighter in landscape so they fit on small phones */
-  .btn{
     font-size: clamp(14px, 1.8vw, 16px);
     padding: 10px 12px;
     white-space: normal;
     text-align: center;
   }
 
-  /* Scale in-card elements up too */
+  /* --------- TIMERS (two columns, side-by-side) --------- */
+  .timers{
+    grid-area: timers-left / timers-right / timers-left / timers-right; /* span both columns */
+    display: grid;
+    grid-template-columns: minmax(var(--side-min), 1fr) minmax(var(--side-min), 1fr);
+    gap: var(--lane-gap);
+    justify-items: center;
+  }
+  #cycleTimer{ grid-column: 1; }
+  #adrTimer{   grid-column: 2; }
+  .timer{ width: min(var(--side-max), 100%); }
+
+  /* Bigger in-card elements */
   #countdown{ font-size: clamp(140px, 20vw, 260px); }
   #adrPrompt{ font-size: clamp(70px, 12vw, 150px); }
-
-  /* Optional: slightly bigger Start/Pause controls in landscape */
   .icon-ctrl{ font-size: clamp(16px, 2.2vw, 20px); padding: 12px 16px; }
   .icon-ctrl svg{ width: 30px; height: 30px; }
+
+  /* --------- EXTRAS (WAAFELSS left, Log right) --------- */
+  .extras{
+    grid-area: extras-left / extras-right / extras-left / extras-right; /* span both columns */
+    display: grid;
+    grid-template-columns: minmax(var(--side-min), 1fr) minmax(var(--side-min), 1fr);
+    gap: var(--lane-gap);
+    justify-items: center;
+  }
+  .wa-shell{ grid-column: 1; width: min(var(--side-max), 100%); }
+  .card{     grid-column: 2; width: min(var(--side-max), 100%); }
 }
 
 
