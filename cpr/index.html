@@ -94,7 +94,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
 .total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
 
-/* ---------- MAIN GRID ---------- */
+/* ---------- MAIN GRID (centered) ---------- */
 .main{
   display:grid;
   gap:var(--gap-lg);
@@ -106,6 +106,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
     "wa"
     "log";
   grid-template-columns: 1fr;
+  justify-items:center;     /* <— hard center everything */
 }
 
 /* Landscape: two columns under the centered total */
@@ -118,25 +119,47 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
       "wa log";
     grid-template-columns: 1fr 1fr;
     align-items:start;
+    justify-items:center;   /* <— hard center each column */
   }
 }
 
-/* ---------- TIMER CARDS ---------- */
+
+/* ---------- MINIMAL TIMERS (no cards) ---------- */
 .timer{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:var(--card-pad);display:flex;flex-direction:column;align-items:center;justify-content:center;
-  width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  margin:0 auto;            /* center */
+  width:min(560px, 100%);   /* width guard so digits wrap nicely */
 }
-.timer .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:4px}
-.timer .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--kpi-digits)}
-#cycleDigits{color:var(--cycle-accent-light)}
-#adrDigits{color:#2ea0ff}
 
-#cycleTimer{grid-area:cycle}
-#adrTimer{grid-area:adr}
+.timer .label{
+  font-size:var(--subtitle-size);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:900;
+  margin-bottom:6px;
+  text-align:center;
+}
 
-/* Start/Pause row */
-.icon-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.timer .digits{
+  font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,Consolas,monospace;
+  font-weight:900;
+  line-height:1;
+  font-size:clamp(64px, 10vw, 140px);   /* BIGGER digits */
+}
+
+#cycleDigits{ color:var(--cycle-accent-light) }
+#adrDigits{   color:#2ea0ff }
+
+#cycleTimer{ grid-area:cycle }
+#adrTimer{   grid-area:adr }
+
+/* Start/Pause row (unchanged spacing, slightly tighter) */
+.icon-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center}
 .icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(14px, 2vw, 18px);font-weight:700}
 .icon-ctrl svg{width:26px;height:26px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
@@ -155,18 +178,36 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* Actions wrapper:
-   - Portrait: 2 rows × 3 buttons total
-   - Landscape: split into left/right stacks under each timer
-*/
-.actions-wrap{grid-area:actions; display:grid; gap:var(--gap-sm); grid-template-columns:repeat(3, minmax(140px,1fr)); justify-items:stretch}
-.actions-left, .actions-right{display:contents;} /* flatten so all 6 join into the 3-column grid */
-
-@media (orientation:landscape){
-  .actions-wrap{display:contents;} /* the two stacks will be placed by areas below */
-  .actions-left{grid-area:actionsL; display:grid; gap:var(--gap-sm); grid-template-columns:1fr; justify-items:center}
-  .actions-right{grid-area:actionsR; display:grid; gap:var(--gap-sm); grid-template-columns:1fr; justify-items:center}
+/* ---------- ACTIONS (compact) ---------- */
+/* Portrait: 2 columns × 3 rows */
+.actions-wrap{
+  grid-area:actions;
+  display:grid;
+  gap:var(--gap-sm);
+  grid-template-columns:repeat(2, minmax(150px, 1fr));
+  justify-items:stretch;
 }
+.actions-left, .actions-right{display:contents;}  /* flatten for portrait */
+
+/* Landscape: two independent stacks under each timer, 2 columns per side */
+@media (orientation:landscape){
+  .actions-wrap{display:contents;}
+  .actions-left{
+    grid-area:actionsL;
+    display:grid;
+    gap:var(--gap-sm);
+    grid-template-columns:repeat(2, minmax(150px, 1fr));
+    justify-items:center;
+  }
+  .actions-right{
+    grid-area:actionsR;
+    display:grid;
+    gap:var(--gap-sm);
+    grid-template-columns:repeat(2, minmax(150px, 1fr));
+    justify-items:center;
+  }
+}
+
 
 /* ---------- WAAFELSS & LOG (EXTRAS) ---------- */
 .extras-wa{grid-area:wa}
