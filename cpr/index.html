@@ -130,87 +130,113 @@ a{color:inherit}
   .actions{grid-area:actions; display:grid; gap:var(--actions-gap); grid-template-columns:repeat(2, minmax(160px, 1fr));}
   .extras{grid-area:extras; justify-items:center}
 }
-/* ===== LANDSCAPE LAYOUT ===== */
+
+/* ===== LANDSCAPE LAYOUT v2 ===== */
 @media (orientation:landscape){
-  /* Layout: total row, then 3-column band (Cycle | Actions | Adrenaline), then extras */
+  /* Grid: total row, timers row (left/right), actions row (full), extras row (full) */
   .main{
     grid-template-areas:
-      "total total total"
-      "left  center right"
-      "extras extras extras";
+      "timers_header timers_header"  /* (we don't move Title/Total; this is just consistent naming) */
+      "left right"
+      "actions actions"
+      "extras extras";
     grid-template-columns:
-      minmax(420px, 1fr)        /* left: wider timer */
-      minmax(380px, 560px)      /* center: actions band */
-      minmax(420px, 1fr);       /* right: wider timer */
+      minmax(520px, 1fr)    /* Left timer wider in landscape */
+      minmax(520px, 1fr);   /* Right timer wider in landscape */
     align-items: start;
-    gap: 18px;
+    gap: 22px;
   }
 
-  /* Let the timers' children participate in .main grid without changing HTML */
+  /* Use contents to position the two timer cards as grid children without changing HTML */
   .timers{ display: contents; }
-
-  /* Place timers left/right, actions in the center column */
   #cycleTimer{ grid-area: left; }
   #adrTimer{   grid-area: right; }
-  .actions{    grid-area: center; }
 
-  /* Actions keep 2 buttons per row, 3 rows, but allow a touch more flexibility */
+  /* Actions go below both timers and span full width */
   .actions{
+    grid-area: actions;
     display: grid;
     gap: var(--actions-gap);
-    grid-template-columns: repeat(2, minmax(170px, 1fr));
+    width: min(1160px, 100%);
+    margin: 0 auto;
+    /* First row is 4 buttons; second row will hold 2 centered buttons */
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
     align-content: start;
   }
+
+  /* Order already matches your DOM: 1 ROSC, 2 Stop, 3 Shock, 4 Amio, 5 DSED, 6 Export */
+  /* Place the last two centered under row 1 */
+  .actions > :nth-child(5){ grid-column: 2; }  /* Log DSED under col 2 */
+  .actions > :nth-child(6){ grid-column: 3; }  /* Export PDF under col 3 */
+
+  /* Let button labels wrap gracefully if needed */
   .btn{ white-space: normal; text-align: center; }
 
-  /* Scale up timers and their internals proportionally in landscape */
+  /* Scale timers and internals proportionally (landscape only) */
   :root{
-    --card-pad:   clamp(18px, 2.6vw, 26px);
-    --kpi-digits: clamp(64px, 9vw, 140px); /* timer digits bigger */
-    --total-size: clamp(52px, 7vw, 96px);  /* total CPR digits bigger */
-    --subtitle-size: clamp(15px, 2.2vw, 20px); /* labels bigger */
-    --timers-gap: 24px;
+    --card-pad:       clamp(20px, 2.4vw, 28px);
+    --kpi-digits:     clamp(72px, 9.8vw, 150px); /* timer digits bigger */
+    --subtitle-size:  clamp(16px, 2.4vw, 22px);  /* labels bigger */
+    --total-size:     clamp(56px, 7.6vw, 100px); /* total CPR digits bigger */
+    --chip-h:         clamp(42px, 6vw, 54px);    /* bigger top chips */
+    --chip-pad-x:     clamp(10px, 2vw, 14px);
+    --actions-gap:    clamp(10px, 1.6vw, 16px);
+    --timers-gap:     26px;
   }
 
-  /* Timer cards: allow them to grow wider in landscape */
-  .timer{ width: min(700px, 100%); }
+  /* Wider timer cards in landscape */
+  .timer{ width: min(780px, 100%); }
 
-  /* Boost the countdown & adrenaline prompt sizes proportionally */
-  #countdown{
-    font-size: clamp(120px, 18vw, 220px);
-  }
-  #adrPrompt{
-    font-size: clamp(56px, 10vw, 128px);
-  }
+  /* Bigger countdown and adrenaline prompt in landscape */
+  #countdown{  font-size: clamp(130px, 20vw, 240px); }
+  #adrPrompt{  font-size: clamp(60px, 11vw, 132px); }
 
-  /* Make Start/Pause controls a bit larger too */
+  /* Start/Pause controls scale up too */
   .icon-ctrl{
-    font-size: clamp(16px, 2.2vw, 20px);
-    padding: 12px 14px;
+    font-size: clamp(17px, 2.4vw, 21px);
+    padding: 12px 16px;
   }
-  .icon-ctrl svg{
-    width: 30px; height: 30px;
-  }
+  .icon-ctrl svg{ width: 32px; height: 32px; }
 
-  /* Header compaction for more vertical room without changing portrait */
-  .header{ gap: 6px; }
-  .brand{ margin-top: 0; }
+  /* Keep extras (WAAFELSS + Log) below actions, centered width */
+  .extras{ grid-area: extras; }
+  .wa-shell, .card{ margin-left: auto; margin-right: auto; }
+
+  /* Title + Total: ensure centered alignment in landscape as well */
+  .brand{ justify-self: center; text-align: center; }
+  .total{ align-items: center; }
+
+  /* Top chips (Back, Theme, BPM, Mute) — bigger & unified spacing */
+  .header{ gap: 8px; }
+  .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
+  .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
+  .icon-toggle{
+    width: var(--chip-h); height: var(--chip-h);
+    border-radius: 12px; border: 1px solid var(--btn-bd); background: var(--btn-bg);
+    font-size: 20px;
+  }
+  .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
 }
 
-   /* ===== LANDSCAPE NARROW SAFETY (ADD BLOCK L2) ===== */
-@media (orientation:landscape) and (max-width: 840px){
+
+/* ===== LANDSCAPE NARROW GUARD ===== */
+@media (orientation:landscape) and (max-width: 920px){
   .main{
     grid-template-columns:
-      minmax(360px, 1fr)
-      minmax(340px, 480px)
-      minmax(360px, 1fr);
+      minmax(460px, 1fr)
+      minmax(460px, 1fr);
   }
-  .timer{ width: min(620px, 100%); }
+  .timer{ width: min(700px, 100%); }
   :root{
-    --kpi-digits: clamp(58px, 8vw, 126px);
-    --total-size: clamp(48px, 6.5vw, 90px);
+    --kpi-digits:    clamp(66px, 9vw, 138px);
+    --total-size:    clamp(52px, 7vw, 96px);
+  }
+  .actions{
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    width: min(1000px, 100%);
   }
 }
+
 
 
 
@@ -927,7 +953,7 @@ mBtn?.addEventListener('click', () => {
   if (n >= 13) {
     alert(
       "This age is more than 12 months.\n" +
-      "Please use the Years button — the Months calculator is for 0–12 months."
+      "Please use the Years button - the Months calculator is for 0–12 months."
     );
     return;
   }
