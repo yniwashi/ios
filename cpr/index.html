@@ -5,13 +5,12 @@
 <title>CPR Timer — Trial</title>
 <style>
 /* ==========================================================
-   CPR TIMER — Patch (2025-09-24 h)
-   - WebClip-friendly PDF modal with Share + Save + visible download link
-   - Blob URL preserved; footer text "Ambulance App" embedded in PDF pages
+   CPR TIMER — Patch (2025-09-24 i)
+   - Export PDF button directly opens iOS Share Sheet (no modal)
+   - Blob URL preserved; multi-page PDFs; footer text inside PDF
    - Actions: 3 rows × 2 buttons, equal width, colored
    - WAAFELSS collapsible below Actions; no inner duplicate title
-   - WAAFELSS buttons match Actions in width/weight
-   - Start/Pause show disabled state; Adrenaline logs each 4:00
+   - Start/Pause show disabled state; Adrenaline logs at 4:00
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -22,11 +21,11 @@
 
   --btn-bg:#171b21; --btn-fg:#e9eef3; --btn-bd:#2b333b;
 
-  /* Action button color tokens (you can tweak these) */
+  /* Action button color tokens (tweak as you like) */
   --rosc-1:#D94B4B; --rosc-2:#9E2E2E; --rosc-bd:#B23A3A;
   --stop-1:#C62828; --stop-2:#8E1E1E; --stop-bd:#A12222;
   --shock-1:#F2B705; --shock-2:#B88406; --shock-bd:#D59B06; /* yellow-ish */
-  --amio-1:#2EA0FF; --amio-2:#1976D2; --amio-bd:#1E88E5; /* sky blue */
+  --amio-1:#2EA0FF; --amio-2:#1976D2; --amio-bd:#1E88E5;   /* sky blue */
   --dsed-1:#F7C948; --dsed-2:#B38600; --dsed-bd:#D1A20A;   /* alt yellow */
   --export-1:#6C63FF; --export-2:#4B46B8; --export-bd:#5B55D6;
 
@@ -47,7 +46,7 @@
   --radius: 18px;
   --shadow: 0 6px 20px rgba(0,0,0,.22);
 
-  /* Log font size (shrink if lines wrap too much) */
+  /* Log font (shrink if lines wrap too much) */
   --log-font: clamp(12px, 1.4vw, 13px);
 
   --total-color:#f1f5f9;
@@ -220,23 +219,6 @@ a{color:inherit}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:var(--log-font)}
 .log li{margin:6px 0}
 
-/* ---------- PDF MODAL ---------- */
-#pdfModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; }
-#pdfBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.5) }
-#pdfCard{
-  position:relative; background:var(--card); border:1px solid var(--border);
-  border-radius:16px; box-shadow:var(--shadow); width:min(920px, 96vw); height:min(80vh, 860px);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-#pdfToolbar{ padding:10px; display:flex; gap:10px; justify-content:flex-end; border-bottom:1px solid var(--border) }
-#pdfFrame{ flex:1; width:100%; border:0; background:#fff }
-#pdfLinkRow{ padding:10px; display:flex; gap:10px; justify-content:space-between; align-items:center; border-top:1px solid var(--border); font-size:12px; color:var(--muted) }
-#pdfLinkRow a{ text-decoration:underline }
-
-/* Toolbar buttons (use export colors) */
-.btn-tb{ padding:10px 14px; border-radius:12px; border:1px solid var(--export-bd); color:#fff; font-weight:800; background:linear-gradient(180deg,var(--export-1),var(--export-2)); box-shadow:var(--shadow) }
-.btn-tb.secondary{ background:var(--btn-bg); color:var(--fg); border-color:var(--btn-bd) }
-
 /* ---------- PRINT ---------- */
 @media print{
   .header,.controls-row,.actions,.wa-shell,.wa-content{display:none!important}
@@ -382,26 +364,6 @@ a{color:inherit}
       <!-- Log -->
       <div class="card">
         <ul id="log" class="log"></ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PDF Modal -->
-<div id="pdfModal" aria-hidden="true">
-  <div id="pdfBackdrop"></div>
-  <div id="pdfCard" role="dialog" aria-modal="true" aria-label="Exported PDF">
-    <div id="pdfToolbar">
-      <button id="pdfShareBtn" class="btn-tb">Share</button>
-      <button id="pdfSaveBtn" class="btn-tb">Save PDF</button>
-      <button id="pdfCloseBtn" class="btn-tb secondary">Close</button>
-    </div>
-    <iframe id="pdfFrame" title="PDF Preview"></iframe>
-    <div id="pdfLinkRow">
-      <span>Tip: If Share is blocked, use this link:</span>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <a id="pdfDownloadLink" href="#" download>Download report</a>
-        <a id="pdfOpenSafari" href="#" rel="noopener">Open in Safari</a>
       </div>
     </div>
   </div>
@@ -674,7 +636,7 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio ||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== EXPORT PDF (blob, modal viewer + Share + Save) ===== */
+/* ===== EXPORT PDF (Share Sheet) ===== */
 function setExportEnabled(enabled){
   $('printPdf').classList.toggle('is-disabled', !enabled);
 }
@@ -688,6 +650,7 @@ async function loadScript(src){
     document.head.appendChild(s);
   });
 }
+
 async function buildPdfBlob(){
   if(!window.jspdf){
     await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
@@ -754,64 +717,16 @@ async function buildPdfBlob(){
   return doc.output('blob');
 }
 
-/* Modal helpers */
-const pdfModal = $('pdfModal'),
-      pdfFrame = $('pdfFrame'),
-      pdfSaveBtn = $('pdfSaveBtn'),
-      pdfCloseBtn = $('pdfCloseBtn'),
-      pdfDownloadLink = $('pdfDownloadLink'),
-      pdfShareBtn = $('pdfShareBtn'),
-      pdfOpenSafari = $('pdfOpenSafari');
-
-let lastPdfUrl = null, lastPdfName = null;
-function openPdfModal(url, filename){
-  lastPdfUrl = url; lastPdfName = filename;
-  pdfFrame.src = url;
-  pdfDownloadLink.href = url;
-  pdfDownloadLink.download = filename;
-  pdfOpenSafari.onclick = (e)=>{ e.preventDefault(); window.open(url, '_blank'); };
-  pdfModal.style.display='flex';
-  pdfModal.setAttribute('aria-hidden','false');
+/* Filename: human-readable with 24h HH:MM, no seconds */
+function pdfFileName(){
+  const d=new Date();
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  const HH=String(d.getHours()).padStart(2,'0');
+  const MM=String(d.getMinutes()).padStart(2,'0');
+  return `CPR Report ${yyyy}-${mm}-${dd} ${HH}-${MM}.pdf`;
 }
-function closePdfModal(){
-  pdfModal.style.display='none';
-  pdfModal.setAttribute('aria-hidden','true');
-  pdfFrame.src = 'about:blank';
-  if(lastPdfUrl){ setTimeout(()=>URL.revokeObjectURL(lastPdfUrl), 30000); lastPdfUrl=null; }
-}
-
-$('pdfBackdrop').addEventListener('click', closePdfModal);
-pdfCloseBtn.addEventListener('click', closePdfModal);
-pdfSaveBtn.addEventListener('click', ()=>{
-  // Programmatic download; if iOS blocks, user can tap the visible link below.
-  const a=document.createElement('a');
-  a.href = lastPdfUrl;
-  a.download = lastPdfName || 'cpr_report.pdf';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-});
-pdfShareBtn.addEventListener('click', async () => {
-  if (!lastPdfUrl) return;
-  try {
-    const blob = await fetch(lastPdfUrl).then(r => r.blob());
-    const filename = lastPdfName || 'cpr_report.pdf';
-    const file = new File([blob], filename, { type: 'application/pdf' });
-
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'CPR Session Report',
-        text: 'Generated by Ambulance App'
-      });
-      // Optionally close after sharing:
-      // closePdfModal();
-    } else {
-      alert('Sharing is not available here. Use “Save PDF” or the download link below.');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Could not open the share sheet. Please use “Save PDF” or the download link below.');
-  }
-});
 
 $('printPdf').onclick = async () => {
   if ($('printPdf').classList.contains('is-disabled') || !sessionEnded()){
@@ -820,12 +735,21 @@ $('printPdf').onclick = async () => {
   }
   try{
     const blob = await buildPdfBlob();
-    const url  = URL.createObjectURL(blob); // blob: URL preserved
-    const filename = `cpr_report_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
-    openPdfModal(url, filename);
+    const name = pdfFileName();
+    const file = new File([blob], name, { type: 'application/pdf' });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'CPR Session Report',
+        text: 'Generated by Ambulance App'
+      });
+    } else {
+      alert('Sharing is not available here.');
+    }
   }catch(err){
     console.error(err);
-    alert('Could not generate PDF. Please try again.');
+    alert('Could not generate or share the PDF. Please try again.');
   }
 };
 
