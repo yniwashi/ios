@@ -752,7 +752,7 @@ async function buildPdfBlob(){
 
   const rows = events.map(e=>[e.ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}), e.label]);
   if(autoTableLoaded && doc.autoTable){
-    doc.autoTable({ head: [['Time (24h)','Event']], body: rows, startY: y+10, styles: { fontSize: 11, cellPadding: 6 }, headStyles: { fillColor: [25,118,210], textColor: 255 }, alternateRowStyles: { fillColor: [232,244,253] }, margin: { left: 40, right: 40 } });
+    doc.autoTable({ head: [['Time','Event']], body: rows, startY: y+10, styles: { fontSize: 11, cellPadding: 6 }, headStyles: { fillColor: [25,118,210], textColor: 255 }, alternateRowStyles: { fillColor: [232,244,253] }, margin: { left: 40, right: 40 } });
   }else{
     y += 28; doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16; doc.setFont('helvetica','normal');
     rows.forEach(r=>{ if (y > 760){ doc.addPage(); y=48; } doc.text(`${r[0]}  |  ${r[1]}`, 40, y); y += 16; });
@@ -821,7 +821,7 @@ function validateAgeBasic(showAlert=true){
 }
 function updateButtonsEnabled(){ const n=parseAgeInt(); const enable=isPositiveWholeAge(n); mBtn.disabled=!enable; yBtn.disabled=!enable; }
 age?.addEventListener('input', updateButtonsEnabled); updateButtonsEnabled();
-mBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button — the Months calculator is for 0–12 months."); return; } renderW(months(n)); });
+mBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button - the Months calculator is for 0–12 months."); return; } renderW(months(n)); });
 yBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=15){ alert("Our guideline defines pediatric patients up to 14 years."); return; } renderW(years(n)); });
 
 /* ===== Tiny utility: tag span-2 on landscape-only buttons ===== */
