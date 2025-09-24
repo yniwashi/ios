@@ -65,6 +65,22 @@
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
 }
 
+   /* Auto mode: when no data-theme is set, follow system light */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme]){
+    color-scheme: light;
+    --bg:#f6f8fc; --fg:#111827; --muted:#4b5563;
+    --card:#ffffff; --border:#e5e7eb;
+    --btn-bg:#ffffff; --btn-fg:#111827; --btn-bd:#d1d5db;
+    --total-color:#111111;
+    --cycle-accent: var(--cycle-accent-light);
+    --cycle-shadow: var(--cycle-shadow-light);
+    --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
+    --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
+  }
+}
+
+
 /* ---------- BASE ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -87,15 +103,27 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
 /* ---------- TOTAL CPR ---------- */
-.total{grid-area:total;display:flex;flex-direction:column;align-items:center;margin:var(--gap-xs) 0 var(--gap-sm)}
-.total .label{font-size:var(--subtitle-size);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900;margin-bottom:2px}
-.total .digits{font-variant-numeric:tabular-nums;font-family:ui-monospace,Consolas,monospace;font-weight:900;font-size:var(--total-size);color:var(--total-color)}
+.total{
+  grid-area:total;
+  display:flex; flex-direction:column; align-items:center;
+  /* tighter spacing so buttons fit in view */
+  margin:6px 0 8px;
+}
+.total .label{
+  font-size:var(--subtitle-size); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); font-weight:900; margin-bottom:2px;
+}
+.total .digits{
+  font-variant-numeric:tabular-nums; font-family:ui-monospace,Consolas,monospace;
+  font-weight:900; font-size:var(--total-size); color:var(--total-color);
+}
 
 /* ---------- MAIN GRID ---------- */
 .main{
   display:grid;
+  /* denser grid gaps */
   row-gap: var(--gap-md);
-  column-gap: var(--gap-lg);
+  column-gap: var(--gap-md);
   grid-template-areas:
     "total"
     "cycle"
@@ -107,16 +135,16 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   justify-items:center;
 }
 
-/* Landscape: denser rows, timers right under TOTAL */
+/* Landscape: denser rows, timers right under TOTAL, actions below timers */
 @media (orientation:landscape){
   .main{
     grid-template-areas:
       "total total"
       "cycle adr"
-      "actionsL actionsR"
-      "wa log";
+      "actions actions"
+      "wa     log";
     grid-template-columns: 1fr 1fr;
-    row-gap: var(--gap-sm);      /* tighter vertical spacing */
+    row-gap: 10px;                 /* bring timers closer to Total */
     justify-items:center;
     align-items:start;
   }
@@ -125,29 +153,26 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 /* ---------- TIMERS (minimal, perfectly centered) ---------- */
 .timer{
   position:relative;                 /* for overlays */
-  margin:0; padding:0;
+  /* tiny gap under timers to make room for buttons */
+  margin:0 auto 8px;
+  padding:0;
   text-align:center;
   width:min(560px, 100%);
   place-self:center;                 /* double down on centering */
 }
 .timer .label{
-  font-size:var(--subtitle-size);
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--muted);
-  font-weight:900;
-  margin-bottom:6px;
+  font-size:var(--subtitle-size); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); font-weight:900; margin-bottom:6px;
 }
 .timer .digits{
-  font-variant-numeric:tabular-nums;
-  font-family:ui-monospace,Consolas,monospace;
-  font-weight:900; line-height:1;
-  font-size:var(--kpi-digits);
+  font-variant-numeric:tabular-nums; font-family:ui-monospace,Consolas,monospace;
+  font-weight:900; line-height:1; font-size:var(--kpi-digits);
 }
 #cycleDigits{ color:var(--cycle-accent-light) }
 #adrDigits{   color:#2ea0ff }
-#cycleTimer{ grid-area:cycle }
-#adrTimer{   grid-area:adr }
+#cycleTimer{  grid-area:cycle }
+#adrTimer{    grid-area:adr }
+
 
 /* Overlay helpers (countdown / prompt) */
 .overlay-center{
@@ -155,7 +180,9 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   left:0; top:0;
   transform:translate(-50%,-50%);
   z-index:2; pointer-events:none;
-  display:flex; align-items:center; justify-content:center;
+- display:flex; align-items:center; justify-content:center;
++ /* don't set display here; hidden by default */
++ align-items:center; justify-content:center;
   text-align:center;
 }
 #countdown.overlay-center{
@@ -169,11 +196,14 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   color:var(--adr-color);
   font-size: clamp(38px, min(10vw, 12vh), 96px);
 }
-#countdown{ display:none }             /* toggled by .show */
-#countdown.show{ display:flex }
+ #countdown{ display:none }             /* toggled by .show */
+ #countdown.show{ display:flex }
++ #adrPrompt{ display:none }            /* hidden by default */
++ #adrTimer.adr-show #adrPrompt{ display:flex }
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
 #adrTimer.adr-hide .label, #adrTimer.adr-hide #adrDigits, #adrTimer.adr-hide .icon-row{ visibility:hidden }
-#adrTimer.adr-show #adrPrompt{ display:flex }
+- #adrTimer.adr-show #adrPrompt{ display:flex }
+
 
 /* Start/Pause */
 .icon-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
@@ -185,10 +215,10 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn{
   appearance:none; cursor:pointer;
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:10px 12px; border-radius:12px; border:1px solid var(--btn-bd);
+  padding:10px 14px; border-radius:12px; border:1px solid var(--btn-bd);
   color:#fff; font-weight:800; letter-spacing:.2px;
-  font-size: clamp(14px, 2vw, 16px);
-  box-shadow:var(--shadow); width:100%; max-width:360px; margin-inline:auto;
+  font-size: clamp(14px, 1.8vw, 16px);
+  box-shadow:var(--shadow); width:100%; max-width:420px; margin-inline:auto;
 }
 .btn .ico{width:18px;height:18px}
 .btn:active{transform:translateY(1px)}
@@ -200,25 +230,47 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* Portrait actions: 2 columns × 3 rows */
+/* Portrait actions: 2 columns × 3 rows, with explicit order */
 .actions-wrap{
   grid-area:actions;
-  display:grid; gap:var(--gap-sm);
+  display:grid;
+  gap:var(--gap-sm);
   grid-template-columns:repeat(2, minmax(140px, 1fr));
   justify-items:stretch;
+
+  /* 👇 explicit placement so Export is bottom-most */
+  grid-template-areas:
+    "stop  rosc"
+    "amio  shock"
+    "dsed  export";
 }
-.actions-left, .actions-right{display:contents} /* flatten in portrait */
+
+/* flatten nested wrappers so buttons are direct grid children */
+.actions-left, .actions-right{ display:contents; }
+
+/* map button IDs to the areas above */
+#stopb    { grid-area: stop; }
+#roscb    { grid-area: rosc; }
+#amiob    { grid-area: amio; }
+#shockb   { grid-area: shock; }
+#dsedb    { grid-area: dsed; }
+#printPdf { grid-area: export; }
+
 
 /* Landscape: two 2×2 stacks, single bottom button centered across two cols */
 @media (orientation:landscape){
   .actions-wrap{display:contents}
   .actions-left, .actions-right{
-    display:grid; gap:var(--gap-sm);
-    grid-template-columns:repeat(2, minmax(140px,1fr));
+    grid-template-columns:repeat(2, minmax(120px,1fr)); /* smaller buttons */
     justify-items:center;
+    align-items:start;
   }
+
+    /* Force placement below timers */
+  .actions-left{ grid-area:cycle }
+  .actions-right{ grid-area:adr }
   /* span utility for the third button on each side */
-  .span-2{ grid-column:1 / -1; justify-self:center; max-width:280px }
+  .span-2{ grid-column:1 / -1; justify-self:center; max-width:240px }
 }
 
 /* ---------- WAAFELSS & LOG ---------- */
@@ -409,29 +461,56 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 /* ===== THEME ===== */
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
+
+// Start with system preference
 let themeMode = 'auto'; // auto | light | dark
 
 function applyTheme(){
-  // remove explicit theme to allow device if auto
   root.removeAttribute('data-theme');
-  if (themeMode==='light') root.setAttribute('data-theme','light');
-  if (themeMode==='dark')  root.setAttribute('data-theme','dark');
-  themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
+  if (themeMode === 'light') {
+    root.setAttribute('data-theme','light');
+  } else if (themeMode === 'dark') {
+    root.setAttribute('data-theme','dark');
+  } else if (themeMode === 'auto') {
+    // Follow system preference
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      root.setAttribute('data-theme','dark');
+    } else {
+      root.setAttribute('data-theme','light');
+    }
+  }
+
+  // Button text
+  themeBtn.textContent = themeMode[0].toUpperCase() + themeMode.slice(1);
   themeBtn.title = `Theme: ${themeBtn.textContent}`;
+
+  // Update theme-color meta
   const meta = document.querySelector('meta[name="theme-color"]')
-    || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
+    || (() => {
+         const m=document.createElement('meta');
+         m.setAttribute('name','theme-color');
+         document.head.appendChild(m);
+         return m;
+       })();
   requestAnimationFrame(()=>{
     const bg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#0b0d10';
     meta.setAttribute('content', bg);
   });
 }
+
+// Toggle button cycles Auto → Light → Dark
 themeBtn.addEventListener('click', () => {
-  themeMode = themeMode==='auto' ? 'light' : themeMode==='light' ? 'dark' : 'auto';
+  themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
   applyTheme();
 });
+
+// Watch for system changes while in auto mode
 const mql = window.matchMedia('(prefers-color-scheme: dark)');
 mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
+
+// Initial apply
 applyTheme();
+
 
 /* Back */
 const HOME = "https://shortcuts.niwashibase.com/helpers/shortcuts_menu.html";
@@ -597,25 +676,22 @@ function tick(){
   }
 
   // adrenaline loop
-  if(adrStart){
-    let a=0;
-    if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
-    else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
-    else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
-    a = a|0;
-    if(a>=240){
-      $('adrDigits').textContent='04:00'; play('adr4');
-      stamp('Adrenaline timer reached 4:00');
-      const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
-      alignOverlays();
-      adrRunning = false;
-      setTimeout(()=>{
-        adrCard.classList.remove('adr-show','adr-hide');
-        adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
-        $('adrStart').disabled = true; $('adrPause').disabled = false;
-      }, 2000);
-      a=0;
-    }
+if(a>=240){
+  $('adrDigits').textContent='04:00'; play('adr4');
+ // log next dose administered automatically at 4:00
+ adrCount++;
+ stamp(`Adrenaline no. ${adrCount} Administered`);
+  const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
+  alignOverlays();
+  adrRunning = false;
+  setTimeout(()=>{
+    adrCard.classList.remove('adr-show','adr-hide');
+    adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true;
+    $('adrStart').disabled = true; $('adrPause').disabled = false;
+  }, 2000);
+  a=0;
+}
+
     $('adrDigits').textContent=fmt(a);
   }else $('adrDigits').textContent='00:00';
 
