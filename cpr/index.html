@@ -131,68 +131,81 @@ a{color:inherit}
   .extras{grid-area:extras; justify-items:center}
 }
 
-/* ===== LANDSCAPE LAYOUT v3 ===== */
+/* ===== LANDSCAPE LAYOUT v4 (REPLACE BLOCK C1) ===== */
 @media (orientation:landscape){
 
-  /* 1) Center title + total in landscape */
+  /* Center the title + total explicitly */
   .brand{ justify-self:center; text-align:center; }
   .total{ align-items:center; }
 
-  /* 2) Main flow: actions (top), timers (middle), extras (bottom) */
+  /* Shared landscape scale tokens (timers + headings grow) */
+  :root{
+    --timer-min:      560px;             /* min column width for each timer */
+    --timer-max:      860px;             /* hard cap width for each timer/card */
+    --card-pad:       clamp(20px, 2.6vw, 30px);
+    --kpi-digits:     clamp(76px, 10.2vw, 164px);
+    --subtitle-size:  clamp(16px, 2.6vw, 22px);
+    --total-size:     clamp(58px, 8vw, 108px);
+    --chip-h:         clamp(44px, 6vw, 56px);
+    --chip-pad-x:     clamp(10px, 2vw, 14px);
+    --actions-gap:    clamp(10px, 1.6vw, 16px);
+    --timers-gap:     26px;
+  }
+
+  /* Top controls a bit larger & even */
+  .header{ gap: 8px; }
+  .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
+  .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
+  .icon-toggle{ width: var(--chip-h); height: var(--chip-h); }
+  .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
+
+  /* Main grid: actions (top), timers (middle), extras (bottom) */
   .main{
     grid-template-areas:
       "actions actions"
       "left    right"
       "extras  extras";
     grid-template-columns:
-      minmax(520px, 1fr) minmax(520px, 1fr);
-    align-items:start;
+      minmax(var(--timer-min), 1fr)
+      minmax(var(--timer-min), 1fr);
+    align-items: start;
     gap: 22px;
   }
 
-  /* 3) Actions row ABOVE timers; visually split into left/right triplets with a center gutter
-        (the TOTAL CPR TIME sits centered above that gutter) */
+  /* Actions row spans both columns BUT contains two columns that exactly match the timer columns */
   .actions{
     grid-area: actions;
     display: grid;
-    /* columns: 3 (left triplet) + a wide center gutter + 3 (right triplet) */
     grid-template-columns:
-      repeat(3, minmax(160px, 1fr))
-      minmax(280px, 520px)   /* <— center gutter for TOTAL CPR TIME alignment */
-      repeat(3, minmax(160px, 1fr));
-    gap: var(--actions-gap);
-    width: min(1280px, 100%);
-    margin: 0 auto;
-    align-items: start;
+      minmax(var(--timer-min), 1fr)   /* left column aligns with left timer */
+      minmax(var(--timer-min), 1fr);  /* right column aligns with right timer */
+    gap: 0; /* gutters handled inside the triplets */
+    width: 100%;
   }
-  /* Place the six buttons explicitly into left/right triplets (same DOM order) */
-  .actions > :nth-child(1){ grid-column: 1; } /* Stop      (left 1) */
-  .actions > :nth-child(2){ grid-column: 2; } /* ROSC      (left 2) */
-  .actions > :nth-child(3){ grid-column: 3; } /* Shock     (left 3) */
-  .actions > :nth-child(4){ grid-column: 5; } /* Amiodarone(right 1) */
-  .actions > :nth-child(5){ grid-column: 6; } /* Log DSED  (right 2) */
-  .actions > :nth-child(6){ grid-column: 7; } /* Export PDF(right 3) */
 
-  .btn{ white-space: normal; text-align: center; }
+  /* Triplets sit centered ABOVE their matching timer and never exceed timer width */
+  .actions-left,
+  .actions-right{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+    gap: var(--actions-gap);
+    max-width: min(var(--timer-max), 100%);
+    justify-self: center;   /* centers triplet within its timer column */
+    align-self: end;
+  }
 
-  /* 4) Timers side-by-side, bigger + proportional */
-  .timers{ display: contents; }   /* flatten so we can place each timer */
+  /* Map each triplet to its side */
+  .actions-left{  grid-column: 1; }
+  .actions-right{ grid-column: 2; }
+
+  /* Timers row: two big cards side-by-side */
+  .timers{ display: contents; } /* let children join the .main grid */
   #cycleTimer{ grid-area: left;  }
   #adrTimer{   grid-area: right; }
-  .timer{ width: min(820px, 100%); }    /* wider cards */
+  .timer{ width: min(var(--timer-max), 100%); }
 
-  :root{
-    --card-pad:       clamp(20px, 2.6vw, 30px);
-    --kpi-digits:     clamp(74px, 10vw, 160px); /* timer digits */
-    --subtitle-size:  clamp(16px, 2.6vw, 22px); /* CYCLE/ADRENALINE labels */
-    --total-size:     clamp(58px, 8vw, 108px);  /* total CPR digits */
-    --chip-h:         clamp(42px, 6vw, 54px);   /* larger top chips */
-    --chip-pad-x:     clamp(10px, 2vw, 14px);
-    --actions-gap:    clamp(10px, 1.6vw, 16px);
-    --timers-gap:     26px;
-  }
-
-  #countdown{ font-size: clamp(130px, 20vw, 240px); }
+  /* Proportional internal scaling (digits, prompts, controls) */
+  #countdown{ font-size: clamp(132px, 20vw, 240px); }
   #adrPrompt{ font-size: clamp(60px, 11vw, 132px); }
 
   .icon-ctrl{
@@ -201,42 +214,29 @@ a{color:inherit}
   }
   .icon-ctrl svg{ width: 32px; height: 32px; }
 
-  /* 5) WAAFELSS under Cycle, Log under Adrenaline (side-by-side) */
-  .extras{ grid-area: extras; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  /* Extras: WAAFELSS under Cycle, Log under Adrenaline */
+  .extras{
+    grid-area: extras;
+    display: grid;
+    grid-template-columns:
+      minmax(var(--timer-min), 1fr)
+      minmax(var(--timer-min), 1fr);
+    gap: 22px;
+  }
   .wa-shell{ grid-column: 1; width: 100%; }
   .card{     grid-column: 2; width: 100%; }
-
-  /* 6) Top chips — larger & unified spacing */
-  .header{ gap: 8px; }
-  .controls-row{ gap: var(--chip-gap); justify-content: space-between; }
-  .chip{ height: var(--chip-h); padding: 0 var(--chip-pad-x); }
-  .icon-toggle{
-    width: var(--chip-h); height: var(--chip-h);
-    border-radius: 12px; border: 1px solid var(--btn-bd); background: var(--btn-bg);
-    font-size: 20px;
-  }
-  .icon-toggle svg{ width: clamp(22px, 3.6vw, 28px); height: clamp(22px, 3.6vw, 28px); }
 }
 
-
-/* ===== LANDSCAPE NARROW GUARD ===== */
-@media (orientation:landscape) and (max-width: 920px){
-  .main{
-    grid-template-columns: minmax(460px, 1fr) minmax(460px, 1fr);
-  }
-  .actions{
-    grid-template-columns:
-      repeat(3, minmax(130px, 1fr))
-      minmax(240px, 1fr)
-      repeat(3, minmax(130px, 1fr));
-    width: min(1100px, 100%);
-  }
-  .timer{ width: min(740px, 100%); }
+/* Narrow-landscape guard so it still looks tidy on smaller phones */
+@media (orientation:landscape) and (max-width: 980px){
   :root{
-    --kpi-digits: clamp(66px, 9vw, 140px);
-    --total-size: clamp(52px, 7vw, 96px);
+    --timer-min: 480px;
+    --timer-max: 800px;
+    --kpi-digits: clamp(70px, 9.6vw, 150px);
+    --total-size: clamp(52px, 7.2vw, 98px);
   }
 }
+
 
 
 
@@ -409,20 +409,29 @@ a{color:inherit}
       </div>
     </div>
 
-    <!-- Actions (3 rows × 2 buttons) -->
+    <!-- Actions -->
     <div class="actions">
-      <!-- Row 1 -->
-      <button id="roscb" class="btn btn-rosc">
-        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
-        ROSC
-      </button>
-     <button id="stopb" class="btn btn-stop">
+<!-- Left triplet ABOVE CYCLE: Stop • ROSC • Export -->
+       <div class="actions-left">
+            <button id="stopb" class="btn btn-stop">
   <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px;">
     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
   </svg>
   Stop
 </button>
-      <!-- Row 2 -->
+   <button id="roscb" class="btn btn-rosc">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
+        ROSC
+      </button>
+    <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
+  </svg>
+  Export PDF
+</button>
+ </div>
+ <!-- Right triplet ABOVE ADRENALINE: Shock • Amiodarone • DSED -->
+  <div class="actions-right">
       <button id="shockb" class="btn btn-shock">
         <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
         Shock
@@ -440,12 +449,7 @@ a{color:inherit}
   </svg>
   Log DSED
 </button>
-      <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
-  </svg>
-  Export PDF
-</button>
+  </div>
     </div>
 
     <!-- Extras -->
@@ -976,6 +980,23 @@ yBtn?.addEventListener('click', () => {
 
   renderW(years(n));
 });
+
+   /* ===== (Optional) Viewport scale attempt — iOS may ignore in some versions ===== */
+(function(){
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (!vp) return;
+  function setScale(s){
+    // Locks zoom level; remove user-scalable=no if you want pinch-zoom back
+    vp.setAttribute('content', `width=device-width, initial-scale=${s}, maximum-scale=${s}, user-scalable=no`);
+  }
+  function onOrient(){
+    const isLand = window.matchMedia('(orientation:landscape)').matches;
+    // tweak the value to taste (0.9–1.0)
+    setTimeout(()=> setScale(isLand ? 0.9 : 1.0), 120);
+  }
+  window.addEventListener('orientationchange', onOrient);
+})();
+
 
    /* ===== Self-check ===== */
 (function(){
