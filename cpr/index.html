@@ -279,8 +279,11 @@ a{color:inherit}
 .wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
 /* Same 2-col layout for WA buttons */
 .wa-row{display:grid; grid-template-columns:repeat(2, minmax(160px, 1fr)); gap:var(--actions-gap); justify-items:stretch; margin-bottom:8px}
-.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-
+.wa-row input{grid-column:1 / -1; width:100%; padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size: 18px;color:var(--fg)}
+.wa-row input::placeholder {
+  font-size: 18px;              /* increase placeholder (hint) text */
+  color: var(--muted);          /* optional: make hint softer */
+}
 /* WA button colors */
 .btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
 .btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
