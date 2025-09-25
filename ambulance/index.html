@@ -320,21 +320,23 @@ function closePanel(){
       if (tool) runAction(tool, params);
     }
 // ---------- Router / action loader ----------
-    // ---------- VERSION ----------
-    async function runAction(actionId, params = {}){
-      try{
-      const ver = 'v3.6';
-const mod = await import(`./tools/${actionId}.js?${ver}`);
-        const mountEl = document.getElementById("panel-body");
-        mountEl.innerHTML = "";
-        openPanel(params.title || actionId.toUpperCase());
-        await mod.run(mountEl, params);
-        updateHash({ tool: actionId, ...params });
-      }catch(e){
-        alert(`Could not load tool: ${actionId}\n${e.message || e}`);
-        console.error(e);
-      }
-    }
+    // ---------- VERSION Automatic based on date ----------
+async function runAction(actionId, params = {}) {
+  try {
+    // DEV: cache-bust every open; swap back to a fixed string later
+    const ver = Date.now();
+    const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
+    const mountEl = document.getElementById("panel-body");
+    mountEl.innerHTML = "";
+    openPanel(params.title || actionId.toUpperCase());
+    await mod.run(mountEl, params);
+    updateHash({ tool: actionId, ...params });
+  } catch (e) {
+    alert(`Could not load tool: ${actionId}\n${e.message || e}`);
+    console.error(e);
+  }
+}
+
 
     function parseHash(){
       const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
