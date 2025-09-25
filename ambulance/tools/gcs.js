@@ -24,7 +24,7 @@ export async function run(root){
       --chip-radius: 999px;            /* 8px for more squarish, 999px for pill */
 
       /* Number badge size (the left number inside a chip) */
-      --chip-num-size: 18px;           /* (13–16px) */
+      --chip-num-size: 16px;           /* (13–16px) */
 
       /* Score card sizes */
       --score-pad-y: 8px;
@@ -71,7 +71,7 @@ export async function run(root){
   /* Section header + spacing */
   .gcs-sec{ margin-top: var(--sec-gap) }
   .gcs-sec:first-of-type{ margin-top: 12px }
-  .gcs-sec .hd{font-size:18px;font-weight:900;color:var(--muted);margin:0 0 8px 4px}
+  .gcs-sec .hd{font-size:16px;font-weight:800;color:var(--muted);margin:0 0 8px 4px}
 
   /* Chip row */
   .chip-row{
