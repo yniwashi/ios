@@ -1,12 +1,12 @@
 // /tools/gcs.js
 export async function run(root){
   root.innerHTML = `
-    <div style="padding:16px;max-width:600px;margin:0 auto;">
+    <div class="tool-root gcs" style="padding:18px;max-width:640px;margin:0 auto;">
       <form id="gcs">
-        <h2 style="margin-top:0;font-size:22px;text-align:center;font-weight:800">Glasgow Coma Scale</h2>
+        <h2 style="margin-top:0;font-size:24px;text-align:center;font-weight:900;letter-spacing:.2px">Glasgow Coma Scale</h2>
 
-        <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-top:20px">
-          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+        <div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:22px">
+          <label style="display:flex;flex-direction:column;font-size:18px;font-weight:700">
             Eye (E)
             <select name="e" required class="gcs-sel">
               <option value="4">4 — Spontaneous</option>
@@ -16,7 +16,7 @@ export async function run(root){
             </select>
           </label>
 
-          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+          <label style="display:flex;flex-direction:column;font-size:18px;font-weight:700">
             Verbal (V)
             <select name="v" required class="gcs-sel">
               <option value="5">5 — Oriented</option>
@@ -27,7 +27,7 @@ export async function run(root){
             </select>
           </label>
 
-          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+          <label style="display:flex;flex-direction:column;font-size:18px;font-weight:700">
             Motor (M)
             <select name="m" required class="gcs-sel">
               <option value="6">6 — Obeys</option>
@@ -40,20 +40,21 @@ export async function run(root){
           </label>
         </div>
 
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <div style="margin-top:26px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
           <button type="submit" class="gcs-btn gcs-primary">Compute</button>
           <button type="button" id="reset" class="gcs-btn gcs-muted">Reset</button>
         </div>
       </form>
 
-      <div id="out" style="margin-top:24px"></div>
+      <div id="out" style="margin-top:26px"></div>
     </div>
   `;
 
+  // controls size + padding
   const selCss = `
-    margin-top:8px;
-    padding:14px;
-    border-radius:12px;
+    margin-top:10px;
+    padding:14px 16px;
+    border-radius:14px;
     border:1px solid #2b3140;
     background:transparent;
     color:inherit;
@@ -67,9 +68,10 @@ export async function run(root){
     border-radius:14px;
     border:1px solid #2b3140;
     color:#fff;
-    font-weight:800;
+    font-weight:900;
     font-size:18px;
     letter-spacing:.3px;
+    min-width:140px;
   `;
   root.querySelector(".gcs-btn.gcs-primary").style.cssText = btnBase + "background:linear-gradient(180deg,#22c1b9,#169e97)";
   root.querySelector(".gcs-btn.gcs-muted").style.cssText   = btnBase + "background:linear-gradient(180deg,#64748b,#475569)";
@@ -86,7 +88,7 @@ export async function run(root){
 
     out.innerHTML = `
       <div style="border:1px solid #2b3140;border-radius:16px;padding:20px;text-align:center">
-        <div style="font-size:32px;font-weight:900;margin-bottom:8px">GCS = ${score}</div>
+        <div style="font-size:36px;font-weight:900;margin-bottom:10px">GCS = ${score}</div>
         <div style="font-size:18px;opacity:.85">Eye ${eVal} + Verbal ${vVal} + Motor ${mVal}</div>
       </div>
     `;
