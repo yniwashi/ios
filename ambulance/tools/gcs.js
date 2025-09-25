@@ -98,12 +98,33 @@ export async function run(root){
     history.replaceState(null,"",`#${p.toString()}`);
   });
 
-  resetBtn.addEventListener("click", ()=>{
-    form.reset(); out.innerHTML = "";
-    const p = new URLSearchParams(location.hash.replace(/^#/, ""));
-    p.delete("e"); p.delete("v"); p.delete("m"); p.set("tool","gcs");
-    history.replaceState(null,"",`#${p.toString()}`);
+// ...keep the rest of the file the same
+
+resetBtn.addEventListener("click", ()=>{
+  // 1) Reset the form to defaults
+  form.reset();
+
+  // 2) Force selects back to their first option (iOS Safari can be stubborn)
+  form.querySelectorAll('select').forEach(s => {
+    s.selectedIndex = 0;
+    // fire change so any listeners update UI
+    s.dispatchEvent(new Event('change', { bubbles: true }));
   });
+
+  // 3) Clear results
+  out.innerHTML = "";
+
+  // 4) Clean up URL hash (leave only the tool for deep-linking)
+  history.replaceState(
+    null,
+    "",
+    location.pathname + location.search + "#tool=gcs"
+  );
+
+  // 5) Remove any lingering focus (prevents odd keyboard/picker states)
+  (document.activeElement && document.activeElement.blur && document.activeElement.blur());
+});
+
 
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
   ["e","v","m"].forEach(k=>{
