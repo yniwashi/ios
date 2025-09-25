@@ -87,29 +87,56 @@
     .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
     .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
 
-    /* Full-screen tool view */
-#panel{ position:fixed; inset:0; background:var(--bg); z-index:9999 }
+   /* Full-screen tool view */
+#panel{
+  position: fixed;
+  inset: 0;
+  background: transparent;             /* was var(--bg) → make transparent so you see the page while swiping */
+  z-index: 9999;
+}
 #panel[hidden]{ display:none }
+
 #panel-card{
-  position:relative; width:100vw; height:100dvh; overflow:auto;
-  background:var(--bg); border:0; border-radius:0; box-shadow:none;
-  -webkit-overflow-scrolling:touch; transform:translateZ(0);
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  border: 0;
+  border-radius: 0;
+  /* subtle depth during swipe */
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);   /* was none */
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0) translateX(0);     /* ensure a transform exists so we can animate X */
+  transition: transform 300ms cubic-bezier(.22,.61,.36,1); /* smooth snap back/complete */
+  will-change: transform;                      /* hint for better perf */
 }
 
 /* Sticky header inside tool */
 .panel-head{
-  position:sticky; top:0;
-  display:flex; align-items:center; gap:10px;
+  position: sticky;
+  top: 0;
+  display: flex; align-items: center; gap: 10px;
   padding: calc(env(safe-area-inset-top) + 6px) 12px 8px 12px;
-  background:var(--bg); border-bottom:1px solid var(--border); z-index:1;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
 }
 .backbtn{
-  appearance:none; cursor:pointer;
-  padding:8px 12px; border-radius:10px;
-  background:var(--surface-2); border:1px solid var(--border);
-  color:var(--text); font-weight:800; font-size:14px;
+  appearance: none; cursor: pointer;
+  padding: 8px 12px; border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 800; font-size: 14px;
 }
-.panel-title{ margin:0; font-size:15px; font-weight:800 }
+.panel-title{ margin: 0; font-size: 15px; font-weight: 800 }
+
+/* Optional: slight parallax/dim to the underlying menu while panel is open */
+body.panel-open .wrap{
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
 
 
 
@@ -374,6 +401,134 @@ document.getElementById("panel-card").addEventListener("touchend", e => {
     closePanel();
   }
 });
+
+  // ===== iOS-style interactive edge-swipe back =====
+(() => {
+  const panel      = document.getElementById("panel");
+  const card       = document.getElementById("panel-card");
+  const content    = document.querySelector(".wrap"); // for subtle parallax/dim if you like
+
+  const EDGE_ZONE = 24;           // px from left edge to allow starting the gesture
+  const COMPLETE_THRESHOLD = 0.28; // fraction of width to trigger close on release
+  const V_TOL = 18;               // vertical movement tolerance before we cancel (px)
+  const MIN_H_START = 6;          // minimum horizontal move to consider (px)
+
+  let startX = 0, startY = 0, dragging = false, width = 0, lastDx = 0;
+  let raf = 0;
+
+  function setX(x) {
+    // move card; add slight parallax to the content beneath if desired
+    card.style.transform = `translateX(${x}px)`;
+    if (content) {
+      const p = Math.min(1, x / (width || 1));
+      content.style.transform = `translateX(${Math.min(12, 12*p)}px)`;
+      content.style.opacity   = String(1 - 0.04*p);
+    }
+  }
+
+  function onStart(e) {
+    if (panel.hidden) return;
+
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+
+    // only start at the very left edge to mimic iOS edge-swipe
+    if (t.clientX > EDGE_ZONE) { dragging = false; return; }
+
+    startX = t.clientX;
+    startY = t.clientY;
+    width  = card.clientWidth || window.innerWidth;
+    dragging = true;
+    lastDx = 0;
+
+    // stop any running transition so we can drag smoothly
+    card.style.transition = "none";
+    if (content) content.style.transition = "none";
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+
+    const dx = t.clientX - startX;
+    const dy = Math.abs(t.clientY - startY);
+
+    // cancel if vertical scroll dominates
+    if (dy > V_TOL && dx < MIN_H_START) { cancel(); return; }
+
+    // ignore leftward moves; we only drag right
+    const dragX = Math.max(0, dx);
+    lastDx = dragX;
+
+    // when we’re clearly dragging horizontally, prevent the page from scrolling
+    if (dragX > MIN_H_START && dy < V_TOL) e.preventDefault();
+
+    // rAF for smoothness
+    if (!raf) {
+      raf = requestAnimationFrame(() => {
+        setX(lastDx);
+        raf = 0;
+      });
+    }
+  }
+
+  function finishClose() {
+    // animate off-screen then close
+    card.style.transition = "transform 280ms cubic-bezier(.22,.61,.36,1)";
+    if (content) content.style.transition = "transform 280ms ease, opacity 280ms ease";
+    requestAnimationFrame(() => {
+      setX(width); // slide fully right
+      // after animation completes, actually close the panel and reset transforms
+      setTimeout(() => {
+        closePanel();          // your existing function
+        card.style.transition = "";
+        if (content) {
+          content.style.transition = "";
+          content.style.transform  = "";
+          content.style.opacity    = "";
+        }
+        setX(0);
+      }, 280);
+    });
+  }
+
+  function snapBack() {
+    // animate back to 0
+    card.style.transition = "transform 260ms cubic-bezier(.22,.61,.36,1)";
+    if (content) content.style.transition = "transform 260ms ease, opacity 260ms ease";
+    requestAnimationFrame(() => {
+      setX(0);
+      setTimeout(() => {
+        card.style.transition = "";
+        if (content) {
+          content.style.transition = "";
+          content.style.transform  = "";
+          content.style.opacity    = "";
+        }
+      }, 260);
+    });
+  }
+
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+
+    const shouldClose = lastDx > (width * COMPLETE_THRESHOLD);
+    if (shouldClose) finishClose(); else snapBack();
+  }
+
+  function cancel() {
+    dragging = false;
+    snapBack();
+  }
+
+  card.addEventListener("touchstart", onStart, { passive: true });
+  card.addEventListener("touchmove",  onMove,  { passive: false });
+  card.addEventListener("touchend",   onEnd,   { passive: true });
+  card.addEventListener("touchcancel",cancel,  { passive: true });
+})();
+
 
   </script>
 </body>
