@@ -337,7 +337,7 @@ function closePanel(){
     // ---------- Router / action loader ----------
     async function runAction(actionId, params = {}){
       try{
-      const ver = 'v3.2';
+      const ver = 'v3.3';
 const mod = await import(`./tools/${actionId}.js?${ver}`);
         const mountEl = document.getElementById("panel-body");
         mountEl.innerHTML = "";
