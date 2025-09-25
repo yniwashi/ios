@@ -115,6 +115,14 @@
 
     body.panel-open { overflow: hidden; }
 
+    /* Bigger base text inside full-screen tool */
+#panel-card { font-size: 17px; }         /* base text size for all tools */
+#panel-body select,
+#panel-body button,
+#panel-body input { font-size: 18px; }   /* controls specifically */
+html { -webkit-text-size-adjust: 100%; } /* prevent Safari odd scaling */
+
+
   </style>
 </head>
 <body>
@@ -324,7 +332,8 @@ function closePanel(){
     // ---------- Router / action loader ----------
     async function runAction(actionId, params = {}){
       try{
-        const mod = await import(`./tools/${actionId}.js`);
+        const ver = 'v3'; // bump when you change tool files
+const mod = await import(`./tools/${actionId}.js?${ver}`);
         const mountEl = document.getElementById("panel-body");
         mountEl.innerHTML = "";
         openPanel(params.title || actionId.toUpperCase());
