@@ -87,33 +87,27 @@
     .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
     .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
 
-    /* Panel (webapp view) */
-   /* Panel (full-screen tool view) */
+    /* Full-screen tool view: ensure it fully covers and sits above grid */
 #panel{
-  position:fixed; inset:0; 
-  background:var(--bg);      /* match page theme, no translucent overlay */
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;              /* <- ensure on top */
 }
-#panel[hidden]{display:none}
+#panel[hidden]{ display: none }
 #panel-card{
-  position:relative;
-  width:100vw; height:100vh; /* full screen */
-  max-width:none; max-height:none;
-  overflow:auto;
-  background:var(--bg);      /* match theme */
-  border:none; border-radius:0; box-shadow:none;
+  position: relative;
+  width: 100vw;
+  height: 100dvh;             /* <- iOS-safe full viewport height */
+  max-width: none; max-height: none;
+  overflow: auto;
+  background: var(--bg);
+  border: 0; border-radius: 0; box-shadow: none;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
 }
-.panel-head{
-  position:sticky; top:0; z-index:2;
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:10px 12px; display:flex; align-items:center; gap:10px
-}
-.backbtn{all:unset; cursor:pointer; padding:8px 12px; border-radius:10px;
-  background:var(--surface-2); border:1px solid var(--border); font-weight:700}
-.panel-title{margin:0; font-size:16px; font-weight:800}
-#panel-body{padding:12px}
+body.panel-open{ overflow: hidden; }   /* already added earlier */
 
-    body.panel-open { overflow: hidden; }
 
     /* Bigger base text inside full-screen tool */
 #panel-card { font-size: 17px; }         /* base text size for all tools */
@@ -337,7 +331,7 @@ function closePanel(){
     // ---------- VERSION ----------
     async function runAction(actionId, params = {}){
       try{
-      const ver = 'v3.4';
+      const ver = 'v3.5';
 const mod = await import(`./tools/${actionId}.js?${ver}`);
         const mountEl = document.getElementById("panel-body");
         mountEl.innerHTML = "";
