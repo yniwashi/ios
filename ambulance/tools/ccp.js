@@ -11,10 +11,10 @@ export async function run(root){
 
             '<div style="display:flex;gap:14px;flex-wrap:wrap">' +
               '<label style="display:flex;align-items:center;gap:8px">' +
-                '<input type="radio" name="mode" value="months" checked> <span>Months (0-12)</span>' +
+                '<input type="radio" name="mode" value="months" checked> <span>Months</span>' +
               '</label>' +
               '<label style="display:flex;align-items:center;gap:8px">' +
-                '<input type="radio" name="mode" value="years"> <span>Years (1-14)</span>' +
+                '<input type="radio" name="mode" value="years"> <span>Years</span>' +
               '</label>' +
               '<label style="display:flex;align-items:center;gap:8px">' +
                 '<input type="radio" name="mode" value="weight"> <span>Weight (kg)</span>' +
