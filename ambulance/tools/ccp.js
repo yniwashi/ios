@@ -81,27 +81,29 @@ export async function run(root){
   const weightRow = root.querySelector("#weightRow");
   const ageRow = root.querySelector("#ageRow");
 
-  // Switch between Age/Weight modes
-  form.mode.forEach(r => r.addEventListener("change", ()=>{
-    const useAge = form.mode.value === "age";
-    ageRow.style.display = useAge ? "grid" : "none";
-    weightRow.style.display = useAge ? "none" : "grid";
-  }));
+  // SAFARI-SAFE: add listeners to the radio buttons via querySelectorAll
+  root.querySelectorAll('input[name="mode"]').forEach(radio=>{
+    radio.addEventListener("change", ()=>{
+      const useAge = (form.elements.namedItem("mode").value === "age");
+      ageRow.style.display = useAge ? "grid" : "none";
+      weightRow.style.display = useAge ? "none" : "grid";
+    });
+  });
 
-  // Placeholder Broselow-like simple estimate (DEMO ONLY)
+  // Estimate weight (demo)
   estBtn.addEventListener("click", ()=>{
-    const ageVal = Number(form.ageVal.value || 0);
-    const unit = form.ageUnit.value;
+    const ageVal = Number(form.elements.namedItem("ageVal").value || 0);
+    const unit   = String(form.elements.namedItem("ageUnit").value || "years");
     let years = unit === "months" ? ageVal/12 : ageVal;
     years = Math.max(0, years);
-    // very rough toy model: 3.5 kg @ birth → +2.5 kg/yr up to 10, then +3 kg/yr
     let w = (years<=0.5) ? 6
         : (years<=10 ? 3.5 + 2.5*years
                      : 3.5 + 2.5*10 + 3*(years-10));
     w = Math.round(w*10)/10;
-    form.weight.value = String(w);
-    // Flip to weight mode automatically
-    form.mode.value = "weight";
+    form.elements.namedItem("weight").value = String(w);
+
+    // flip to weight mode
+    root.querySelector('input[name="mode"][value="weight"]').checked = true;
     ageRow.style.display = "none"; weightRow.style.display = "grid";
   });
 
@@ -112,12 +114,11 @@ export async function run(root){
     const route = String(fd.get("route"));
     const med   = String(fd.get("med"));
 
-    // Weight resolution
+    // weight resolution
     let weightKg = 0;
     if (mode === "weight"){
       weightKg = Number(fd.get("weight") || 0);
     } else {
-      // If user didn't hit "Estimate Weight" button, estimate now as safety net
       const ageVal = Number(fd.get("ageVal") || 0);
       const unit   = String(fd.get("ageUnit") || "years");
       let years = unit === "months" ? ageVal/12 : ageVal;
@@ -125,17 +126,15 @@ export async function run(root){
       weightKg = Math.max(0, Math.round(w*10)/10);
     }
 
-    // -------------------------------
-    // PLACEHOLDER DOSING (replace with your Kotlin logic)
+    // ---- PLACEHOLDER DOSING (replace with your Kotlin) ----
     const MEDS = {
-      adenosine:  { label:"Adenosine",   dMgPerKg:0.1,  maxMg:6,  note:"1st dose (IV push rapid). 2nd dose often 0.2 mg/kg; adjust per protocol." },
+      adenosine:  { label:"Adenosine",   dMgPerKg:0.1,  maxMg:6,  note:"1st dose IV push rapid. 2nd often 0.2 mg/kg." },
       amiodarone:{ label:"Amiodarone",  dMgPerKg:5,    maxMg:300, note:"Over 20–60 min per local protocol." },
-      ketamine:   { label:"Ketamine",    dMgPerKg:1,    maxMg:100, note:"IV 1 mg/kg (analgesia/sedation) — demo only." },
-      midazolam:  { label:"Midazolam",   dMgPerKg:0.1,  maxMg:10,  note:"0.1 mg/kg IV/IO (max 10 mg) — demo only." }
+      ketamine:   { label:"Ketamine",    dMgPerKg:1,    maxMg:100, note:"Demo dose only." },
+      midazolam:  { label:"Midazolam",   dMgPerKg:0.1,  maxMg:10,  note:"Demo dose only." }
     };
     const cfg = MEDS[med];
 
-    // Compute
     const doseMg = Math.min(cfg.maxMg, Math.round(cfg.dMgPerKg * weightKg * 10)/10);
     const volMl  = Math.round((doseMg / 5) * 100)/100; // assume 5 mg/mL for demo
 
@@ -151,13 +150,13 @@ export async function run(root){
       </div>
     `;
 
-    // deep-link core state
+    // deep-link
     const p = new URLSearchParams(location.hash.replace(/^#/, ""));
     p.set("tool","ccp"); p.set("med",med); p.set("route",route); p.set("w",String(weightKg));
     history.replaceState(null,"",`#${p.toString()}`);
   });
 
-  // prefill from deep-link
+  // prefill deep-link
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
   if (h.get("med"))   root.querySelector('[name="med"]').value = h.get("med");
   if (h.get("route")) root.querySelector('[name="route"]').value = h.get("route");
