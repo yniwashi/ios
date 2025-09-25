@@ -1,6 +1,6 @@
 // /tools/apgar.js
-// APGAR with horizontal "chips" per category — pink theme, adjustable tokens,
-// compact sections with separators, and a clear total out of 10.
+// APGAR with chip UI (pink), Kotlin-equivalent scoring & output.
+// Shows only the total and status (no A/P/G/Ac/R breakdown).
 
 export async function run(root){
   root.innerHTML = "";
@@ -10,29 +10,24 @@ export async function run(root){
   // =========================
   const CSS_TOKENS = `
     :root {
-      /* Spacing */
-      --sec-gap: 18px;                 /* space between APGAR blocks */
-      --row-gap: 8px;                  /* space between chips in a row */
+      --sec-gap: 18px;
+      --row-gap: 8px;
 
-      /* Chip size + shape */
       --chip-pad-y: 10px;
       --chip-pad-x: 12px;
       --chip-font: 14px;
-      --chip-radius: 999px;            /* 8px for less round */
-
-      /* Number in chip "(2)" */
+      --chip-radius: 999px;
       --chip-num-size: 16px;
 
-      /* Score card sizes */
-      --score-pad-y: 8px;
-      --score-pad-x: 12px;
-      --score-min-h: 40px;
-      --score-val: 18px;               /* "Total 8 / 10" size */
-      --score-sum: 13px;               /* details line size */
+      --score-pad-y: 10px;
+      --score-pad-x: 14px;
+      --score-min-h: 44px;
+      --score-val: 18px;        /* "APGAR Score is 8" */
+      --score-sum: 13px;        /* "Baby's Status" line */
 
-      /* Selected chip colors (PINK) */
-      --chip-sel-start: #ff6ea9;       /* start */
-      --chip-sel-end:   #e34e8a;       /* end */
+      /* Selected chip = PINK */
+      --chip-sel-start: #ff6ea9;
+      --chip-sel-end:   #e34e8a;
       --chip-sel-text:  #ffffff;
 
       /* Unselected chip */
@@ -47,7 +42,7 @@ export async function run(root){
       --score-warn-end:   #c67b06;
       --score-bad-start:  #ef4444;
       --score-bad-end:    #c03030;
-      --score-neutral-s:  #ff6ea9;     /* pinky neutral backdrop */
+      --score-neutral-s:  #ff6ea9; /* pink neutral */
       --score-neutral-e:  #e34e8a;
     }
   `;
@@ -59,20 +54,20 @@ export async function run(root){
   .apg-wrap{padding:12px 12px 16px;max-width:760px;margin:0 auto;-webkit-text-size-adjust:100%}
   .apg-title{margin:0 0 8px;font-size:18px;text-align:center;font-weight:900;letter-spacing:.2px}
 
-  /* Score card (full background color) */
+  /* Score card */
   .apg-score{
     border-radius:12px;
     padding:var(--score-pad-y) var(--score-pad-x);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
     color:#fff; min-height:var(--score-min-h); text-align:center;
-    background:linear-gradient(180deg,var(--score-neutral-s),var(--score-neutral-e)); /* pink-neutral until classified */
+    background:linear-gradient(180deg,var(--score-neutral-s),var(--score-neutral-e));
   }
   .apg-score.ok   { background:linear-gradient(180deg,var(--score-ok-start),var(--score-ok-end)) }
   .apg-score.warn { background:linear-gradient(180deg,var(--score-warn-start),var(--score-warn-end)) }
   .apg-score.bad  { background:linear-gradient(180deg,var(--score-bad-start),var(--score-bad-end)) }
 
   .apg-score .val{font-size:var(--score-val);font-weight:900}
-  .apg-score .sum{font-size:var(--score-sum);font-weight:700;opacity:.95}
+  .apg-score .sum{font-size:var(--score-sum);font-weight:800;opacity:.98}
 
   /* Section header + spacing + separator */
   .apg-sec{
@@ -83,40 +78,28 @@ export async function run(root){
   .apg-sec:first-of-type{ margin-top: 12px }
   .apg-sec:last-of-type{ border-bottom: none }
   .apg-sec .hd{
-    font-size:16px;                    /* make titles bigger if you like */
-    font-weight:900;
-    color:var(--muted);
-    margin:0 0 8px 4px;
-    letter-spacing:.2px;
+    font-size:16px; font-weight:900; color:var(--muted);
+    margin:0 0 8px 4px; letter-spacing:.2px;
   }
 
-  /* Chip row */
-  .chip-row{
-    display:flex; flex-wrap:wrap; gap:var(--row-gap); align-items:stretch;
-  }
-
-  /* Chip (label around a hidden radio) */
+  /* Chips */
+  .chip-row{ display:flex; flex-wrap:wrap; gap:var(--row-gap); align-items:stretch }
   .chip{
     position:relative; display:inline-flex; align-items:center; gap:8px;
     padding:var(--chip-pad-y) var(--chip-pad-x);
-    border:1px solid var(--chip-border);
-    border-radius:var(--chip-radius);
-    background:var(--chip-bg);
-    color:var(--chip-text);
+    border:1px solid var(--chip-border); border-radius:var(--chip-radius);
+    background:var(--chip-bg); color:var(--chip-text);
     cursor:pointer; line-height:1.1; font-weight:800; font-size:var(--chip-font);
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
     min-height: calc(var(--chip-pad-y)*2 + 20px);
   }
   .chip:active{ transform: translateY(1px) scale(.99) }
-
   .chip input{ position:absolute; opacity:0; pointer-events:none }
-
   .chip .kv{ display:inline-flex; align-items:baseline; gap:8px; min-width:0 }
   .chip .n{ font-size:var(--chip-num-size); font-weight:900; flex:none }
   .chip .t{ white-space:nowrap }
   @media (max-width:400px){ .chip .t{ white-space:normal } }
 
-  /* Selected state (pink) */
   .chip.selected{
     background:linear-gradient(180deg,var(--chip-sel-start),var(--chip-sel-end));
     border-color: var(--chip-sel-end);
@@ -132,8 +115,9 @@ export async function run(root){
       <h2 class="apg-title">APGAR Score</h2>
 
       <div id="scoreCard" class="apg-score">
-        <div class="val" id="scoreVal">Total — / 10</div>
-        <div class="sum" id="scoreSum"></div>
+        <div class="val" id="scoreVal">APGAR Score is —</div>
+        <div class="sum" id="scoreSum">Baby's Status</div>
+        <div class="sum" id="statusLine"></div>
       </div>
 
       <section class="apg-sec" aria-labelledby="hd-appearance">
@@ -163,30 +147,30 @@ export async function run(root){
     </div>
   `);
 
-  // ---------- Options ----------
-  // Each is [score, label]
+  // ---------- Options (Kotlin-equivalent, compact wording) ----------
+  // We map exactly as your Kotlin when/else, with minor rephrasing for brevity.
   const Appearance = [
-    [0, "Blue/pale all over"],
-    [1, "Pink body, blue extremities"],
+    [0, "Cyanotic/pale all over"],      // "Cyanotic or Pale all over"
+    [1, "Pink body, blue limbs"],       // "Peripheral cyanosis only"
     [2, "Completely pink"]
   ];
   const Pulse = [
-    [0, "Absent"],
-    [1, "< 100 bpm"],
+    [0, "0"],                           // "0"
+    [1, "< 100 bpm"],                   // "Less than 100"
     [2, "≥ 100 bpm"]
   ];
   const Grimace = [
-    [0, "No response"],
-    [1, "Grimace/feeble response"],
-    [2, "Cough/sneeze/pull away"]
+    [0, "No response to stimulus"],     // "No response to stimulation"
+    [1, "Grimace / weak cry"],          // "Grimace (facial movement) or Weak cry when stimulated"
+    [2, "Strong cry / withdraws"]       // Kotlin's "else"
   ];
   const Activity = [
-    [0, "Limp"],
+    [0, "Floppy"],
     [1, "Some flexion"],
     [2, "Active motion"]
   ];
   const Respiration = [
-    [0, "Absent"],
+    [0, "Apnoeic"],
     [1, "Slow/irregular"],
     [2, "Good, crying"]
   ];
@@ -213,26 +197,28 @@ export async function run(root){
   renderRow("#rowAc", "ac", Activity);
   renderRow("#rowR",  "r",  Respiration);
 
-  // ---------- State & scoring ----------
-  const scoreCard = root.querySelector("#scoreCard");
-  const scoreVal  = root.querySelector("#scoreVal");
-  const scoreSum  = root.querySelector("#scoreSum");
+  // ---------- Scoring ----------
+  const scoreCard  = root.querySelector("#scoreCard");
+  const scoreVal   = root.querySelector("#scoreVal");
+  const scoreSum   = root.querySelector("#scoreSum");
+  const statusLine = root.querySelector("#statusLine");
 
   function getSel(name){
     const el = root.querySelector(`input[name="${name}"]:checked`);
     return el ? Number(el.value) : null;
   }
   function classify(total){
-    // Common cutoffs: 7–10 OK, 4–6 intermediate, 0–3 low
     scoreCard.classList.remove("ok","warn","bad");
-    if (total == null){ return; }
-    if      (total <= 3) scoreCard.classList.add("bad");
+    if (total == null) return;
+    // Kotlin mapping:
+    // <=3 "Severely Depressed", 4..6 "Moderately Depressed", else "Normal"
+    if (total <= 3) scoreCard.classList.add("bad");
     else if (total <= 6) scoreCard.classList.add("warn");
-    else                 scoreCard.classList.add("ok");
+    else scoreCard.classList.add("ok");
   }
   function syncSelectedClass(){
     ["a","p","g","ac","r"].forEach(name=>{
-      root.querySelectorAll(`input[name="${name}"]`).forEach(inp=>{
+      root.querySelectorAll(`input[name='${name}']`).forEach(inp=>{
         const chip = inp.closest(".chip");
         if (chip) chip.classList.toggle("selected", !!inp.checked);
       });
@@ -245,17 +231,23 @@ export async function run(root){
     const g  = getSel("g");
     const ac = getSel("ac");
     const r  = getSel("r");
-    const partsOk = [a,p,g,ac,r].every(v => v !== null);
 
-    if (partsOk){
+    const ready = [a,p,g,ac,r].every(v => v !== null);
+    if (ready){
       const total = a+p+g+ac+r;
-      scoreVal.textContent = `Total ${total} / 10`;
-      scoreSum.textContent = `(A ${a}, P ${p}, G ${g}, Ac ${ac}, R ${r})`;
+      scoreVal.textContent = `APGAR Score is ${total}`;
+      scoreSum.textContent = `Baby's Status`;
+      statusLine.textContent = (total <= 3)
+        ? "Severely Depressed"
+        : (total <= 6)
+          ? "Moderately Depressed"
+          : "Normal";
       classify(total);
     } else {
-      scoreVal.textContent = `Total — / 10`;
-      scoreSum.textContent = ``;
-      // leave pink-neutral background until classified
+      scoreVal.textContent = `APGAR Score is —`;
+      scoreSum.textContent = `Baby's Status`;
+      statusLine.textContent = ``;
+      // keep pink-neutral bg
     }
 
     if (pushHash){
