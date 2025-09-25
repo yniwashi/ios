@@ -3,53 +3,58 @@
 export async function run(root){
   const style = document.createElement("style");
   style.textContent = `
-   .gcs-wrap { padding:10px 12px; max-width:720px; margin:0 auto; }
-.gcs-title { margin:0; font-size:18px; text-align:center; font-weight:900; letter-spacing:.2px }
+  .gcs-wrap { padding:8px 10px; max-width:720px; margin:0 auto; }
+.gcs-title { margin:0; font-size:17px; text-align:center; font-weight:900; letter-spacing:.2px }
 
-/* Score card: full background color */
+/* Score card */
 .gcs-score {
-  margin-top:8px; border-radius:12px; padding:8px 10px;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  color:#fff; min-height:44px; text-align:center;
+  margin-top:6px; border-radius:10px; padding:8px 10px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  color:#fff; min-height:40px; text-align:center;
 }
-.gcs-score .val { font-size:16px; font-weight:900; letter-spacing:.2px }
-.gcs-score .sum { font-size:12px; font-weight:700; opacity:.9 }
+.gcs-score .val { font-size:15px; font-weight:900; letter-spacing:.2px }
+.gcs-score .sum { font-size:11px; font-weight:700; opacity:.9 }
 .gcs-score.ok     { background:linear-gradient(180deg,#16a34a,#0e7a34) }
 .gcs-score.warn   { background:linear-gradient(180deg,#f59e0b,#c67b06) }
 .gcs-score.bad    { background:linear-gradient(180deg,#ef4444,#c03030) }
 .gcs-score.neutral{ background:linear-gradient(180deg,#64748b,#475569) }
 
-.gcs-group { margin-top:8px; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--surface) }
+/* Groups */
+.gcs-group { margin-top:6px; border:1px solid var(--border); border-radius:8px; padding:6px; background:var(--surface) }
 .gcs-group legend { padding:0 6px; font-weight:800; font-size:12px; color:var(--muted) }
 
 /* Vertical list */
-.gcs-list { margin:6px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px }
+.gcs-list { margin:4px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px }
 
-/* Ultra-compact line-style radio item */
-.line {
-  position:relative; display:flex; align-items:flex-start; gap:8px;
-  padding:8px 10px; border:1px solid var(--border); border-radius:10px;
-  background:var(--surface-2); cursor:pointer; min-height:38px;
+/* >>> Ultra-compact radio line <<< */
+.line{
+  position:relative; display:flex; align-items:flex-start; gap:6px;
+  padding:6px 8px; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface-2); cursor:pointer; min-height:34px; /* real height cut */
 }
 .line input[type="radio"]{ position:absolute; opacity:0; pointer-events:none }
-.dot { width:14px; height:14px; border-radius:50%; border:2px solid #2b3140; flex:none; margin-top:2px; background:transparent }
+.dot{ width:12px; height:12px; border-radius:50%; border:2px solid #2b3140; flex:none; margin-top:2px; background:transparent }
 
-.txt { display:flex; gap:6px; align-items:baseline; flex-wrap:wrap; line-height:1.2; flex:1; min-width:0 }
-.num { font-weight:900; font-size:13px; flex:none }
+.txt{ display:flex; gap:6px; align-items:baseline; flex-wrap:wrap; line-height:1.15; flex:1; min-width:0 }
+.num{ font-weight:900; font-size:12.5px; flex:none }
 .desc{
   font-weight:700; font-size:12.5px; opacity:.95;
-  word-wrap:break-word; overflow-wrap:break-word; white-space:normal;
+  word-break:break-word; overflow-wrap:break-word; white-space:normal;
 }
 
-/* Selected state */
-.line.selected { border-color:#169e97; background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff }
-.line.selected .dot { border-color:rgba(255,255,255,.9); background:#fff }
+/* Selected */
+.line.selected{ border-color:#169e97; background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff }
+.line.selected .dot{ border-color:rgba(255,255,255,.9); background:#fff }
 
-/* Very small devices */
-@media (max-width: 360px){
+/* Tightest on very small screens */
+@media (max-width:360px){
   .desc{ font-size:12px }
-  .line{ padding:7px 9px; min-height:36px }
+  .line{ padding:5px 7px; min-height:32px }
 }
+
+/* Prevent iOS auto text inflation that can blow up row height */
+.gcs-wrap { -webkit-text-size-adjust: 100% }
+
 
   `;
   root.innerHTML = `
