@@ -1,55 +1,78 @@
 // /tools/gcs.js
 export async function run(root){
   root.innerHTML = `
-    <form id="gcs" style="padding:8px 4px 14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <label>Eye (E)
-          <select name="e" required class="gcs-sel">
-            <option value="4">4 — Spontaneous</option>
-            <option value="3">3 — To speech</option>
-            <option value="2">2 — To pain</option>
-            <option value="1">1 — None</option>
-          </select>
-        </label>
-        <label>Verbal (V)
-          <select name="v" required class="gcs-sel">
-            <option value="5">5 — Oriented</option>
-            <option value="4">4 — Confused</option>
-            <option value="3">3 — Inappropriate</option>
-            <option value="2">2 — Incomprehensible</option>
-            <option value="1">1 — None</option>
-          </select>
-        </label>
-        <label>Motor (M)
-          <select name="m" required class="gcs-sel">
-            <option value="6">6 — Obeys</option>
-            <option value="5">5 — Localizes</option>
-            <option value="4">4 — Withdraws</option>
-            <option value="3">3 — Flexion</option>
-            <option value="2">2 — Extension</option>
-            <option value="1">1 — None</option>
-          </select>
-        </label>
-      </div>
+    <div style="padding:16px;max-width:600px;margin:0 auto;">
+      <form id="gcs">
+        <h2 style="margin-top:0;font-size:22px;text-align:center;font-weight:800">Glasgow Coma Scale</h2>
 
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <button type="submit" class="gcs-btn gcs-primary">Compute</button>
-        <button type="button" id="reset" class="gcs-btn gcs-muted">Reset</button>
-      </div>
-    </form>
+        <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-top:20px">
+          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+            Eye (E)
+            <select name="e" required class="gcs-sel">
+              <option value="4">4 — Spontaneous</option>
+              <option value="3">3 — To speech</option>
+              <option value="2">2 — To pain</option>
+              <option value="1">1 — None</option>
+            </select>
+          </label>
 
-    <div id="out" style="padding:4px 4px 10px"></div>
+          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+            Verbal (V)
+            <select name="v" required class="gcs-sel">
+              <option value="5">5 — Oriented</option>
+              <option value="4">4 — Confused</option>
+              <option value="3">3 — Inappropriate</option>
+              <option value="2">2 — Incomprehensible</option>
+              <option value="1">1 — None</option>
+            </select>
+          </label>
+
+          <label style="display:flex;flex-direction:column;font-size:16px;font-weight:600">
+            Motor (M)
+            <select name="m" required class="gcs-sel">
+              <option value="6">6 — Obeys</option>
+              <option value="5">5 — Localizes</option>
+              <option value="4">4 — Withdraws</option>
+              <option value="3">3 — Flexion</option>
+              <option value="2">2 — Extension</option>
+              <option value="1">1 — None</option>
+            </select>
+          </label>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+          <button type="submit" class="gcs-btn gcs-primary">Compute</button>
+          <button type="button" id="reset" class="gcs-btn gcs-muted">Reset</button>
+        </div>
+      </form>
+
+      <div id="out" style="margin-top:24px"></div>
+    </div>
   `;
 
-  // Mobile-friendly controls
-  const selCss = "margin-top:6px;padding:12px;border-radius:10px;border:1px solid #2b3140;background:transparent;color:inherit;width:100%";
-  root.querySelectorAll(".gcs-sel").forEach(sel=>sel.style.cssText = selCss);
+  const selCss = `
+    margin-top:8px;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #2b3140;
+    background:transparent;
+    color:inherit;
+    font-size:18px;
+    width:100%;
+  `;
+  root.querySelectorAll(".gcs-sel").forEach(sel=>sel.style.cssText=selCss);
 
-  const btnBase = "padding:12px 16px;border-radius:12px;border:1px solid #2b3140;color:#fff;font-weight:800;letter-spacing:.2px";
-  const primary = "background:linear-gradient(180deg,#22c1b9,#169e97)";
-  const muted   = "background:linear-gradient(180deg,#64748b,#475569)";
-  root.querySelector(".gcs-btn.gcs-primary").style.cssText = `${btnBase};${primary}`;
-  root.querySelector(".gcs-btn.gcs-muted").style.cssText   = `${btnBase};${muted}`;
+  const btnBase = `
+    padding:14px 20px;
+    border-radius:14px;
+    border:1px solid #2b3140;
+    color:#fff;
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:.3px;
+  `;
+  root.querySelector(".gcs-btn.gcs-primary").style.cssText = btnBase + "background:linear-gradient(180deg,#22c1b9,#169e97)";
+  root.querySelector(".gcs-btn.gcs-muted").style.cssText   = btnBase + "background:linear-gradient(180deg,#64748b,#475569)";
 
   const form = root.querySelector("#gcs");
   const out  = root.querySelector("#out");
@@ -62,9 +85,9 @@ export async function run(root){
     const score = eVal + vVal + mVal;
 
     out.innerHTML = `
-      <div style="border:1px solid #2b3140;border-radius:14px;padding:14px">
-        <div style="font-weight:900;margin-bottom:6px;font-size:18px">GCS = ${score}</div>
-        <div style="opacity:.85">E:${eVal} &nbsp; V:${vVal} &nbsp; M:${mVal}</div>
+      <div style="border:1px solid #2b3140;border-radius:16px;padding:20px;text-align:center">
+        <div style="font-size:32px;font-weight:900;margin-bottom:8px">GCS = ${score}</div>
+        <div style="font-size:18px;opacity:.85">Eye ${eVal} + Verbal ${vVal} + Motor ${mVal}</div>
       </div>
     `;
 
@@ -80,7 +103,6 @@ export async function run(root){
     history.replaceState(null,"",`#${p.toString()}`);
   });
 
-  // Deep-link prefill
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
   ["e","v","m"].forEach(k=>{
     if (h.get(k)) root.querySelector(`[name="${k}"]`).value = h.get(k);
