@@ -68,10 +68,24 @@ export async function run(root){
   .gcs-score .val{font-size:var(--score-val);font-weight:900}
   .gcs-score .sum{font-size:var(--score-sum);font-weight:700;opacity:.95}
 
-  /* Section header + spacing */
-  .gcs-sec{ margin-top: var(--sec-gap) }
-  .gcs-sec:first-of-type{ margin-top: 12px }
-  .gcs-sec .hd{font-size:16px;font-weight:800;color:var(--muted);margin:0 0 8px 4px}
+ /* Section header + spacing + separator */
+.gcs-sec {
+  margin-top: var(--sec-gap);
+  padding-bottom: 12px;               /* space below each section */
+  border-bottom: 1px solid var(--border);
+}
+.gcs-sec:first-of-type {
+  margin-top: 12px;
+}
+.gcs-sec:last-of-type {
+  border-bottom: none;                /* no line after the last section */
+}
+.gcs-sec .hd {
+  font-size:16px;
+  font-weight:800;
+  color:var(--muted);
+  margin:0 0 8px 4px;
+}
 
   /* Chip row */
   .chip-row{
