@@ -37,7 +37,12 @@
 
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .brand{display:flex; align-items:center; gap:10px}
-    .logo{width:26px; height:26px; border-radius:8px; background:linear-gradient(150deg,var(--accent),#8854d0); box-shadow:var(--shadow)}
+.logo {
+  width: 28px;         /* adjust size */
+  height: 28px;
+  object-fit: contain; /* keeps correct proportions */
+  border-radius: 6px;  /* optional if you want rounded corners */
+}
     .title{margin:0; font-size:clamp(18px,3.8vw,22px); letter-spacing:.2px}
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
@@ -146,10 +151,10 @@ body.panel-open .wrap{
   <div class="wrap">
     <!-- Topbar -->
     <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <h1 class="title">Ambulance</h1>
-      </div>
+<div class="brand">
+  <img class="logo" src="images/logo.png" alt="Ambulance Logo">
+  <h1 class="title">Ambulance</h1>
+</div>
       <div class="theme-toggle">
         <span style="font-weight:600">Theme</span>
         <select id="themeSelect" aria-label="Theme">
