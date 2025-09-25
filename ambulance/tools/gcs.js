@@ -28,9 +28,9 @@ export async function run(root){
 
 /* >>> Ultra-compact radio line <<< */
 .line{
-  position:relative; display:flex; align-items:flex-start; gap:4px;
-  padding:4px 8px; border:1px solid var(--border); border-radius:8px;
-  background:var(--surface-2); cursor:pointer; min-height:28px; /* real height cut */
+  position:relative; display:flex; align-items:flex-start; gap:2px;
+  padding:3px 5px; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface-2); cursor:pointer; min-height:20px; /* real height cut */
 }
 .line input[type="radio"]{ position:absolute; opacity:0; pointer-events:none }
 .dot{ width:12px; height:12px; border-radius:50%; border:2px solid #2b3140; flex:none; margin-top:2px; background:transparent }
