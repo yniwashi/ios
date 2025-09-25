@@ -3,47 +3,54 @@
 export async function run(root){
   const style = document.createElement("style");
   style.textContent = `
-    .gcs-wrap { padding:12px; max-width:720px; margin:0 auto; }
-    .gcs-title { margin:0; font-size:18px; text-align:center; font-weight:900; letter-spacing:.2px }
+   .gcs-wrap { padding:10px 12px; max-width:720px; margin:0 auto; }
+.gcs-title { margin:0; font-size:18px; text-align:center; font-weight:900; letter-spacing:.2px }
 
-    /* Full background color on the score card */
-    .gcs-score {
-      margin-top:10px; border-radius:14px; padding:10px 12px;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      color:#fff; min-height:52px; text-align:center;
-    }
-    .gcs-score .val { font-size:18px; font-weight:900; letter-spacing:.2px }
-    .gcs-score .sum { font-size:12px; font-weight:700; opacity:.9 }
-    .gcs-score.ok     { background:linear-gradient(180deg,#16a34a,#0e7a34) }
-    .gcs-score.warn   { background:linear-gradient(180deg,#f59e0b,#c67b06) }
-    .gcs-score.bad    { background:linear-gradient(180deg,#ef4444,#c03030) }
-    .gcs-score.neutral{ background:linear-gradient(180deg,#64748b,#475569) }
+/* Score card: full background color */
+.gcs-score {
+  margin-top:8px; border-radius:12px; padding:8px 10px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  color:#fff; min-height:44px; text-align:center;
+}
+.gcs-score .val { font-size:16px; font-weight:900; letter-spacing:.2px }
+.gcs-score .sum { font-size:12px; font-weight:700; opacity:.9 }
+.gcs-score.ok     { background:linear-gradient(180deg,#16a34a,#0e7a34) }
+.gcs-score.warn   { background:linear-gradient(180deg,#f59e0b,#c67b06) }
+.gcs-score.bad    { background:linear-gradient(180deg,#ef4444,#c03030) }
+.gcs-score.neutral{ background:linear-gradient(180deg,#64748b,#475569) }
 
-    .gcs-group { margin-top:10px; border:1px solid var(--border); border-radius:12px; padding:8px; background:var(--surface); }
-    .gcs-group legend { padding:0 6px; font-weight:800; font-size:13px; color:var(--muted) }
+.gcs-group { margin-top:8px; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--surface) }
+.gcs-group legend { padding:0 6px; font-weight:800; font-size:12px; color:var(--muted) }
 
-    /* Vertical list */
-    .gcs-list { margin:6px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; }
+/* Vertical list */
+.gcs-list { margin:6px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px }
 
-    /* Line-style radio item */
-    .line { position:relative; display:flex; align-items:center; gap:10px;
-            padding:10px 10px; border:1px solid var(--border); border-radius:10px;
-            background:var(--surface-2); cursor:pointer; min-height:44px; }
-    .line input[type="radio"]{ position:absolute; opacity:0; pointer-events:none; }
-    .dot { width:18px; height:18px; border-radius:50%; border:2px solid #2b3140; flex:none; background:transparent; }
-    .txt { display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; line-height:1.2; }
-    .num { font-weight:900; font-size:14px; }
-    .desc{ font-weight:700; font-size:13px; opacity:.95; word-break:break-word; }
+/* Ultra-compact line-style radio item */
+.line {
+  position:relative; display:flex; align-items:flex-start; gap:8px;
+  padding:8px 10px; border:1px solid var(--border); border-radius:10px;
+  background:var(--surface-2); cursor:pointer; min-height:38px;
+}
+.line input[type="radio"]{ position:absolute; opacity:0; pointer-events:none }
+.dot { width:14px; height:14px; border-radius:50%; border:2px solid #2b3140; flex:none; margin-top:2px; background:transparent }
 
-    /* Selected line */
-    .line.selected { border-color:#169e97; background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff; }
-    .line.selected .dot { border-color:rgba(255,255,255,.9); background:#fff; }
+.txt { display:flex; gap:6px; align-items:baseline; flex-wrap:wrap; line-height:1.2; flex:1; min-width:0 }
+.num { font-weight:900; font-size:13px; flex:none }
+.desc{
+  font-weight:700; font-size:12.5px; opacity:.95;
+  word-wrap:break-word; overflow-wrap:break-word; white-space:normal;
+}
 
-    /* Make it a bit tighter on very small screens */
-    @media (max-width: 360px){
-      .desc{ font-size:12px }
-      .line{ padding:8px 10px; min-height:42px }
-    }
+/* Selected state */
+.line.selected { border-color:#169e97; background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff }
+.line.selected .dot { border-color:rgba(255,255,255,.9); background:#fff }
+
+/* Very small devices */
+@media (max-width: 360px){
+  .desc{ font-size:12px }
+  .line{ padding:7px 9px; min-height:36px }
+}
+
   `;
   root.innerHTML = `
     <div class="gcs-wrap">
