@@ -1,54 +1,48 @@
 // /tools/gcs.js
-// Compact GCS with radio "pills", instant scoring, no footer buttons.
-// Full card background color changes based on severity. Text fits within each pill.
+// GCS — vertical radio lists, compact lines, instant scoring, full-card color.
 export async function run(root){
-  // Scoped styles
   const style = document.createElement("style");
   style.textContent = `
-    .gcs-wrap { padding:14px; max-width:720px; margin:0 auto; }
-    .gcs-title { margin:0; font-size:20px; text-align:center; font-weight:900; letter-spacing:.2px }
+    .gcs-wrap { padding:12px; max-width:720px; margin:0 auto; }
+    .gcs-title { margin:0; font-size:18px; text-align:center; font-weight:900; letter-spacing:.2px }
 
+    /* Full background color on the score card */
     .gcs-score {
-      margin-top:12px; border-radius:16px; padding:14px 16px;
+      margin-top:10px; border-radius:14px; padding:10px 12px;
       display:flex; align-items:center; justify-content:center; gap:10px;
-      color:#fff; /* default; overridden by bg classes */
-      min-height:64px; text-align:center;
+      color:#fff; min-height:52px; text-align:center;
     }
-    .gcs-score .val { font-size:22px; font-weight:900; letter-spacing:.3px }
-    .gcs-score .sum { font-size:13px; font-weight:700; opacity:.9 }
+    .gcs-score .val { font-size:18px; font-weight:900; letter-spacing:.2px }
+    .gcs-score .sum { font-size:12px; font-weight:700; opacity:.9 }
+    .gcs-score.ok     { background:linear-gradient(180deg,#16a34a,#0e7a34) }
+    .gcs-score.warn   { background:linear-gradient(180deg,#f59e0b,#c67b06) }
+    .gcs-score.bad    { background:linear-gradient(180deg,#ef4444,#c03030) }
+    .gcs-score.neutral{ background:linear-gradient(180deg,#64748b,#475569) }
 
-    /* full background color (not border) */
-    .gcs-score.ok   { background:linear-gradient(180deg,#16a34a,#0e7a34) }
-    .gcs-score.warn { background:linear-gradient(180deg,#f59e0b,#c67b06) }
-    .gcs-score.bad  { background:linear-gradient(180deg,#ef4444,#c03030) }
-    .gcs-score.neutral { background:linear-gradient(180deg,#64748b,#475569) }
+    .gcs-group { margin-top:10px; border:1px solid var(--border); border-radius:12px; padding:8px; background:var(--surface); }
+    .gcs-group legend { padding:0 6px; font-weight:800; font-size:13px; color:var(--muted) }
 
-    .gcs-group { margin-top:12px; border:1px solid #2b3140; border-radius:12px; padding:10px }
-    .gcs-group legend { padding:0 6px; font-weight:800; font-size:14px }
-    .gcs-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:8px; margin-top:8px }
+    /* Vertical list */
+    .gcs-list { margin:6px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; }
 
-    /* compact pill radios */
-    .chip { position:relative; display:block; user-select:none }
-    .chip input[type="radio"] { position:absolute; inset:0; opacity:0; pointer-events:none; }
-    .chip label {
-      display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-      gap:4px; padding:10px 8px; min-height:56px;
-      border-radius:12px; border:1px solid #2b3140; background:var(--surface-2);
-      color: var(--text); font-weight:800; font-size:14px; letter-spacing:.2px;
-      transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
-      cursor:pointer; line-height:1.15;
-      word-break: break-word;
-    }
-    .chip label .k { font-weight:900; font-size:16px }
-    .chip input[type="radio"]:checked + label {
-      background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff; border-color:#169e97;
-      box-shadow: 0 6px 18px rgba(0,0,0,.25);
-    }
-    .chip label:active { transform: translateY(1px) scale(.99) }
-    .chip label:focus-within { outline:2px solid color-mix(in oklab, var(--accent) 50%, transparent); outline-offset:2px }
+    /* Line-style radio item */
+    .line { position:relative; display:flex; align-items:center; gap:10px;
+            padding:10px 10px; border:1px solid var(--border); border-radius:10px;
+            background:var(--surface-2); cursor:pointer; min-height:44px; }
+    .line input[type="radio"]{ position:absolute; opacity:0; pointer-events:none; }
+    .dot { width:18px; height:18px; border-radius:50%; border:2px solid #2b3140; flex:none; background:transparent; }
+    .txt { display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; line-height:1.2; }
+    .num { font-weight:900; font-size:14px; }
+    .desc{ font-weight:700; font-size:13px; opacity:.95; word-break:break-word; }
 
-    @media (min-width: 480px){
-      .gcs-row { grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); }
+    /* Selected line */
+    .line.selected { border-color:#169e97; background:linear-gradient(180deg,#22c1b9,#169e97); color:#fff; }
+    .line.selected .dot { border-color:rgba(255,255,255,.9); background:#fff; }
+
+    /* Make it a bit tighter on very small screens */
+    @media (max-width: 360px){
+      .desc{ font-size:12px }
+      .line{ padding:8px 10px; min-height:42px }
     }
   `;
   root.innerHTML = `
@@ -62,82 +56,84 @@ export async function run(root){
 
       <fieldset class="gcs-group">
         <legend>Eye (E)</legend>
-        <div class="gcs-row" id="rowE"></div>
+        <ul id="listE" class="gcs-list"></ul>
       </fieldset>
 
       <fieldset class="gcs-group">
         <legend>Verbal (V)</legend>
-        <div class="gcs-row" id="rowV"></div>
+        <ul id="listV" class="gcs-list"></ul>
       </fieldset>
 
       <fieldset class="gcs-group">
         <legend>Motor (M)</legend>
-        <div class="gcs-row" id="rowM"></div>
+        <ul id="listM" class="gcs-list"></ul>
       </fieldset>
     </div>
   `;
   root.prepend(style);
 
-  // Options (number + short label)
+  // Data
   const E = [[4,"Spontaneous"],[3,"To speech"],[2,"To pain"],[1,"None"]];
   const V = [[5,"Oriented"],[4,"Confused"],[3,"Inappropriate"],[2,"Incomprehensible"],[1,"None"]];
   const M = [[6,"Obeys"],[5,"Localizes"],[4,"Withdraws"],[3,"Flexion"],[2,"Extension"],[1,"None"]];
 
-  function renderGroup(containerId, name, items){
-    const row = root.querySelector(containerId);
-    row.innerHTML = "";
-    items.forEach(([val, text]) => {
+  // Render a vertical list of radio lines
+  function renderList(ulId, name, items){
+    const ul = root.querySelector(ulId);
+    ul.innerHTML = "";
+    items.forEach(([val, text])=>{
       const id = `${name}-${val}`;
-      const wrap = document.createElement("div");
-      wrap.className = "chip";
-      // two-line layout: number line + label line (fits better)
-      wrap.innerHTML = `
-        <input type="radio" name="${name}" id="${id}" value="${val}">
-        <label for="${id}">
-          <span class="k">${val}</span>
-          <span class="t">${text}</span>
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <label class="line" for="${id}">
+          <input type="radio" id="${id}" name="${name}" value="${val}">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="txt"><span class="num">${val}</span><span class="desc">${text}</span></span>
         </label>
       `;
-      row.appendChild(wrap);
+      ul.appendChild(li);
     });
   }
-  renderGroup("#rowE","e",E);
-  renderGroup("#rowV","v",V);
-  renderGroup("#rowM","m",M);
+  renderList("#listE","e",E);
+  renderList("#listV","v",V);
+  renderList("#listM","m",M);
 
+  // Helpers
   const scoreCard = root.querySelector("#scoreCard");
   const scoreVal  = root.querySelector("#scoreVal");
   const scoreSum  = root.querySelector("#scoreSum");
 
-  function getSelected(name){
+  function getSel(name){
     const el = root.querySelector(`input[name="${name}"]:checked`);
     return el ? Number(el.value) : null;
   }
-
   function setCardClass(cls){
     scoreCard.classList.remove("ok","warn","bad","neutral");
     scoreCard.classList.add(cls);
   }
-
   function classify(total){
     if (total == null){ setCardClass("neutral"); return; }
     if (total <= 8) setCardClass("bad");
     else if (total <= 12) setCardClass("warn");
     else setCardClass("ok");
   }
-
+  function updateSelections(){
+    // Toggle selected class on the line wrappers
+    ["e","v","m"].forEach(name=>{
+      const all = root.querySelectorAll(`input[name="${name}"]`);
+      all.forEach(inp=>{
+        const line = inp.closest(".line");
+        if (!line) return;
+        if (inp.checked) line.classList.add("selected");
+        else line.classList.remove("selected");
+      });
+    });
+  }
   function updateScore(pushHash=true){
-    const e = getSelected("e");
-    const v = getSelected("v");
-    const m = getSelected("m");
+    updateSelections();
+    const e = getSel("e"), v = getSel("v"), m = getSel("m");
 
-    // Main text must say E#, V#, M#
-    const parts = [
-      `E${e!=null?e:"—"}`,
-      `V${v!=null?v:"—"}`,
-      `M${m!=null?m:"—"}`
-    ];
-    scoreVal.textContent = parts.join(", ");
+    scoreVal.textContent = `E${e!=null?e:"—"}, V${v!=null?v:"—"}, M${m!=null?m:"—"}`;
 
     const ready = e!=null && v!=null && m!=null;
     scoreSum.textContent = ready ? `(Total ${e+v+m})` : "";
@@ -154,7 +150,7 @@ export async function run(root){
     }
   }
 
-  // Wire listeners
+  // Event wiring
   root.querySelectorAll('input[name="e"],input[name="v"],input[name="m"]').forEach(inp=>{
     inp.addEventListener("change", ()=>{
       if (navigator.vibrate) { try{ navigator.vibrate(6); }catch(_){} }
