@@ -351,6 +351,30 @@ async function runAction(actionId, params = {}) {
       const { tool, ...params } = parseHash();
       if (tool) runAction(tool, params);
     });
+
+  // ===== Swipe back support =====
+let touchStartX = 0;
+let touchStartY = 0;
+const SWIPE_THRESHOLD = 60; // px horizontal distance to trigger back
+const VERTICAL_TOLERANCE = 40; // px vertical movement tolerance
+
+document.getElementById("panel-card").addEventListener("touchstart", e => {
+  if (e.touches.length !== 1) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+});
+
+document.getElementById("panel-card").addEventListener("touchend", e => {
+  if (e.changedTouches.length !== 1) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+
+  if (dx > SWIPE_THRESHOLD && dy < VERTICAL_TOLERANCE) {
+    // user swiped right
+    closePanel();
+  }
+});
+
   </script>
 </body>
 </html>
