@@ -24,14 +24,14 @@ export async function run(root){
       --chip-radius: 999px;            /* 8px for more squarish, 999px for pill */
 
       /* Number badge size (the left number inside a chip) */
-      --chip-num-size: 14px;           /* (13–16px) */
+      --chip-num-size: 18px;           /* (13–16px) */
 
       /* Score card sizes */
       --score-pad-y: 8px;
       --score-pad-x: 12px;
       --score-min-h: 40px;
-      --score-val: 15px;               /* “E4, V3, M3” font size */
-      --score-sum: 12px;               /* “(Total 10)” font size */
+      --score-val: 20px;               /* “E4, V3, M3” font size */
+      --score-sum: 20px;               /* “(Total 10)” font size */
 
       /* Selected chip colors */
       --chip-sel-start: #2f81f7;       /* start color for selected chip background */
@@ -71,7 +71,7 @@ export async function run(root){
   /* Section header + spacing */
   .gcs-sec{ margin-top: var(--sec-gap) }
   .gcs-sec:first-of-type{ margin-top: 12px }
-  .gcs-sec .hd{font-size:13px;font-weight:800;color:var(--muted);margin:0 0 8px 4px}
+  .gcs-sec .hd{font-size:18px;font-weight:900;color:var(--muted);margin:0 0 8px 4px}
 
   /* Chip row */
   .chip-row{
@@ -152,7 +152,7 @@ export async function run(root){
       el.setAttribute("for", id);
       el.innerHTML = `
         <input type="radio" id="${id}" name="${name}" value="${val}">
-        <span class="kv"><span class="n">${val}</span><span class="t">${text}</span></span>
+        <span class="kv"><span class="n">(${val})</span><span class="t">${text}</span></span>
       `;
       row.appendChild(el);
     });
