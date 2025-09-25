@@ -121,6 +121,11 @@
 #panel-body button,
 #panel-body input { font-size: 18px; }   /* controls specifically */
 html { -webkit-text-size-adjust: 100%; } /* prevent Safari odd scaling */
+    #panel-card {
+  -webkit-overflow-scrolling: touch; /* smooth native scrolling */
+  transform: translateZ(0);          /* creates a new layer; helps iOS popovers */
+}
+
 
 
   </style>
