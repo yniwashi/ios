@@ -1,57 +1,115 @@
 // /tools/gcs.js
-// GCS with compact horizontal chips per category (fast taps, tiny height, full text visible).
+// GCS with horizontal "chips" per category — bigger targets, clear selected color,
+// and adjustable spacing. Tweak the CSS variables below to fine-tune the look.
+
 export async function run(root){
   root.innerHTML = "";
 
+  // =========================
+  // 🎛 TUNABLE DESIGN TOKENS
+  // =========================
+  // Adjust these defaults right here (live development: your index.html's Date.now cache-buster will pick it up).
+  const CSS_TOKENS = `
+    :root {
+      /* Section spacing (space between Eye/Verbal/Motor blocks) */
+      --sec-gap: 18px;                 /* try 14–24px */
+
+      /* Row spacing (space between chips in a row) */
+      --row-gap: 8px;                  /* try 6–12px */
+
+      /* Chip size and shape */
+      --chip-pad-y: 10px;              /* vertical padding inside a chip (8–12px) */
+      --chip-pad-x: 12px;              /* horizontal padding (10–16px) */
+      --chip-font: 14px;               /* base font size of chip text (13–16px) */
+      --chip-radius: 999px;            /* 8px for more squarish, 999px for pill */
+
+      /* Number badge size (the left number inside a chip) */
+      --chip-num-size: 14px;           /* (13–16px) */
+
+      /* Score card sizes */
+      --score-pad-y: 8px;
+      --score-pad-x: 12px;
+      --score-min-h: 40px;
+      --score-val: 15px;               /* “E4, V3, M3” font size */
+      --score-sum: 12px;               /* “(Total 10)” font size */
+
+      /* Selected chip colors */
+      --chip-sel-start: #2f81f7;       /* start color for selected chip background */
+      --chip-sel-end:   #1f6fff;       /* end color for selected chip background */
+      --chip-sel-text:  #ffffff;       /* selected chip text color */
+
+      /* Unselected chip */
+      --chip-border: var(--border);
+      --chip-bg:     var(--surface-2);
+      --chip-text:   var(--text);
+    }
+  `;
+
   const style = document.createElement("style");
   style.textContent = `
-  .gcs-wrap{padding:8px 10px;max-width:760px;margin:0 auto;-webkit-text-size-adjust:100%}
-  .gcs-title{margin:0 0 6px;font-size:16px;text-align:center;font-weight:900;letter-spacing:.2px}
+  ${CSS_TOKENS}
 
-  /* Score card (full background) */
-  .gcs-score{border-radius:10px;padding:6px 10px;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;min-height:34px;text-align:center}
-  .gcs-score .val{font-size:14px;font-weight:900}
-  .gcs-score .sum{font-size:11px;font-weight:700;opacity:.9}
-  .gcs-score.ok{background:linear-gradient(180deg,#16a34a,#0e7a34)}
-  .gcs-score.warn{background:linear-gradient(180deg,#f59e0b,#c67b06)}
-  .gcs-score.bad{background:linear-gradient(180deg,#ef4444,#c03030)}
-  .gcs-score.neutral{background:linear-gradient(180deg,#64748b,#475569)}
+  .gcs-wrap{padding:12px 12px 16px;max-width:760px;margin:0 auto;-webkit-text-size-adjust:100%}
+  .gcs-title{margin:0 0 8px;font-size:18px;text-align:center;font-weight:900;letter-spacing:.2px}
 
-  /* Section */
-  .gcs-sec{margin-top:8px}
-  .gcs-sec .hd{font-size:12px;font-weight:800;color:var(--muted);margin:0 0 6px 4px}
+  /* Score card (full background color) */
+  .gcs-score{
+    border-radius:12px;
+    padding:var(--score-pad-y) var(--score-pad-x);
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    color:#fff; min-height:var(--score-min-h); text-align:center;
+    background:linear-gradient(180deg,#16a34a,#0e7a34); /* default -> will be replaced by state */
+  }
+  .gcs-score.neutral{ background:linear-gradient(180deg,#64748b,#475569) }
+  .gcs-score.ok     { background:linear-gradient(180deg,#16a34a,#0e7a34) }
+  .gcs-score.warn   { background:linear-gradient(180deg,#f59e0b,#c67b06) }
+  .gcs-score.bad    { background:linear-gradient(180deg,#ef4444,#c03030) }
 
-  /* Chip row — single thin line, wraps if needed */
+  .gcs-score .val{font-size:var(--score-val);font-weight:900}
+  .gcs-score .sum{font-size:var(--score-sum);font-weight:700;opacity:.95}
+
+  /* Section header + spacing */
+  .gcs-sec{ margin-top: var(--sec-gap) }
+  .gcs-sec:first-of-type{ margin-top: 12px }
+  .gcs-sec .hd{font-size:13px;font-weight:800;color:var(--muted);margin:0 0 8px 4px}
+
+  /* Chip row */
   .chip-row{
-    display:flex; flex-wrap:wrap; gap:6px;
-    align-items:stretch;
+    display:flex; flex-wrap:wrap; gap:var(--row-gap); align-items:stretch;
   }
 
-  /* Each chip is a label tied to a visually-hidden radio */
-  .chip{position:relative;display:inline-flex;align-items:center;gap:6px;
-    padding:6px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);
-    color:var(--text);cursor:pointer;line-height:1.1; font-weight:800; font-size:12.5px;
+  /* Chip (label around a hidden radio) */
+  .chip{
+    position:relative; display:inline-flex; align-items:center; gap:8px;
+    padding:var(--chip-pad-y) var(--chip-pad-x);
+    border:1px solid var(--chip-border);
+    border-radius:var(--chip-radius);
+    background:var(--chip-bg);
+    color:var(--chip-text);
+    cursor:pointer; line-height:1.1; font-weight:800; font-size:var(--chip-font);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+    min-height: calc(var(--chip-pad-y)*2 + 20px); /* keeps a nice tap area */
   }
-  .chip input{position:absolute;opacity:0;pointer-events:none}
-  .chip .kv{display:inline-flex;align-items:center;gap:6px;min-width:0}
-  .chip .n{font-weight:900;font-size:12.5px;flex:none}
-  .chip .t{white-space:nowrap}                /* keep row compact; allow wrap on very narrow screens below */
-  @media (max-width:360px){ .chip .t{white-space:normal} } /* allow wrap when space is super tight */
+  .chip:active{ transform: translateY(1px) scale(.99) }
 
+  .chip input{ position:absolute; opacity:0; pointer-events:none }
+
+  .chip .kv{ display:inline-flex; align-items:baseline; gap:8px; min-width:0 }
+  .chip .n{ font-size:var(--chip-num-size); font-weight:900; flex:none }
+  .chip .t{ white-space:nowrap }                 /* don’t wrap unless very narrow */
+  @media (max-width:400px){ .chip .t{ white-space:normal } } /* allow wrap on small screens */
+
+  /* Selected state */
   .chip.selected{
-    background:linear-gradient(180deg,#22c1b9,#169e97);
-    border-color:#169e97; color:#fff;
-    box-shadow:0 4px 12px rgba(0,0,0,.2)
+    background:linear-gradient(180deg,var(--chip-sel-start),var(--chip-sel-end));
+    border-color: var(--chip-sel-end);
+    color: var(--chip-sel-text);
+    box-shadow:0 6px 16px rgba(0,0,0,.22);
   }
-
-  /* Make the rows super thin overall */
-  .chip-row .chip{min-height:28px}
-
-  /* Reduce outer spacing so everything fits on one mobile view */
-  .gcs-wrap .gcs-sec + .gcs-sec{margin-top:6px}
   `;
   root.appendChild(style);
 
+  // Markup
   root.insertAdjacentHTML("afterbegin", `
     <div class="gcs-wrap">
       <h2 class="gcs-title">Glasgow Coma Scale</h2>
@@ -78,12 +136,12 @@ export async function run(root){
     </div>
   `);
 
-  // Options
+  // Options (number + label)
   const E = [[4,"Spontaneous"],[3,"To speech"],[2,"To pain"],[1,"None"]];
   const V = [[5,"Oriented"],[4,"Confused"],[3,"Inappropriate"],[2,"Incomprehensible"],[1,"None"]];
   const M = [[6,"Obeys"],[5,"Localizes"],[4,"Withdraws"],[3,"Flexion"],[2,"Extension"],[1,"None"]];
 
-  // Render a chip row (horizontal, compact)
+  // Render a chip row
   function renderRow(sel, name, items){
     const row = root.querySelector(sel);
     row.innerHTML = "";
@@ -103,6 +161,7 @@ export async function run(root){
   renderRow("#rowV","v",V);
   renderRow("#rowM","m",M);
 
+  // Score helpers
   const scoreCard = root.querySelector("#scoreCard");
   const scoreVal  = root.querySelector("#scoreVal");
   const scoreSum  = root.querySelector("#scoreSum");
@@ -124,10 +183,9 @@ export async function run(root){
   function syncSelectedClass(){
     ["e","v","m"].forEach(name=>{
       root.querySelectorAll(`input[name="${name}"]`).forEach(inp=>{
-        const chip = inp.parentElement?.parentElement || null; // label.chip
+        const chip = inp.closest(".chip");
         if (!chip) return;
-        if (inp.checked) chip.classList.add("selected");
-        else chip.classList.remove("selected");
+        chip.classList.toggle("selected", !!inp.checked);
       });
     });
   }
@@ -137,6 +195,7 @@ export async function run(root){
     const v = getSelected("v");
     const m = getSelected("m");
 
+    // Main readout — larger and clear
     scoreVal.textContent = `E${e!=null?e:"—"}, V${v!=null?v:"—"}, M${m!=null?m:"—"}`;
     const ready = e!=null && v!=null && m!=null;
     scoreSum.textContent = ready ? `(Total ${e+v+m})` : "";
@@ -153,14 +212,14 @@ export async function run(root){
   }
 
   // Wire events
-  root.querySelectorAll('#rowE input, #rowV input, #rowM input').forEach(inp=>{
+  root.querySelectorAll('#rowE input,#rowV input,#rowM input').forEach(inp=>{
     inp.addEventListener("change", ()=>{
-      if (navigator.vibrate) { try{ navigator.vibrate(5); }catch(_){} }
+      if (navigator.vibrate) { try{ navigator.vibrate(6); }catch(_){} }
       updateScore(true);
     });
   });
 
-  // Deep-link restore
+  // Restore from hash
   const h = new URLSearchParams((location.hash||"").replace(/^#/,""));
   [["e",E],["v",V],["m",M]].forEach(([name])=>{
     const v = h.get(name);
