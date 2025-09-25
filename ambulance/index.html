@@ -88,13 +88,33 @@
     .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
 
     /* Panel (webapp view) */
-    #panel{position:fixed; inset:0; background:rgba(0,0,0,.45); display:grid; place-items:center}
-    #panel[hidden]{display:none}
-    #panel-card{width:min(760px,94vw); max-height:88vh; overflow:auto; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.45)}
-    .panel-head{position:sticky; top:0; background:var(--surface); border-bottom:1px solid var(--border); padding:8px 10px; display:flex; align-items:center; gap:8px}
-    .backbtn{all:unset; cursor:pointer; padding:8px 10px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border); font-weight:700}
-    .panel-title{margin:0; font-size:15px; font-weight:700}
-    #panel-body{padding:10px}
+   /* Panel (full-screen tool view) */
+#panel{
+  position:fixed; inset:0; 
+  background:var(--bg);      /* match page theme, no translucent overlay */
+}
+#panel[hidden]{display:none}
+#panel-card{
+  position:relative;
+  width:100vw; height:100vh; /* full screen */
+  max-width:none; max-height:none;
+  overflow:auto;
+  background:var(--bg);      /* match theme */
+  border:none; border-radius:0; box-shadow:none;
+}
+.panel-head{
+  position:sticky; top:0; z-index:2;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:10px 12px; display:flex; align-items:center; gap:10px
+}
+.backbtn{all:unset; cursor:pointer; padding:8px 12px; border-radius:10px;
+  background:var(--surface-2); border:1px solid var(--border); font-weight:700}
+.panel-title{margin:0; font-size:16px; font-weight:800}
+#panel-body{padding:12px}
+
+    body.panel-open { overflow: hidden; }
+
   </style>
 </head>
 <body>
@@ -229,15 +249,18 @@
       return base + encodeURIComponent(payload);
     }
 
-    function openPanel(title){
-      document.getElementById("panel-title").textContent = title || "Tool";
-      document.getElementById("panel").hidden = false;
-    }
-    function closePanel(){
-      document.getElementById("panel").hidden = true;
-      document.getElementById("panel-body").innerHTML = "";
-      updateHash({});
-    }
+   function openPanel(title){
+  document.getElementById("panel-title").textContent = title || "Tool";
+  document.getElementById("panel").hidden = false;
+  document.body.classList.add("panel-open");
+}
+function closePanel(){
+  document.getElementById("panel").hidden = true;
+  document.getElementById("panel-body").innerHTML = "";
+  document.body.classList.remove("panel-open");
+  updateHash({});
+}
+
 
     document.addEventListener("DOMContentLoaded", mount);
     function mount(){
