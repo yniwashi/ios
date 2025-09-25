@@ -211,7 +211,7 @@ html { -webkit-text-size-adjust: 100%; } /* prevent Safari odd scaling */
     // Buttons (add actionId for webapp tools; if none, uses href or Shortcuts)
     const BUTTONS = [
       { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"APGAR Score",      iconType:"svg", icon:"ico-star",   color:"c-brown",  href:"#", showDefault:true, showShortcuts:true actionId:"apgar" },
+      { text:"APGAR Score",      iconType:"svg", icon:"ico-star",   color:"c-brown",  href:"#", showDefault:true, showShortcuts:true },
       { text:"AS-Call",          iconType:"svg", icon:"ico-call",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
       { text:"Calculate MAP",    iconType:"svg", icon:"ico-calc",   color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
       { text:"Care Tools",       iconType:"svg", icon:"ico-wrench", color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
@@ -337,7 +337,7 @@ function closePanel(){
     // ---------- Router / action loader ----------
     async function runAction(actionId, params = {}){
       try{
-        const ver = 'v3.2'; // bump when you change tool files
+        const ver = 'v3'; // bump when you change tool files
 const mod = await import(`./tools/${actionId}.js?${ver}`);
         const mountEl = document.getElementById("panel-body");
         mountEl.innerHTML = "";
@@ -366,4 +366,3 @@ const mod = await import(`./tools/${actionId}.js?${ver}`);
   </script>
 </body>
 </html>
-
