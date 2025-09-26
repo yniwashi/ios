@@ -8,11 +8,13 @@
   <!-- Webclip / PWA friendliness -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <!-- Theme color for light/dark (used by Safari, Android, and iOS 15+) -->
+  <!-- Theme color for light/dark -->
   <meta id="theme-color" name="theme-color" content="#0f1115" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f9fc">
   <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f1115">
 
+  <!-- Material Symbols Rounded (filled) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
   <style>
     :root{ --radius:12px; --speed:.22s; --shadow:0 8px 18px rgba(0,0,0,.28); --shadow-2:0 12px 28px rgba(0,0,0,.35); --gap:8px }
     @media (prefers-color-scheme: light){ :root{
@@ -30,36 +32,37 @@
     body{
       margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;
       background:var(--bg); color:var(--text); -webkit-tap-highlight-color:transparent;
-      /* safe area padding for webclip */
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     .wrap{max-width:980px; margin:0 auto; padding:12px clamp(8px,4vw,16px) 18px; display:flex; flex-direction:column; gap:10px}
 
+    /* Topbar */
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px}
-    .brand{display:flex; align-items:center; gap:6px}
-   .logo {
-  width:60px;       /* bigger */
-  height:60px;
-  object-fit:contain;
-  border-radius:6px;
-  transform:scaleX(-1);
-}
-.title {
-  margin:0;
-  font-size:clamp(24px,4vw,30px); /* bigger */
-  letter-spacing:.25px;
-  font-weight:800;
-}
-
+    .brand{display:flex; align-items:center; gap:8px}
+    .logo{
+      width:50px;   /* a bit smaller than 60 */
+      height:50px;
+      object-fit:contain;
+      border-radius:6px;
+      transform:scaleX(-1);
+    }
+    .title{
+      margin:0;
+      font-size:clamp(20px,3.8vw,26px); /* smaller than 24–30 */
+      font-weight:800;
+      letter-spacing:.25px;
+    }
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
 
+    /* News */
     .news{display:none; background:linear-gradient(180deg,rgba(47,129,247,.12),rgba(47,129,247,.06));
       border:1px solid color-mix(in oklab, var(--accent) 40%, transparent);
       color:color-mix(in oklab, var(--text) 85%, var(--accent));
       padding:10px 12px; border-radius:12px; line-height:1.35; animation:fadeIn .25s ease-out both}
     @keyframes fadeIn{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
 
+    /* Shortcuts mode row */
     .row{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px}
     .copy{display:flex; flex-direction:column; gap:3px}
     .copy .t{margin:0; font-size:15px; font-weight:600}
@@ -72,39 +75,36 @@
     .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a); border-color:color-mix(in oklab, var(--accent-2) 60%, var(--border))}
     .toggle input:checked + .rail .knob{transform:translateX(26px)}
 
-    /* ====== Sections ====== */
-    .sections{display:flex; flex-direction:column; gap:6px}
+    /* Sections */
+    .sections{display:flex; flex-direction:column; gap:8px}
     .section{display:flex; flex-direction:column; gap:4px}
-   .section-head{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:var(--muted);
-  font-size:13px;        /* bigger */
-  font-weight:600;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  padding:4px 2px 0;
-}
-
+    .section-head{
+      display:flex; align-items:center; gap:8px;
+      color:var(--muted); font-size:12px; font-weight:600;
+      letter-spacing:.14em; text-transform:uppercase; padding:4px 2px 0
+    }
     .section-head::after{content:""; height:1px; background:var(--border); flex:1}
 
-    .grid{display:grid; gap:6px; grid-template-columns:repeat(5, minmax(0, 1fr))}
-    @media (orientation:landscape){ .grid{grid-template-columns:repeat(8, minmax(0, 1fr))} }
+    /* Grid & buttons — wider cards */
+    .grid{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+    @media (orientation:landscape){ .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))} }
 
-    /* Compact cards */
     .btn{
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:#fff;
-      border-radius:10px; min-height:72px; padding:8px 6px; font-size:13px; font-weight:800; letter-spacing:.2px; text-align:center;
+      border-radius:10px; min-height:72px; padding:10px 10px; font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
       box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
     }
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
-    .ico{width:24px; height:24px; display:block; opacity:.95}
-    .label{opacity:.98; line-height:1.1}
-    .btn{opacity:0; animation:pop .28s ease-out forwards} .btn:nth-child(odd){animation-delay:.02s} .btn:nth-child(even){animation-delay:.06s}
-    @keyframes pop{from{opacity:0; transform:scale(.97)} to{opacity:1; transform:scale(1)}}
+    .label{opacity:.98; line-height:1.12}
 
+    /* Material icon styling */
+    .material-symbols-rounded{
+      font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24;
+      font-size:26px; line-height:1;
+    }
+
+    /* Colors */
     .c-blue{background:linear-gradient(180deg,#3a7bfd,#2660ea)}
     .c-teal{background:linear-gradient(180deg,#22c1b9,#169e97)}
     .c-purple{background:linear-gradient(180deg,#7a5cff,#5a3df0)}
@@ -115,23 +115,18 @@
     .c-cyan{background:linear-gradient(180deg,#12c2e9,#0aa0c2)}
     .c-slate{background:linear-gradient(180deg,#64748b,#475569)}
     .c-indigo{background:linear-gradient(180deg,#6366f1,#4f46e5)}
-    .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
     .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
+    .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
 
-    /* Full-screen tool view */
+    /* Panel */
     #panel{ position: fixed; inset: 0; background: transparent; z-index: 9999; }
     #panel[hidden]{ display:none }
     #panel-card{ position: relative; width: 100vw; height: 100dvh; overflow: auto; background: var(--bg); border: 0; border-radius: 0; box-shadow: 0 10px 30px rgba(0,0,0,.35); -webkit-overflow-scrolling: touch; transform: translateZ(0) translateX(0); transition: transform 300ms cubic-bezier(.22,.61,.36,1); will-change: transform; }
-
     .panel-head{ position: sticky; top: 0; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 6px) 12px 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 1; }
     .backbtn{ appearance: none; cursor: pointer; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-weight: 800; font-size: 14px; }
     .panel-title{ margin: 0; font-size: 15px; font-weight: 800 }
-
     body.panel-open .wrap{ transition: transform 300ms ease, opacity 300ms ease; }
   </style>
-
-
-  
 </head>
 <body>
   <div class="wrap">
@@ -180,297 +175,229 @@
       <div id="panel-body"></div>
     </div>
   </section>
-<!-- SVG sprite — place once inside <body> or just before </body> -->
-<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
 
-  <!-- Row 1 — Resuscitation & Timers -->
-  <symbol id="ico-heartbeat" viewBox="0 0 24 24">
-    <path d="M4 12h3l2-5 4 10 2-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-clipboard-check" viewBox="0 0 24 24">
-    <path d="M9 11l3 3L22 4M12 3h-1a3 3 0 00-3 3v1H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-baby" viewBox="0 0 24 24">
-    <path d="M12 4a4 4 0 110 8 4 4 0 010-8zm-6 14a6 6 0 0112 0H6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
+  <script type="module">
+    /* =========================
+         CONFIG
+       ========================= */
+    const NEWS_MESSAGE = "";
+    const SHORTCUT_NAME = "Ambulance";
+    const SEPARATOR     = "::";
+    const USE_RETURN_URL = false;
+    const RETURN_URL    = "https://yourdomain.com/done.html";
 
-  <!-- Row 2 — Pediatric Care -->
-  <symbol id="ico-stethoscope" viewBox="0 0 24 24">
-    <path d="M5 3v5a5 5 0 0010 0V3M8 21a3 3 0 006 0v-4h-6v4zM19 14a2 2 0 11-4 0 2 2 0 014 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-user-heart" viewBox="0 0 24 24">
-    <path d="M12 11a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-8 2-8 5v1h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M17.5 15.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-tools" viewBox="0 0 24 24">
-    <path d="M3 7l5 5M12 8l8-8M7 3l5 5M3 21l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-scale" viewBox="0 0 24 24">
-    <path d="M3 6h18M6 6l-3 9h6l-3-9zM18 6l-3 9h6l-3-9zM12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
+    // Buttons (Material Symbols)
+    const BUTTONS = [
+      // Row 1 — Resuscitation & Timers
+      { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
+      { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
+      { text:"WAAFELSS",         iconType:"material", icon:"child_care",          color:"c-teal",   href:"#", showDefault:true, showShortcuts:true },
 
-  <!-- Row 3 — Assessment Scores -->
-  <symbol id="ico-brain" viewBox="0 0 24 24">
-    <path d="M12 3a5 5 0 00-5 5 5 5 0 00-3 9h2a3 3 0 003 3h4a3 3 0 003-3h2a5 5 0 00-3-9 5 5 0 00-5-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-sparkles" viewBox="0 0 24 24">
-    <path d="M12 3v3m0 12v3m9-9h-3M6 12H3m12-8l-2 5-5 2 5 2 2 5 2-5 5-2-5-2-2-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-bed" viewBox="0 0 24 24">
-    <path d="M3 7h18M3 7v13M21 7v13M6 15h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
+      // Row 2 — Pediatric Care
+      { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+      { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
+      { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
+      { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
 
-  <!-- Row 4 — Calculators · Reference -->
-  <symbol id="ico-workflow" viewBox="0 0 24 24">
-    <path d="M4 4h6v6H4zm0 10h6v6H4zm10-5h6M10 7h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-droplets" viewBox="0 0 24 24">
-    <path d="M12 3.5S8 9 8 13a4 4 0 008 0c0-4-4-9.5-4-9.5zM5 15a3 3 0 106 0c0-3-3-6.5-3-6.5S5 12 5 15z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-wand" viewBox="0 0 24 24">
-    <path d="M6 6l12 12M8 4l1 2m7-2l-1 2M4 8l2 1m12 7l-2-1M20 8l-2 1M4 16l2-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-calculator" viewBox="0 0 24 24">
-    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M8 7h8M8 11h8M8 15h8M8 19h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
+      // Row 3 — Assessment Scores
+      { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+      { text:"APGAR Score",      iconType:"material", icon:"auto_awesome",        color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+      { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
 
-  <!-- Ops / Links -->
-  <symbol id="ico-phone-call" viewBox="0 0 24 24">
-    <path d="M15 5a5 5 0 015 5c0 7-8 9-8 9s-1-4-5-8a5 5 0 015-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-helicopter" viewBox="0 0 24 24">
-    <path d="M2 12h20M12 2v20M5 12a7 7 0 0114 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="ico-globe" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
+      // Row 4 — Calculators · Reference
+      { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+      { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+      { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+      { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
 
-</svg>
+      // Ops / Links
+      { text:"AS-Call",          iconType:"material", icon:"call",                color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+      { text:"HOS",              iconType:"material", icon:"helicopter",          color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+      { text:"Websites",         iconType:"material", icon:"language",            color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
+    ];
 
+    // Sections layout
+    const SECTIONS = [
+      { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS"] },
+      { title: "Pediatric Care",         items: ["CCP Pediatric","AP Pediatrics","Care Tools","Estimated Weight"] },
+      { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score"] },
+      { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP"] },
+      { title: "Ops / Links",            items: ["AS-Call","HOS","Websites"] }
+    ];
 
-<script type="module">
-  /* =========================
-       CONFIG — EDIT HERE
-    ========================= */
-  const NEWS_MESSAGE = ""; // e.g., "New calculators available."
-  const SHORTCUT_NAME = "Ambulance";
-  const SEPARATOR     = "::";
-  const USE_RETURN_URL = false;
-  const RETURN_URL    = "https://yourdomain.com/done.html";
+    /* =========================
+         CORE
+       ========================= */
+    const THEME_KEY = "amb_theme";
+    const themeMeta = document.getElementById("theme-color");
 
-  // Buttons (add actionId for webapp tools; if none, uses href or Shortcuts)
- const BUTTONS = [
-  // Row 1 — Resuscitation & Timers
-  { text:"CPR",              iconType:"svg", icon:"ico-heartbeat",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-  { text:"RSI Checklist",    iconType:"svg", icon:"ico-clipboard-check", color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
-  { text:"WAAFELSS",         iconType:"svg", icon:"ico-baby",            color:"c-teal",   href:"#", showDefault:true, showShortcuts:true },
-
-  // Row 2 — Pediatric Care
-  { text:"CCP Pediatric",    iconType:"svg", icon:"ico-stethoscope",     color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-  { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user-heart",      color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-  { text:"Care Tools",       iconType:"svg", icon:"ico-tools",           color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
-  { text:"Estimated Weight", iconType:"svg", icon:"ico-scale",           color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-
-  // Row 3 — Assessment Scores
-  { text:"GCS Score",        iconType:"svg", icon:"ico-brain",           color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-  { text:"APGAR Score",      iconType:"svg", icon:"ico-sparkles",        color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-  { text:"SAT Score",        iconType:"svg", icon:"ico-bed",             color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-
-  // Row 4 — Calculators · Reference
-  { text:"Flowcharts",       iconType:"svg", icon:"ico-workflow",        color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-  { text:"RBS Converter",    iconType:"svg", icon:"ico-droplets",        color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-  { text:"CPG Wizard",       iconType:"svg", icon:"ico-wand",            color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-  { text:"Calculate MAP",    iconType:"svg", icon:"ico-calculator",      color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-
-  // Ops / Links
-  { text:"AS-Call",          iconType:"svg", icon:"ico-phone-call",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-  { text:"HOS",              iconType:"svg", icon:"ico-helicopter",      color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-  { text:"Websites",         iconType:"svg", icon:"ico-globe",           color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
-];
-
-
-  // Fixed section order + exact items
-  const SECTIONS = [
-    { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS"] },
-    { title: "Pediatric Care",         items: ["CCP Pediatric","AP Pediatrics","Care Tools","Estimated Weight"] },
-    { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score"] },
-    { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP"] },
-    { title: "Ops / Links",            items: ["AS-Call","HOS","Websites"] } // compact band at bottom
-  ];
-
-  /* =========================
-       CORE
-     ========================= */
-  const THEME_KEY = "amb_theme";
-  const themeMeta = document.getElementById("theme-color");
-
-  function setThemeColorFromCSS(){
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
-    themeMeta.setAttribute("content", bg);
-  }
-  function applyTheme(val){
-    document.documentElement.setAttribute("data-theme", val);
-    localStorage.setItem(THEME_KEY, val);
-    setThemeColorFromCSS();
-  }
-  function initTheme(){
-    const saved = localStorage.getItem(THEME_KEY) || "auto";
-    document.getElementById("themeSelect").value = saved;
-    applyTheme(saved);
-    if (saved === "auto"){
-      const mql = window.matchMedia("(prefers-color-scheme: dark)");
-      mql.addEventListener?.("change", setThemeColorFromCSS);
+    function setThemeColorFromCSS(){
+      const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
+      themeMeta.setAttribute("content", bg);
     }
-  }
-
-  function buildShortcutsUrl(label){
-    const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
-    const payload = USE_RETURN_URL ? `web${SEPARATOR}${label}${SEPARATOR}${RETURN_URL}` : `web${SEPARATOR}${label}`;
-    return base + encodeURIComponent(payload);
-  }
-
-  function openPanel(title){
-    document.getElementById("panel-title").textContent = title || "Tool";
-    document.getElementById("panel").hidden = false;
-    document.body.classList.add("panel-open");
-  }
-  function closePanel(){
-    document.getElementById("panel").hidden = true;
-    document.getElementById("panel-body").innerHTML = "";
-    document.body.classList.remove("panel-open");
-    updateHash({});
-  }
-
-  document.addEventListener("DOMContentLoaded", mount);
-  function mount(){
-    initTheme();
-    document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
-
-    const newsEl = document.getElementById("news");
-    if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.textContent = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
-
-    const toggle = document.getElementById("mode");
-    const sectionsEl = document.getElementById("sections");
-
-    // build a map for quick lookup
-    const map = new Map(BUTTONS.map(b => [b.text, b]));
-
-    function render(){
-      const useShortcuts = toggle.checked;
-      sectionsEl.innerHTML = "";
-
-      for (const sec of SECTIONS){
-        // pick only items that exist + visible in current mode
-        const items = sec.items
-          .map(name => map.get(name))
-          .filter(Boolean)
-          .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
-
-        if (items.length === 0) continue; // skip empty sections in this mode
-
-        const secEl = document.createElement("section");
-        secEl.className = "section";
-        const head = document.createElement("div");
-        head.className = "section-head";
-        head.textContent = sec.title;
-        const grid = document.createElement("div");
-        grid.className = "grid";
-
-        items.forEach((btn, i) => {
-          const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
-          const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
-          const a = document.createElement("a");
-          a.className = `btn ${btn.color || "c-blue"}`;
-          a.id = id;
-          a.href = href;
-          a.style.animationDelay = `${i*18}ms`;
-          const iconHtml = (btn.iconType === "img")
-            ? `<img class="ico" src="${btn.icon}" alt="" />`
-            : `<svg class="ico" aria-hidden="true"><use href="#${btn.icon}"/></svg>`;
-          a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
-
-          if (!useShortcuts){
-            if (btn.actionId){
-              a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
-            } else if (!btn.href || btn.href === "#"){
-              a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href"); });
-            }
-          }
-          grid.appendChild(a);
-        });
-
-        secEl.appendChild(head);
-        secEl.appendChild(grid);
-        sectionsEl.appendChild(secEl);
+    function applyTheme(val){
+      document.documentElement.setAttribute("data-theme", val);
+      localStorage.setItem(THEME_KEY, val);
+      setThemeColorFromCSS();
+    }
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY) || "auto";
+      document.getElementById("themeSelect").value = saved;
+      applyTheme(saved);
+      if (saved === "auto"){
+        const mql = window.matchMedia("(prefers-color-scheme: dark)");
+        mql.addEventListener?.("change", setThemeColorFromCSS);
       }
     }
 
-    toggle.addEventListener("change", render);
-    document.getElementById("panel-back").addEventListener("click", closePanel);
-    render();
-
-    // Deep-links (e.g., #tool=gcs)
-    const { tool, ...params } = parseHash();
-    if (tool) runAction(tool, params);
-  }
-
-  // ---------- Router / action loader ----------
-  async function runAction(actionId, params = {}) {
-    try {
-      const ver = Date.now();
-      const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
-      const mountEl = document.getElementById("panel-body");
-      mountEl.innerHTML = "";
-      openPanel(params.title || actionId.toUpperCase());
-      await mod.run(mountEl, params);
-      updateHash({ tool: actionId, ...params });
-    } catch (e) {
-      alert(`Could not load tool: ${actionId}\n${e.message || e}`);
-      console.error(e);
+    function buildShortcutsUrl(label){
+      const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
+      const payload = `web${SEPARATOR}${label}`;
+      return base + encodeURIComponent(payload);
     }
-  }
 
-  function parseHash(){
-    const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
-    const obj = {}; for (const [k,v] of h.entries()) obj[k]=v; return obj;
-  }
-  function updateHash(obj){
-    const h = new URLSearchParams(obj);
-    const s = h.toString();
-    history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search);
-  }
-  window.addEventListener("hashchange", () => {
-    const { tool, ...params } = parseHash();
-    if (tool) runAction(tool, params);
-  });
+    function openPanel(title){
+      document.getElementById("panel-title").textContent = title || "Tool";
+      document.getElementById("panel").hidden = false;
+      document.body.classList.add("panel-open");
+    }
+    function closePanel(){
+      document.getElementById("panel").hidden = true;
+      document.getElementById("panel-body").innerHTML = "";
+      document.body.classList.remove("panel-open");
+      updateHash({});
+    }
 
-  // ===== Basic swipe back support =====
-  let touchStartX = 0; let touchStartY = 0; const SWIPE_THRESHOLD = 60; const VERTICAL_TOLERANCE = 40;
-  document.getElementById("panel-card").addEventListener("touchstart", e => { if (e.touches.length !== 1) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
-  document.getElementById("panel-card").addEventListener("touchend", e => { if (e.changedTouches.length !== 1) return; const dx = e.changedTouches[0].clientX - touchStartX; const dy = Math.abs(e.changedTouches[0].clientY - touchStartY); if (dx > SWIPE_THRESHOLD && dy < VERTICAL_TOLERANCE) closePanel(); });
+    document.addEventListener("DOMContentLoaded", mount);
+    function mount(){
+      initTheme();
+      document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
-  // ===== iOS-style interactive edge-swipe back =====
-  (() => {
-    const panel = document.getElementById("panel");
-    const card  = document.getElementById("panel-card");
-    const content = document.querySelector(".wrap");
+      // News (optional)
+      const newsEl = document.getElementById("news");
+      if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.textContent = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
 
-    const EDGE_ZONE = 24; const COMPLETE_THRESHOLD = 0.28; const V_TOL = 18; const MIN_H_START = 6;
-    let startX = 0, startY = 0, dragging = false, width = 0, lastDx = 0; let raf = 0;
-    function setX(x){ card.style.transform = `translateX(${x}px)`; if (content){ const p = Math.min(1, x / (width || 1)); content.style.transform = `translateX(${Math.min(12, 12*p)}px)`; content.style.opacity = String(1 - 0.04*p); } }
-    function onStart(e){ if (panel.hidden) return; const t = e.touches && e.touches[0]; if (!t) return; if (t.clientX > EDGE_ZONE) { dragging = false; return; } startX = t.clientX; startY = t.clientY; width = card.clientWidth || window.innerWidth; dragging = true; lastDx = 0; card.style.transition = "none"; if (content) content.style.transition = "none"; }
-    function onMove(e){ if (!dragging) return; const t = e.touches && e.touches[0]; if (!t) return; const dx = t.clientX - startX; const dy = Math.abs(t.clientY - startY); if (dy > V_TOL && dx < MIN_H_START) { cancel(); return; } const dragX = Math.max(0, dx); lastDx = dragX; if (dragX > MIN_H_START && dy < V_TOL) e.preventDefault(); if (!raf){ raf = requestAnimationFrame(() => { setX(lastDx); raf = 0; }); } }
-    function finishClose(){ card.style.transition = "transform 280ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 280ms ease, opacity 280ms ease"; requestAnimationFrame(() => { setX(width); setTimeout(() => { closePanel(); card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } setX(0); }, 280); }); }
-    function snapBack(){ card.style.transition = "transform 260ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 260ms ease, opacity 260ms ease"; requestAnimationFrame(() => { setX(0); setTimeout(() => { card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } }, 260); }); }
-    function onEnd(){ if (!dragging) return; dragging = false; const shouldClose = lastDx > (width * COMPLETE_THRESHOLD); if (shouldClose) finishClose(); else snapBack(); }
-    function cancel(){ dragging = false; snapBack(); }
-    card.addEventListener("touchstart", onStart, { passive: true });
-    card.addEventListener("touchmove",  onMove,  { passive: false });
-    card.addEventListener("touchend",   onEnd,   { passive: true });
-    card.addEventListener("touchcancel",cancel,  { passive: true });
-  })();
-</script>
+      const toggle = document.getElementById("mode");
+      const sectionsEl = document.getElementById("sections");
+
+      const map = new Map(BUTTONS.map(b => [b.text, b]));
+
+      function render(){
+        const useShortcuts = toggle.checked;
+        sectionsEl.innerHTML = "";
+
+        for (const sec of SECTIONS){
+          const items = sec.items
+            .map(name => map.get(name))
+            .filter(Boolean)
+            .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
+          if (!items.length) continue;
+
+          const secEl = document.createElement("section");
+          secEl.className = "section";
+          const head = document.createElement("div");
+          head.className = "section-head";
+          head.textContent = sec.title;
+          const grid = document.createElement("div");
+          grid.className = "grid";
+
+          items.forEach((btn, i) => {
+            const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
+            const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
+
+            const a = document.createElement("a");
+            a.className = `btn ${btn.color || "c-blue"}`;
+            a.id = id;
+            a.href = href;
+            a.style.animationDelay = `${i*18}ms`;
+
+            const iconHtml =
+              btn.iconType === "material"
+                ? `<span class="material-symbols-rounded" aria-hidden="true">${btn.icon}</span>`
+                : ""; // no other icon types used now
+
+            a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
+
+            if (!useShortcuts){
+              if (btn.actionId){
+                a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
+              } else if (!btn.href || btn.href === "#"){
+                a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href"); });
+              }
+            }
+            grid.appendChild(a);
+          });
+
+          secEl.appendChild(head);
+          secEl.appendChild(grid);
+          sectionsEl.appendChild(secEl);
+        }
+      }
+
+      toggle.addEventListener("change", render);
+      document.getElementById("panel-back").addEventListener("click", closePanel);
+      render();
+
+      // Deep-links (e.g., #tool=gcs)
+      const { tool, ...params } = parseHash();
+      if (tool) runAction(tool, params);
+    }
+
+    // ---------- Router / action loader ----------
+    async function runAction(actionId, params = {}) {
+      try {
+        const ver = Date.now();
+        const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
+        const mountEl = document.getElementById("panel-body");
+        mountEl.innerHTML = "";
+        openPanel(params.title || actionId.toUpperCase());
+        await mod.run(mountEl, params);
+        updateHash({ tool: actionId, ...params });
+      } catch (e) {
+        alert(`Could not load tool: ${actionId}\n${e.message || e}`);
+        console.error(e);
+      }
+    }
+
+    function parseHash(){
+      const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
+      const obj = {}; for (const [k,v] of h.entries()) obj[k]=v; return obj;
+    }
+    function updateHash(obj){
+      const h = new URLSearchParams(obj);
+      const s = h.toString();
+      history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search);
+    }
+    window.addEventListener("hashchange", () => {
+      const { tool, ...params } = parseHash();
+      if (tool) runAction(tool, params);
+    });
+
+    // ===== Basic swipe back support =====
+    let touchStartX = 0; let touchStartY = 0; const SWIPE_THRESHOLD = 60; const VERTICAL_TOLERANCE = 40;
+    document.getElementById("panel-card").addEventListener("touchstart", e => { if (e.touches.length !== 1) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
+    document.getElementById("panel-card").addEventListener("touchend", e => { if (e.changedTouches.length !== 1) return; const dx = e.changedTouches[0].clientX - touchStartX; const dy = Math.abs(e.changedTouches[0].clientY - touchStartY); if (dx > SWIPE_THRESHOLD && dy < VERTICAL_TOLERANCE) closePanel(); });
+
+    // ===== iOS-style interactive edge-swipe back =====
+    (() => {
+      const panel = document.getElementById("panel");
+      const card  = document.getElementById("panel-card");
+      const content = document.querySelector(".wrap");
+
+      const EDGE_ZONE = 24; const COMPLETE_THRESHOLD = 0.28; const V_TOL = 18; const MIN_H_START = 6;
+      let startX = 0, startY = 0, dragging = false, width = 0, lastDx = 0; let raf = 0;
+      function setX(x){ card.style.transform = `translateX(${x}px)`; if (content){ const p = Math.min(1, x / (width || 1)); content.style.transform = `translateX(${Math.min(12, 12*p)}px)`; content.style.opacity = String(1 - 0.04*p); } }
+      function onStart(e){ if (panel.hidden) return; const t = e.touches && e.touches[0]; if (!t) return; if (t.clientX > EDGE_ZONE) { dragging = false; return; } startX = t.clientX; startY = t.clientY; width = card.clientWidth || window.innerWidth; dragging = true; lastDx = 0; card.style.transition = "none"; if (content) content.style.transition = "none"; }
+      function onMove(e){ if (!dragging) return; const t = e.touches && e.touches[0]; if (!t) return; const dx = t.clientX - startX; const dy = Math.abs(t.clientY - startY); if (dy > V_TOL && dx < MIN_H_START) { cancel(); return; } const dragX = Math.max(0, dx); lastDx = dragX; if (dragX > MIN_H_START && dy < V_TOL) e.preventDefault(); if (!raf){ raf = requestAnimationFrame(() => { setX(lastDx); raf = 0; }); } }
+      function finishClose(){ card.style.transition = "transform 280ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 280ms ease, opacity 280ms ease"; requestAnimationFrame(() => { setX(width); setTimeout(() => { closePanel(); card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } setX(0); }, 280); }); }
+      function snapBack(){ card.style.transition = "transform 260ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 260ms ease, opacity 260ms ease"; requestAnimationFrame(() => { setX(0); setTimeout(() => { card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } }, 260); }); }
+      function onEnd(){ if (!dragging) return; dragging = false; const shouldClose = lastDx > (width * COMPLETE_THRESHOLD); if (shouldClose) finishClose(); else snapBack(); }
+      function cancel(){ dragging = false; snapBack(); }
+      card.addEventListener("touchstart", onStart, { passive: true });
+      card.addEventListener("touchmove",  onMove,  { passive: false });
+      card.addEventListener("touchend",   onEnd,   { passive: true });
+      card.addEventListener("touchcancel",cancel,  { passive: true });
+    })();
+  </script>
 </body>
 </html>
