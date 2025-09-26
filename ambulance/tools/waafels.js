@@ -33,11 +33,17 @@ export async function run(mountEl) {
 
       .waaf-label{ font-size:12px; font-weight:700; color:#6e7b91; margin:0 0 4px 2px }
       .waaf-input-wrap{ position:relative }
-      .waaf-input{
-        width:100%; font-size:18px; font-weight:800; color:var(--text,#0c1230);
-        background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
-        border-radius:12px; padding:12px 14px; outline:none;
-      }
+     /* LANDMARK H — make input width obey its box and align flush */
+.waaf-input{
+  width:100%;
+  box-sizing:border-box;         /* <-- add this */
+  -webkit-appearance:none;       /* iOS tidy */
+  display:block;                 /* avoids inline quirks */
+
+  font-size:18px; font-weight:800; color:var(--text,#0c1230);
+  background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
+  border-radius:12px; padding:12px 14px; outline:none;
+}
 
       /* LANDMARK G — inline hint for validation (caps) */
       .waaf-hint{
