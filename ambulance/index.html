@@ -75,14 +75,42 @@
     .grid{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
     @media (orientation:landscape){ .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))} }
 
-    .btn{
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:#fff;
-      border-radius:10px; min-height:72px; padding:10px 10px; font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
-      box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
-    }
+   .btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none;
+  /* remove color:#fff */
+  color:var(--btn-fg, #fff);  /* default white, but customizable */
+  border-radius:10px; min-height:72px; padding:10px 10px;
+  font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
+  box-shadow:var(--shadow);
+  transition:transform var(--speed), box-shadow var(--speed), filter var(--speed);
+}
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
     .label{opacity:.98; line-height:1.12}
+
+    /* 👇 per-button overrides text and bg color */
+#btn-cpr               { --btn-fg:#fff; }   /* CPR white */
+#btn-rsi-checklist     { --btn-fg:#fff; }   /* RSI Checklist white */
+#btn-waafelss          { --btn-fg:#fff; }   /* WAAFELSS white */
+
+#btn-ccp-pediatric     { --btn-fg:#fff; }   /* CCP Pediatric white */
+#btn-ap-pediatrics     { --btn-fg:#fff; }   /* AP Pediatrics white */
+#btn-care-tools        { --btn-fg:#000000; }   /* Care Tools black */
+#btn-estimated-weight  { --btn-fg:#fff; }   /* Estimated Weight white */
+
+#btn-gcs-score         { --btn-fg:#fff; }   /* GCS Score white */
+#btn-apgar-score       { --btn-fg:#fff; }   /* APGAR Score white */
+#btn-sat-score         { --btn-fg:#000000; }   /* SAT Score black */
+
+#btn-flowcharts        { --btn-fg:#fff; }   /* Flowcharts white */
+#btn-rbs-converter     { --btn-fg:#000000; }   /* RBS Converter black */
+#btn-cpg-wizard        { --btn-fg:#fff; }   /* CPG Wizard white */
+#btn-calculate-map     { --btn-fg:#000000; }   /* Calculate MAP black */
+
+#btn-as-call           { --btn-fg:#000000; }   /* AS-Call black */
+#btn-hos               { --btn-fg:#fff; }   /* HOS white */
+#btn-websites          { --btn-fg:#fff; }   /* Websites white */
+
 
     /* Material icon styling */
     .material-symbols-rounded{
@@ -186,23 +214,23 @@
   // Row 1 — Resuscitation & Timers
   { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"btn-cpr",       href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
   { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"btn-rsi",       href:"#", showDefault:true, showShortcuts:true },
-  { text:"WAAFELSS",         iconType:"material", icon:"baby_changing_station", color:"btn-waafelss", href:"#", showDefault:true, showShortcuts:true },
+  { text:"WAAFELSS",         iconType:"material", icon:"face", color:"btn-waafelss", href:"#", showDefault:true, showShortcuts:true },
 
   // Row 2 — Pediatric Care
   { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"btn-ccp",       href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-  { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"btn-ap",        href:"#", showDefault:true, showShortcuts:true },
-  { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:true },
+  { text:"AP Pediatrics",    iconType:"material", icon:"medication", color:"btn-ap",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"Care Tools",       iconType:"material", icon:"widgets",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:true },
   { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"btn-weight",    href:"#", showDefault:true, showShortcuts:true },
 
   // Row 3 — Assessment Scores
-  { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"btn-gcs",       href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+  { text:"GCS Score",        iconType:"material", icon:"neurology",          color:"btn-gcs",       href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
   { text:"APGAR Score",      iconType:"material", icon:"child_care",          color:"btn-apgar",     href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-  { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"btn-sat",       href:"#", showDefault:true, showShortcuts:true },
+  { text:"SAT Score",        iconType:"material", icon:"syringe",                 color:"btn-sat",       href:"#", showDefault:true, showShortcuts:true },
 
   // Row 4 — Calculators · Reference
-  { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"btn-flowcharts", href:"#", showDefault:true, showShortcuts:true },
-  { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"btn-rbs",        href:"#", showDefault:true, showShortcuts:true },
-  { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"btn-cpg",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"Flowcharts",       iconType:"material", icon:"apps",              color:"btn-flowcharts", href:"#", showDefault:true, showShortcuts:true },
+  { text:"RBS Converter",    iconType:"material", icon:"glucose",          color:"btn-rbs",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"CPG Wizard",       iconType:"material", icon:"wand_stars",       color:"btn-cpg",        href:"#", showDefault:true, showShortcuts:true },
   { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"btn-map",        href:"#", showDefault:true, showShortcuts:true },
 
   // Ops / Links
