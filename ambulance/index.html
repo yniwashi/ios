@@ -72,18 +72,26 @@
     .section-head::after{content:""; height:1px; background:var(--border); flex:1}
 
     /* Grid & buttons — wider cards */
-    .grid{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
-    @media (orientation:landscape){ .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))} }
+    /* fixed-size cards (no stretch when items are hidden) */
+:root{ --btn-w:108px }                                  /* portrait card width */
+@media (orientation:landscape){ :root{ --btn-w:120px } } /* landscape width */
 
-   .btn{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none;
-  /* remove color:#fff */
-  color:var(--btn-fg, #fff);  /* default white, but customizable */
-  border-radius:10px; min-height:72px; padding:10px 10px;
-  font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
-  box-shadow:var(--shadow);
-  transition:transform var(--speed), box-shadow var(--speed), filter var(--speed);
+.grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;   /* left-align rows; change to center if you prefer */
+  align-items:stretch;
 }
+
+
+  .btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:var(--btn-fg, #fff);
+  width:var(--btn-w);                /* LANDMARK 2: fixed card width */
+  border-radius:10px; min-height:72px; padding:10px 10px; font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
+  box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
+}
+
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
     .label{opacity:.98; line-height:1.12}
