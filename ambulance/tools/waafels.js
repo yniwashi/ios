@@ -26,8 +26,9 @@ export async function run(mountEl) {
         background:linear-gradient(90deg,#fa3473,#ff6ea9);
       }
 
-      .waaf-row{ display:flex; gap:10px; flex-wrap:wrap; }
-      .waaf-col{ flex:1 1 260px; min-width:240px }
+      /* LANDMARK F — align columns bottoms so input aligns with chips */
+      .waaf-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+      .waaf-col{ flex:1 1 260px; min-width:240px; display:flex; flex-direction:column; justify-content:flex-end; }
       .waaf-field{ margin-bottom:10px }
 
       .waaf-label{ font-size:12px; font-weight:700; color:#6e7b91; margin:0 0 4px 2px }
@@ -38,15 +39,21 @@ export async function run(mountEl) {
         border-radius:12px; padding:12px 14px; outline:none;
       }
 
-      .waaf-radio{
-        display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+      /* LANDMARK G — inline hint for validation (caps) */
+      .waaf-hint{
+        display:none; margin-top:6px; font-size:12px; font-weight:800;
+        padding:8px 10px; border-radius:10px;
+        background:#fff4f6; color:#8a1736; border:1px solid #ffd1dc;
       }
+      :root[data-theme="dark"] .waaf-hint{
+        background:#3a1e2a; color:#ffd7e2; border-color:#6b2a42;
+      }
+
+      .waaf-radio{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
       .waaf-chip{
         border-radius:999px; border:1px solid var(--border,#dbe0ea);
         background:var(--surface,#f3f6fb);
-        padding:12px 16px;
-        font-weight:900; font-size:14px;
-        cursor:pointer;
+        padding:12px 16px; font-weight:900; font-size:14px; cursor:pointer;
       }
       .waaf-chip[data-active="true"]{
         background:#ffe3ed; border-color:#ff8bb5; color:#6c1130;
@@ -59,22 +66,17 @@ export async function run(mountEl) {
       }
       .waaf-actions{ display:flex; gap:10px; }
 
-      /* LANDMARK A — AP/CCP buttons become toggle-style with active highlight */
+      /* AP/CCP toggle look */
       .waaf-btn{
         border:none; border-radius:12px; padding:10px 14px; font-weight:900; cursor:pointer;
-        box-shadow:0 6px 14px rgba(0,0,0,.12);
-        transition:filter .15s ease;
+        box-shadow:0 6px 14px rgba(0,0,0,.12); transition:filter .15s ease;
       }
       .waaf-btn.push-right{ margin-left:auto }
       .waaf-btn:hover{ filter:brightness(1.02) }
-      /* default (inactive) look */
       .waaf-btn.mode{ color:var(--text,#0c1230); background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea); }
-      /* active look */
       .waaf-btn.mode[data-active="true"]{ color:#fff; background:linear-gradient(180deg,#ff4f8d,#fa3473); border:none; }
 
-      .waaf-results{
-        display:flex; flex-direction:column; gap:8px; margin-top:12px;
-      }
+      .waaf-results{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
       .waaf-rowitem{
         background:var(--surface,#f6f8fd); border:1px solid var(--border,#e7ecf3);
         border-radius:12px; padding:10px 12px; display:flex; align-items:baseline; gap:8px;
@@ -82,28 +84,14 @@ export async function run(mountEl) {
       .waaf-k{ font-size:12px; font-weight:800; color:#6e7b91; min-width:150px }
       .waaf-v{ font-size:16px; font-weight:900; color:var(--text,#0c1230); word-break:break-word }
 
-      /* ---------- Dark theme tweaks ---------- */
-      :root[data-theme="dark"] .waaf-card{
-        --waaf-bg:#151921; --waaf-bd:#232a37;
-      }
-      :root[data-theme="dark"] .waaf-input{
-        background:#12151c; border-color:#232a37; color:#eef2ff;
-      }
-      :root[data-theme="dark"] .waaf-chip{
-        background:#12151c; border-color:#232a37; color:#eef2ff;
-      }
-      :root[data-theme="dark"] .waaf-chip[data-active="true"]{
-        background:#4c1329; border-color:#8b2146; color:#ffd7e6;
-      }
-      :root[data-theme="dark"] .waaf-rowitem{
-        background:#12151c; border-color:#232a37;
-      }
-      :root[data-theme="dark"] .waaf-btn.mode{
-        background:#12151c; border:1px solid #232a37; color:#eef2ff;
-      }
-      :root[data-theme="dark"] .waaf-btn.mode[data-active="true"]{
-        color:#fff; background:linear-gradient(180deg,#ff4f8d,#fa3473); border:none;
-      }
+      /* Dark tweaks */
+      :root[data-theme="dark"] .waaf-card{ --waaf-bg:#151921; --waaf-bd:#232a37; }
+      :root[data-theme="dark"] .waaf-input{ background:#12151c; border-color:#232a37; color:#eef2ff; }
+      :root[data-theme="dark"] .waaf-chip{ background:#12151c; border-color:#232a37; color:#eef2ff; }
+      :root[data-theme="dark"] .waaf-chip[data-active="true"]{ background:#4c1329; border-color:#8b2146; color:#ffd7e6; }
+      :root[data-theme="dark"] .waaf-rowitem{ background:#12151c; border-color:#232a37; }
+      :root[data-theme="dark"] .waaf-btn.mode{ background:#12151c; border:1px solid #232a37; color:#eef2ff; }
+      :root[data-theme="dark"] .waaf-btn.mode[data-active="true"]{ color:#fff; background:linear-gradient(180deg,#ff4f8d,#fa3473); border:none; }
     </style>
 
     <div class="waaf-wrap">
@@ -122,6 +110,8 @@ export async function run(mountEl) {
               <div class="waaf-input-wrap">
                 <input id="ageInput" class="waaf-input" inputmode="numeric" placeholder="e.g., 8">
               </div>
+              <!-- LANDMARK G — inline validation hint -->
+              <div id="waafHint" class="waaf-hint"></div>
             </div>
           </div>
 
@@ -137,7 +127,6 @@ export async function run(mountEl) {
         <div class="waaf-actions-wrap">
           <div class="waaf-actions-title">Calculate WAAFELLS for</div>
           <div class="waaf-actions">
-            <!-- LANDMARK B — both AP/CCP are toggle buttons with data-active -->
             <button id="btnAP"  class="waaf-btn mode" data-active="false">AP</button>
             <button id="btnCCP" class="waaf-btn mode" data-active="false">CCP</button>
             <button id="btnClear" class="waaf-btn mode push-right" data-active="false">Clear</button>
@@ -164,11 +153,12 @@ export async function run(mountEl) {
   const $ = sel => mountEl.querySelector(sel);
   const $$ = sel => [...mountEl.querySelectorAll(sel)];
 
-  const ageInput   = $('#ageInput');
-  const ageChipWrap= $('#ageGroup');
-  const modePill   = $('#waafModePill');
-  const btnAP      = $('#btnAP');
-  const btnCCP     = $('#btnCCP');
+  const ageInput    = $('#ageInput');
+  const ageChipWrap = $('#ageGroup');
+  const modePill    = $('#waafModePill');
+  const hint        = $('#waafHint');
+  const btnAP       = $('#btnAP');
+  const btnCCP      = $('#btnCCP');
 
   const out = {
     age: $('#valAge'),
@@ -183,7 +173,6 @@ export async function run(mountEl) {
     needle: $('#valNeedle'),
   };
 
-  /* LANDMARK C — keep the selected mode so we can auto-recalc */
   let currentMode = null; // 'AP' | 'CCP' | null
 
   function activeAgeGroup(){
@@ -194,14 +183,12 @@ export async function run(mountEl) {
     $$('.waaf-chip').forEach(b => b.dataset.active = (b.dataset.val === val));
   }
 
-  /* LANDMARK D — smart number formatting: drop .0, keep one decimal if needed */
   const EPS = 1e-9;
   function fmtSmart(v){
     const r = Math.round(v);
     if (Math.abs(v - r) < EPS) return String(r);
     return (Math.round(v*10)/10).toFixed(1);
   }
-
   const clamp = (v,max) => (v > max ? max : v);
   const fmtAgeLabel = (age, grp) => {
     const n = Math.round(age);
@@ -210,33 +197,58 @@ export async function run(mountEl) {
       : (n === 1 ? '1 year'  : `${n} years`);
   };
 
-  function clearAll(){
+  /* LANDMARK G — validation + inline hint */
+  function showHint(msg){
+    hint.textContent = msg || '';
+    hint.style.display = msg ? 'block' : 'none';
+  }
+  function clearOutputsKeepMode(){
     Object.values(out).forEach(el => el.textContent = '—');
+  }
+  function validateAge(){
+    const grp = activeAgeGroup();
+    const raw = (ageInput.value||'').trim();
+    const age = Number(raw);
+    if (!raw || Number.isNaN(age) || age < 0){
+      showHint('');
+      clearOutputsKeepMode();
+      return { ok:false, age:null, grp };
+    }
+    if (grp === 'Months' && age > 12){
+      showHint('Age over 12 months. Switch Age Group to Years.');
+      clearOutputsKeepMode();
+      return { ok:false, age, grp };
+    }
+    if (grp === 'Years' && age > 14){
+      showHint('Pediatric guideline cap is 14 years. For 15+ use adult references.');
+      clearOutputsKeepMode();
+      return { ok:false, age, grp };
+    }
+    showHint('');
+    return { ok:true, age, grp };
+  }
+
+  function clearAll(){
+    clearOutputsKeepMode();
     modePill.textContent = '';
     modePill.style.display = 'none';
     ageInput.value = '';
-    currentMode = null;                 // also clear mode
-    btnAP.dataset.active = 'false';
+    currentMode = null;
+    btnAP.dataset.active  = 'false';
     btnCCP.dataset.active = 'false';
-  }
-
-  function hasValidAge(){
-    const raw = (ageInput.value||'').trim();
-    const age = Number(raw);
-    return !!raw && !Number.isNaN(age) && age >= 0;
+    showHint('');
   }
 
   // ===== Core calc
   function calc(mode){  // mode: 'AP' | 'CCP'
-    const grp = activeAgeGroup();
-    const raw = (ageInput.value||'').trim();
-    const age = Number(raw);
-    if (!raw || Number.isNaN(age) || age < 0){ // no age yet
-      Object.values(out).forEach(el => el.textContent = '—');
-      return;
-    }
+    const v = validateAge();
+    if (!v.ok){ return; }
+    const { age, grp } = v;
 
-    // show mode pill
+    // ensure mode pill & button highlight
+    currentMode = mode;
+    btnAP.dataset.active  = (mode === 'AP')  ? 'true' : 'false';
+    btnCCP.dataset.active = (mode === 'CCP') ? 'true' : 'false';
     modePill.textContent = mode;
     modePill.style.display = 'inline-block';
 
@@ -268,7 +280,7 @@ export async function run(mountEl) {
         energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J`;
       }
 
-    } else {
+    } else { // Years
       if (age <= 5){
         weight = age * 2 + 8;
         adrMg = weight * 0.01;
@@ -341,44 +353,34 @@ export async function run(mountEl) {
     out.needle.textContent = needle;
   }
 
-  /* ====== Wiring ====== */
+  /* ===== Wiring ===== */
 
-  // LANDMARK E — helper to set mode and highlight button
   function setMode(mode){
     currentMode = mode;
     btnAP.dataset.active  = (mode === 'AP')  ? 'true' : 'false';
     btnCCP.dataset.active = (mode === 'CCP') ? 'true' : 'false';
-    // show pill label
     modePill.textContent = mode;
     modePill.style.display = 'inline-block';
-    // recalc immediately if age present
-    if (hasValidAge()) calc(mode);
+    // Only calc when within caps
+    if (validateAge().ok) calc(mode);
   }
 
-  // Age group chips: set active AND (if mode chosen) recalc immediately
   $$('.waaf-chip').forEach(ch => ch.addEventListener('click', () => {
     setAgeGroup(ch.dataset.val);
-    if (currentMode && hasValidAge()) calc(currentMode);
+    // Re-validate and calc if a mode is selected
+    if (currentMode && validateAge().ok) calc(currentMode);
   }));
 
-  // Mode buttons toggle + calc
   btnAP.addEventListener('click',  () => setMode('AP'));
   btnCCP.addEventListener('click', () => setMode('CCP'));
 
-  // Live recalc while typing age (only when a mode is set)
+  // Live validate & calc while typing
   ageInput.addEventListener('input', () => {
-    if (currentMode && hasValidAge()) calc(currentMode);
-    else {
-      // if age emptied, clear results but keep the visual mode state
-      if (!(ageInput.value||'').trim()){
-        Object.values(out).forEach(el => el.textContent = '—');
-      }
-    }
+    const v = validateAge();
+    if (currentMode && v.ok) calc(currentMode);
   });
 
-  // Clear: reset everything
   $('#btnClear').addEventListener('click', () => clearAll());
 
-  // init
   clearAll();
 }
