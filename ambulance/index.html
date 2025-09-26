@@ -72,44 +72,34 @@
     .section-head::after{content:""; height:1px; background:var(--border); flex:1}
 
     /* Grid & buttons — wider cards */
-    /* fixed-size cards (no stretch when items are hidden) */
-:root{ --btn-w:108px }                                  /* portrait card width */
-@media (orientation:landscape){ :root{ --btn-w:120px } } /* landscape width */
-
-/* Fixed-size cards, dense packing, left-aligned */
+    
+/* Compact cards, auto-fill columns, dense packing */
 .grid{
-  --btnw: 160px;         /* button width  (tweak if you like) */
-  --btnh: 120px;         /* button height (tweak if you like) */
-
-  display:grid;
-  gap:12px;
-  /* fixed-width columns; auto-fill as many as fit */
-  grid-template-columns: repeat(auto-fill, minmax(var(--btnw), var(--btnw)));
-  /* fixed row height so packing works perfectly */
-  grid-auto-rows: var(--btnh);
-  /* pack items tightly when some are hidden */
-  grid-auto-flow: row dense;
-  /* left align the grid area */
-  justify-content:start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-auto-flow: dense;
+}
+@media (orientation:landscape){
+  .grid{
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
 }
 
 
-
- .btn{
-  width: var(--btnw);           /* match grid column width */
-  min-height: var(--btnh);      /* match grid row height */
+.btn{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
   text-decoration:none; color:var(--btn-fg,#fff);
-  border-radius:12px; padding:12px 12px;
+  border-radius:12px; padding:10px 10px;        /* back to the “perfect” size */
+  min-height:72px;                               /* comfy height, width from grid */
   font-size:13px; font-weight:800; letter-spacing:.2px; text-align:center;
   box-shadow:var(--shadow);
   transition:transform var(--speed), box-shadow var(--speed), filter var(--speed);
 }
+.btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2) }
+.btn:active{ transform:translateY(0) scale(.98) }
+.label{ opacity:.98; line-height:1.12 }
 
-
-    .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
-    .btn:active{transform:translateY(0) scale(.98)}
-    .label{opacity:.98; line-height:1.12}
 
     /* 👇 per-button overrides text and bg color */
 #cpr               { --btn-fg:#fff; }   /* CPR white */
