@@ -37,8 +37,20 @@
 
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .brand{display:flex; align-items:center; gap:6px}
-    .logo{ width:40px; height:40px; object-fit:contain; border-radius:6px; transform:scaleX(-1) }
-    .title{margin:0; font-size:clamp(18px,3.6vw,22px); letter-spacing:.2px}
+   .logo {
+  width:60px;       /* bigger */
+  height:60px;
+  object-fit:contain;
+  border-radius:6px;
+  transform:scaleX(-1);
+}
+.title {
+  margin:0;
+  font-size:clamp(24px,4vw,30px); /* bigger */
+  letter-spacing:.25px;
+  font-weight:800;
+}
+
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
 
@@ -63,7 +75,18 @@
     /* ====== Sections ====== */
     .sections{display:flex; flex-direction:column; gap:6px}
     .section{display:flex; flex-direction:column; gap:4px}
-    .section-head{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; padding:2px 2px 0}
+   .section-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:13px;        /* bigger */
+  font-weight:600;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  padding:4px 2px 0;
+}
+
     .section-head::after{content:""; height:1px; background:var(--border); flex:1}
 
     .grid{display:grid; gap:6px; grid-template-columns:repeat(5, minmax(0, 1fr))}
@@ -72,12 +95,12 @@
     /* Compact cards */
     .btn{
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:#fff;
-      border-radius:10px; min-height:60px; padding:8px 6px; font-size:11.5px; font-weight:800; letter-spacing:.2px; text-align:center;
+      border-radius:10px; min-height:72px; padding:8px 6px; font-size:13px; font-weight:800; letter-spacing:.2px; text-align:center;
       box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
     }
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
-    .ico{width:20px; height:20px; display:block; opacity:.95}
+    .ico{width:24px; height:24px; display:block; opacity:.95}
     .label{opacity:.98; line-height:1.1}
     .btn{opacity:0; animation:pop .28s ease-out forwards} .btn:nth-child(odd){animation-delay:.02s} .btn:nth-child(even){animation-delay:.06s}
     @keyframes pop{from{opacity:0; transform:scale(.97)} to{opacity:1; transform:scale(1)}}
@@ -106,6 +129,9 @@
 
     body.panel-open .wrap{ transition: transform 300ms ease, opacity 300ms ease; }
   </style>
+
+
+  
 </head>
 <body>
   <div class="wrap">
@@ -154,25 +180,75 @@
       <div id="panel-body"></div>
     </div>
   </section>
+<!-- SVG sprite — place once inside <body> or just before </body> -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
 
-  <!-- SVG sprite (icons) -->
-  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-    <symbol id="ico-user" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 12c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z"/></symbol>
-    <symbol id="ico-doc"  viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8Zm-2 14h-2v-2h2Zm0-4h-2v-2h2Zm0-4h-2V6h2Z"/></symbol>
-    <symbol id="ico-plus" viewBox="0 0 24 24"><path fill="currentColor" d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6z"/></symbol>
-    <symbol id="ico-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3z"/></symbol>
-    <symbol id="ico-call" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8c1.44 2.83 3.76 5.14 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24c1.12.37 2.33.57 3.57.57c.55 0 1 .45 1 1V20c0 .55-.45 1-1 1c-9.39 0-17-7.61-17-17c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1c0 1.25.2 2.45.57 3.57c.11.35.02.75-.25 1.02z"/></symbol>
-    <symbol id="ico-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04z"/></symbol>
-    <symbol id="ico-globe" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20ZM4.93 6.27A8 8 0 0 1 9 4.07V8H6c-.97 0-1.75.78-1.75 1.75V12h2.75v2H5a2 2 0 0 0-2 2v.8a8 8 0 0 1 1.93-10.53ZM12 20a8 8 0 0 1-2-.27V16h2l2-2V9h3a2 2 0 0 0 2-2v-.28A8 8 0 0 1 12 20Z"/></symbol>
-    <symbol id="ico-flow"  viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm6 8h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Zm0-12h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V2Z"/></symbol>
-    <symbol id="ico-wrench" viewBox="0 0 24 24"><path fill="currentColor" d="M22 19l-6.6-6.6a5 5 0 0 0-6.8-6.8L11 8L8 11L4.6 8A5 5 0 0 0 11.4 14.6L19 22z"/></symbol>
-    <symbol id="ico-clip" viewBox="0 0 24 24"><path fill="currentColor" d="M16 6a4 4 0 0 0-8 0v9a6 6 0 1 0 12 0V9h-2v6a4 4 0 1 1-8 0V6a2 2 0 1 1 4 0v8h2z"/></symbol>
-    <symbol id="ico-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></symbol>
-    <symbol id="ico-bars" viewBox="0 0 24 24"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM9 17H7v-4h2Zm4 0h-2V6h2Zm4 0h-2V9h2Z"/></symbol>
-    <symbol id="ico-weight" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h10l3 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8zM9 8a3 3 0 1 0 6 0"/></symbol>
-    <symbol id="ico-calc" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21h2v-2H7Zm4 0h2v-2h-2Zm4 0h2v-2h-2ZM19 3H5v2h14Zm-4 4H9v6h6Z"/></symbol>
-    <symbol id="ico-pulse" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12h4l2-5l4 10l2-5h6"/></symbol>
-  </svg>
+  <!-- Row 1 — Resuscitation & Timers -->
+  <symbol id="ico-heartbeat" viewBox="0 0 24 24">
+    <path d="M4 12h3l2-5 4 10 2-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-clipboard-check" viewBox="0 0 24 24">
+    <path d="M9 11l3 3L22 4M12 3h-1a3 3 0 00-3 3v1H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-baby" viewBox="0 0 24 24">
+    <path d="M12 4a4 4 0 110 8 4 4 0 010-8zm-6 14a6 6 0 0112 0H6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- Row 2 — Pediatric Care -->
+  <symbol id="ico-stethoscope" viewBox="0 0 24 24">
+    <path d="M5 3v5a5 5 0 0010 0V3M8 21a3 3 0 006 0v-4h-6v4zM19 14a2 2 0 11-4 0 2 2 0 014 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-user-heart" viewBox="0 0 24 24">
+    <path d="M12 11a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-8 2-8 5v1h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M17.5 15.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-tools" viewBox="0 0 24 24">
+    <path d="M3 7l5 5M12 8l8-8M7 3l5 5M3 21l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-scale" viewBox="0 0 24 24">
+    <path d="M3 6h18M6 6l-3 9h6l-3-9zM18 6l-3 9h6l-3-9zM12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- Row 3 — Assessment Scores -->
+  <symbol id="ico-brain" viewBox="0 0 24 24">
+    <path d="M12 3a5 5 0 00-5 5 5 5 0 00-3 9h2a3 3 0 003 3h4a3 3 0 003-3h2a5 5 0 00-3-9 5 5 0 00-5-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-sparkles" viewBox="0 0 24 24">
+    <path d="M12 3v3m0 12v3m9-9h-3M6 12H3m12-8l-2 5-5 2 5 2 2 5 2-5 5-2-5-2-2-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-bed" viewBox="0 0 24 24">
+    <path d="M3 7h18M3 7v13M21 7v13M6 15h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- Row 4 — Calculators · Reference -->
+  <symbol id="ico-workflow" viewBox="0 0 24 24">
+    <path d="M4 4h6v6H4zm0 10h6v6H4zm10-5h6M10 7h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-droplets" viewBox="0 0 24 24">
+    <path d="M12 3.5S8 9 8 13a4 4 0 008 0c0-4-4-9.5-4-9.5zM5 15a3 3 0 106 0c0-3-3-6.5-3-6.5S5 12 5 15z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-wand" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M8 4l1 2m7-2l-1 2M4 8l2 1m12 7l-2-1M20 8l-2 1M4 16l2-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-calculator" viewBox="0 0 24 24">
+    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 7h8M8 11h8M8 15h8M8 19h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- Ops / Links -->
+  <symbol id="ico-phone-call" viewBox="0 0 24 24">
+    <path d="M15 5a5 5 0 015 5c0 7-8 9-8 9s-1-4-5-8a5 5 0 015-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-helicopter" viewBox="0 0 24 24">
+    <path d="M2 12h20M12 2v20M5 12a7 7 0 0114 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ico-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+</svg>
+
 
 <script type="module">
   /* =========================
@@ -185,25 +261,35 @@
   const RETURN_URL    = "https://yourdomain.com/done.html";
 
   // Buttons (add actionId for webapp tools; if none, uses href or Shortcuts)
-  const BUTTONS = [
-    { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-    { text:"APGAR Score",      iconType:"svg", icon:"ico-star",  color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-    { text:"AS-Call",          iconType:"svg", icon:"ico-call",  color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-    { text:"Calculate MAP",    iconType:"svg", icon:"ico-calc",  color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-    { text:"Care Tools",       iconType:"svg", icon:"ico-wrench",color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
-    { text:"CCP Pediatric",    iconType:"svg", icon:"ico-user",  color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-    { text:"CPG Wizard",       iconType:"svg", icon:"ico-plus",  color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-    { text:"CPR",              iconType:"svg", icon:"ico-heart", color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-    { text:"Estimated Weight", iconType:"svg", icon:"ico-weight",color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-    { text:"Flowcharts",       iconType:"svg", icon:"ico-flow",  color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-    { text:"GCS Score",        iconType:"svg", icon:"ico-bars", color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-    { text:"HOS",              iconType:"svg", icon:"ico-home",  color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-    { text:"RBS Converter",    iconType:"svg", icon:"ico-bars", color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-    { text:"RSI Checklist",    iconType:"svg", icon:"ico-clip", color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
-    { text:"SAT Score",        iconType:"svg", icon:"ico-star", color:"c-olive", href:"#", showDefault:true, showShortcuts:true },
-    { text:"WAAFELSS",         iconType:"svg", icon:"ico-doc",  color:"c-teal",  href:"#", showDefault:true, showShortcuts:true },
-    { text:"Websites",         iconType:"svg", icon:"ico-globe",color:"c-slate", href:"https://example.com", showDefault:true, showShortcuts:false }
-  ];
+ const BUTTONS = [
+  // Row 1 — Resuscitation & Timers
+  { text:"CPR",              iconType:"svg", icon:"ico-heartbeat",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
+  { text:"RSI Checklist",    iconType:"svg", icon:"ico-clipboard-check", color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
+  { text:"WAAFELSS",         iconType:"svg", icon:"ico-baby",            color:"c-teal",   href:"#", showDefault:true, showShortcuts:true },
+
+  // Row 2 — Pediatric Care
+  { text:"CCP Pediatric",    iconType:"svg", icon:"ico-stethoscope",     color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+  { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user-heart",      color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
+  { text:"Care Tools",       iconType:"svg", icon:"ico-tools",           color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
+  { text:"Estimated Weight", iconType:"svg", icon:"ico-scale",           color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+
+  // Row 3 — Assessment Scores
+  { text:"GCS Score",        iconType:"svg", icon:"ico-brain",           color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+  { text:"APGAR Score",      iconType:"svg", icon:"ico-sparkles",        color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+  { text:"SAT Score",        iconType:"svg", icon:"ico-bed",             color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+
+  // Row 4 — Calculators · Reference
+  { text:"Flowcharts",       iconType:"svg", icon:"ico-workflow",        color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+  { text:"RBS Converter",    iconType:"svg", icon:"ico-droplets",        color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+  { text:"CPG Wizard",       iconType:"svg", icon:"ico-wand",            color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+  { text:"Calculate MAP",    iconType:"svg", icon:"ico-calculator",      color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+
+  // Ops / Links
+  { text:"AS-Call",          iconType:"svg", icon:"ico-phone-call",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+  { text:"HOS",              iconType:"svg", icon:"ico-helicopter",      color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+  { text:"Websites",         iconType:"svg", icon:"ico-globe",           color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
+];
+
 
   // Fixed section order + exact items
   const SECTIONS = [
