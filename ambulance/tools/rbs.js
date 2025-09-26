@@ -11,16 +11,43 @@ export async function run(mountEl) {
         position:relative;
       }
       .rbs-title{margin:0 0 10px 0; font-weight:700; color:#6e7b91}
-      .rbs-input-wrap{ position:relative; }
-      .rbs-input{
-        width:100%; font-size:20px; font-weight:700; color:var(--text,#0c1230);
-        background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
-        border-radius:14px; padding:14px 56px 14px 14px; outline:none;
-      }
-      .rbs-unit{
-        position:absolute; right:14px; bottom:12px; font-size:13px; color:#8a94a8;
-        pointer-events:none;
-      }
+     /* ---------- Align input with mg/dL label ---------- */
+.rbs-input-wrap{
+  display:flex;
+  align-items:center;          /* keeps input text and unit on the same baseline */
+  gap:8px;
+}
+
+.rbs-input{
+  flex:1;                      /* let input take remaining width */
+  width:100%;
+  font-size:20px;
+  font-weight:700;
+  color:var(--text,#0c1230);
+  background:var(--surface,#f3f6fb);
+  border:1px solid var(--border,#dbe0ea);
+  border-radius:14px;
+  padding:14px 12px;           /* no extra right padding now */
+  outline:none;
+}
+
+.rbs-input:focus{
+  box-shadow:0 0 0 3px color-mix(in oklab, var(--accent,#2f81f7) 25%, transparent);
+}
+
+.rbs-unit{
+  position:static;             /* sit inline, no absolute positioning */
+  font-size:14px;
+  color:#6e7b91;               /* readable in light */
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+/* Dark theme unit color for contrast */
+:root[data-theme="dark"] .rbs-unit{
+  color:#9aa6c3;
+}
+
 
       .rbs-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px }
       .rbs-chip{
