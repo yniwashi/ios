@@ -76,21 +76,36 @@
 :root{ --btn-w:108px }                                  /* portrait card width */
 @media (orientation:landscape){ :root{ --btn-w:120px } } /* landscape width */
 
+/* Fixed-size cards, dense packing, left-aligned */
 .grid{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  justify-content:flex-start;   /* left-align rows; change to center if you prefer */
-  align-items:stretch;
+  --btnw: 160px;         /* button width  (tweak if you like) */
+  --btnh: 120px;         /* button height (tweak if you like) */
+
+  display:grid;
+  gap:12px;
+  /* fixed-width columns; auto-fill as many as fit */
+  grid-template-columns: repeat(auto-fill, minmax(var(--btnw), var(--btnw)));
+  /* fixed row height so packing works perfectly */
+  grid-auto-rows: var(--btnh);
+  /* pack items tightly when some are hidden */
+  grid-auto-flow: row dense;
+  /* left align the grid area */
+  justify-content:start;
 }
 
 
-  .btn{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:var(--btn-fg, #fff);
-  width:var(--btn-w);                /* LANDMARK 2: fixed card width */
-  border-radius:10px; min-height:72px; padding:10px 10px; font-size:12.5px; font-weight:800; letter-spacing:.2px; text-align:center;
-  box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
+
+ .btn{
+  width: var(--btnw);           /* match grid column width */
+  min-height: var(--btnh);      /* match grid row height */
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  text-decoration:none; color:var(--btn-fg,#fff);
+  border-radius:12px; padding:12px 12px;
+  font-size:13px; font-weight:800; letter-spacing:.2px; text-align:center;
+  box-shadow:var(--shadow);
+  transition:transform var(--speed), box-shadow var(--speed), filter var(--speed);
 }
+
 
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
