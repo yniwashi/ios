@@ -2,7 +2,7 @@
 export async function run(mountEl) {
   mountEl.innerHTML = `
     <style>
-      /* ========= WAAFELSS (scoped) ========= */
+      /* ========= WAAFELLS (scoped) ========= */
       .waaf-wrap{ padding:12px }
       .waaf-card{
         background:var(--waaf-bg, var(--surface,#ffffff));
@@ -14,8 +14,12 @@ export async function run(mountEl) {
         display:flex; align-items:center; justify-content:space-between; gap:10px;
         margin-bottom:10px;
       }
+      /* LANDMARK 1 — Title only "WAAFELLS" */
       .waaf-title{ margin:0; font-weight:900; font-size:16px; color:var(--text,#0c1230) }
+
+      /* LANDMARK 2 — Mode pill hidden until a mode is chosen */
       .waaf-pill{
+        display:none;                /* hidden by default */
         padding:6px 10px; border-radius:999px; font-weight:800;
         background:#ffd2e1; color:#6c1130; border:1px solid rgba(0,0,0,.08);
       }
@@ -36,39 +40,47 @@ export async function run(mountEl) {
         border-radius:12px; padding:12px 14px; outline:none;
       }
 
+      /* LANDMARK 3 — Larger age group chips */
       .waaf-radio{
         display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
       }
       .waaf-chip{
         border-radius:999px; border:1px solid var(--border,#dbe0ea);
-        background:var(--surface,#f3f6fb); padding:8px 12px; font-weight:800; cursor:pointer;
+        background:var(--surface,#f3f6fb);
+        padding:12px 16px;            /* bigger */
+        font-weight:900;
+        font-size:14px;               /* bigger */
+        cursor:pointer;
       }
       .waaf-chip[data-active="true"]{
         background:#ffe3ed; border-color:#ff8bb5; color:#6c1130;
       }
 
-      .waaf-actions{ display:flex; gap:10px; margin:10px 0 6px }
+      /* LANDMARK 4 — Action heading + AP/CCP buttons */
+      .waaf-actions-wrap{ margin-top:12px }
+      .waaf-actions-title{
+        margin:0 0 6px 2px; font-weight:900; font-size:12px; color:#6e7b91;
+        text-transform:uppercase; letter-spacing:.12em;
+      }
+      .waaf-actions{ display:flex; gap:10px; }
       .waaf-btn{
         border:none; border-radius:12px; padding:10px 14px; font-weight:900; cursor:pointer;
         box-shadow:0 6px 14px rgba(0,0,0,.12);
       }
       .waaf-btn.primary{ color:#fff; background:linear-gradient(180deg,#ff4f8d,#fa3473) }
       .waaf-btn.ghost{ color:var(--text,#0c1230); background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea); }
+      .waaf-btn.push-right{ margin-left:auto }
 
+      /* LANDMARK 5 — Stacked results (one after another) */
       .waaf-results{
-        display:grid; gap:10px; margin-top:8px;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        display:flex; flex-direction:column; gap:8px; margin-top:12px;
       }
-      .waaf-card-sm{
+      .waaf-rowitem{
         background:var(--surface,#f6f8fd); border:1px solid var(--border,#e7ecf3);
-        border-radius:12px; padding:10px 12px;
+        border-radius:12px; padding:10px 12px; display:flex; align-items:baseline; gap:8px;
       }
-      .waaf-k{ font-size:12px; font-weight:700; color:#6e7b91; margin-bottom:2px }
-      .waaf-v{ font-size:18px; font-weight:900; color:var(--text,#0c1230) }
-
-      /* Reference block (always high-contrast) */
-      .waaf-ref-title{ margin:14px 0 6px 0; font-weight:900; color:var(--text,#0c1230) }
-      .waaf-ref{ white-space:pre-line; line-height:1.35; color:var(--text,#0c1230) }
+      .waaf-k{ font-size:12px; font-weight:800; color:#6e7b91; min-width:150px }
+      .waaf-v{ font-size:16px; font-weight:900; color:var(--text,#0c1230); word-break:break-word }
 
       /* ---------- Dark theme tweaks ---------- */
       :root[data-theme="dark"] .waaf-card{
@@ -80,11 +92,11 @@ export async function run(mountEl) {
       :root[data-theme="dark"] .waaf-chip{
         background:#12151c; border-color:#232a37; color:#eef2ff;
       }
-      :root[data-theme="dark"] .waaf-card-sm{
-        background:#12151c; border-color:#232a37;
-      }
       :root[data-theme="dark"] .waaf-chip[data-active="true"]{
         background:#4c1329; border-color:#8b2146; color:#ffd7e6;
+      }
+      :root[data-theme="dark"] .waaf-rowitem{
+        background:#12151c; border-color:#232a37;
       }
       :root[data-theme="dark"] .waaf-btn.ghost{
         background:#12151c; border:1px solid #232a37; color:#eef2ff;
@@ -94,8 +106,8 @@ export async function run(mountEl) {
     <div class="waaf-wrap">
       <div class="waaf-card">
         <div class="waaf-head">
-          <h3 class="waaf-title">WAAFELSS (Pediatric quick calcs)</h3>
-          <div id="waafModePill" class="waaf-pill">Select Mode</div>
+          <h3 class="waaf-title">WAAFELLS</h3>
+          <div id="waafModePill" class="waaf-pill"></div>
         </div>
 
         <div class="waaf-strip"></div>
@@ -119,26 +131,31 @@ export async function run(mountEl) {
           </div>
         </div>
 
-        <div class="waaf-actions">
-          <button id="btnAP"  class="waaf-btn primary">AP WAAFELSS</button>
-          <button id="btnCCP" class="waaf-btn ghost">CCP WAAFELSS</button>
-          <button id="btnClear" class="waaf-btn ghost" style="margin-left:auto">Clear</button>
+        <!-- LANDMARK 4 — Title above AP/CCP + shorter labels -->
+        <div class="waaf-actions-wrap">
+          <div class="waaf-actions-title">Calculate WAAFELLS for</div>
+          <div class="waaf-actions">
+            <button id="btnAP"  class="waaf-btn primary">AP</button>
+            <button id="btnCCP" class="waaf-btn ghost">CCP</button>
+            <button id="btnClear" class="waaf-btn ghost push-right">Clear</button>
+          </div>
         </div>
 
+        <!-- LANDMARK 5 — Stacked results with Age at the top -->
         <div class="waaf-results">
-          <div class="waaf-card-sm"><div class="waaf-k">Weight</div><div id="valWeight" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">Adrenaline</div><div id="valAdr" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">Amiodarone</div><div id="valAmi" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">Fluids (10–20 mL/kg)</div><div id="valFluids" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">LMA / LT Size</div><div id="valTube" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">Energy</div><div id="valEnergy" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">SBP (mmHg)</div><div id="valSbp" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm"><div class="waaf-k">Dextrose (ROSC)</div><div id="valDex" class="waaf-v">—</div></div>
-          <div class="waaf-card-sm" style="grid-column: span 2;"><div class="waaf-k">Needle</div><div id="valNeedle" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Age</div><div id="valAge" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Weight</div><div id="valWeight" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Adrenaline</div><div id="valAdr" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Amiodarone</div><div id="valAmi" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Fluids (10–20 mL/kg)</div><div id="valFluids" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">SGA Size</div><div id="valTube" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Energy</div><div id="valEnergy" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">SBP (mmHg)</div><div id="valSbp" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Dextrose 10% (ROSC)</div><div id="valDex" class="waaf-v">—</div></div>
+          <div class="waaf-rowitem"><div class="waaf-k">Chest Wall Decompression</div><div id="valNeedle" class="waaf-v">—</div></div>
         </div>
 
-        <div class="waaf-ref-title">Notes</div>
-        <div class="waaf-ref">Energy capped at 360 J. Dextrose (ROSC) capped at 50 mL.</div>
+        <!-- LANDMARK 6 — Notes removed -->
       </div>
     </div>
   `;
@@ -152,6 +169,7 @@ export async function run(mountEl) {
   const modePill = $('#waafModePill');
 
   const out = {
+    age: $('#valAge'),
     weight: $('#valWeight'),
     adr: $('#valAdr'),
     ami: $('#valAmi'),
@@ -171,17 +189,26 @@ export async function run(mountEl) {
     $$('.waaf-chip').forEach(b => b.dataset.active = (b.dataset.val === val));
   }
 
-  // Format helpers
   const clamp = (v, max) => (v > max ? max : v);
   const oneDec = v => (Math.round(v*10)/10).toFixed(1);
+  const fmtAgeLabel = (age, grp) => {
+    if (grp === 'Months') {
+      const n = Math.round(age);
+      return n === 1 ? '1 month' : `${n} months`;
+    } else {
+      const n = Math.round(age);
+      return n === 1 ? '1 year' : `${n} years`;
+    }
+  };
 
   function clearAll(){
     Object.values(out).forEach(el => el.textContent = '—');
-    modePill.textContent = 'Select Mode';
+    modePill.textContent = '';
+    modePill.style.display = 'none';        // hide mode pill again
     ageInput.value = '';
   }
 
-  // ===== Core calc (mirrors your Kotlin exactly) =====
+  // ===== Core calc (same logic as your Kotlin) =====
   function calc(mode){  // mode: 'AP' | 'CCP'
     const grp = activeAgeGroup();        // 'Months' | 'Years'
     const raw = (ageInput.value||'').trim();
@@ -190,10 +217,14 @@ export async function run(mountEl) {
       clearAll(); return;
     }
 
-    // Set pill
-    modePill.textContent = `${mode} WAAFELSS`;
+    // LANDMARK 2 — show mode pill and set to AP/CCP only
+    modePill.textContent = mode;
+    modePill.style.display = 'inline-block';
 
-    // Output vars
+    // Write Age row first
+    out.age.textContent = fmtAgeLabel(age, grp);
+
+    // Outputs
     let weight, adrMg, adrMl, amiMg, minFl, maxFl, energy, energySeq, dex, sBP, tube, needle;
 
     if (grp === 'Months'){
@@ -282,7 +313,7 @@ export async function run(mountEl) {
       }
     }
 
-    // Write outputs (matching your Kotlin display, including ml based on adrMl)
+    // Write outputs (stacked)
     out.weight.textContent = `${oneDec(weight)} kg`;
     out.adr.textContent    = `${oneDec(adrMg)} mg (${oneDec(adrMl)} mL)`;
     out.ami.textContent    = `${oneDec(amiMg)} mg (${oneDec(adrMl)} mL)`;
@@ -294,7 +325,7 @@ export async function run(mountEl) {
     out.needle.textContent = needle;
   }
 
-  // ===== Wire up
+  // Wire up
   $$('.waaf-chip').forEach(ch => ch.addEventListener('click', () => {
     setAgeGroup(ch.dataset.val);
   }));
