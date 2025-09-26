@@ -1,221 +1,204 @@
-// tools/rbs.js
-export async function run(root) {
-  root.innerHTML = `
-  <style>
-    .rbs * { box-sizing: border-box; }
-    .rbs { padding: 12px; }
+// tools/rbsconverter.js
+export async function run(mountEl) {
+  mountEl.innerHTML = `
+    <style>
+      /* ===== RBS Converter — Scoped ===== */
+      .rbs-wrap{padding:12px}
+      .rbs-card{
+        background:#e8f5e9;                 /* light "Normal" baseline */
+        border:1px solid color-mix(in oklab, var(--border, #dbe0ea) 70%, transparent);
+        border-radius:14px; padding:14px; box-shadow:0 6px 18px rgba(0,0,0,.12);
+        position:relative;
+      }
+      .rbs-title{margin:0 0 10px 0; font-weight:700; color:#6e7b91}
+      .rbs-input-wrap{ position:relative; }
+      .rbs-input{
+        width:100%; font-size:20px; font-weight:700; color:var(--text,#0c1230);
+        background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
+        border-radius:14px; padding:14px 56px 14px 14px; outline:none;
+      }
+      .rbs-unit{
+        position:absolute; right:14px; bottom:12px; font-size:13px; color:#8a94a8;
+        pointer-events:none;
+      }
 
-    :root{
-      --rbs-low:#ff3b30;   /* iOS red  */
-      --rbs-norm:#34c759;  /* iOS green */
-      --rbs-high:#ff9500;  /* iOS orange */
-    }
+      .rbs-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px }
+      .rbs-chip{
+        border-radius:999px; border:1px solid var(--border,#dbe0ea);
+        background:var(--surface,#f3f6fb); padding:8px 12px; font-weight:700;
+        cursor:pointer; user-select:none;
+      }
+      .rbs-actions{ display:flex; gap:12px; margin-top:10px }
+      .rbs-btn{
+        border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer;
+        box-shadow:0 6px 14px rgba(0,0,0,.15);
+      }
+      .rbs-btn.primary{ color:#fff; background:linear-gradient(180deg,#4a80ff,#2f66ea) }
+      .rbs-btn.ghost{ color:var(--text,#0c1230); background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea); }
 
-    .rbs-card{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.08);
-      max-width: 720px;
-      margin: 0 auto;
-      position: relative;
-      overflow: hidden;
-    }
+      .rbs-strip{ height:4px; border-radius:6px; margin:14px -14px 10px -14px; background:#224; opacity:.9 }
+      .rbs-result{
+        display:flex; align-items:baseline; gap:8px; margin-top:8px; color:var(--text,#0c1230);
+      }
+      .rbs-mm{ font-size:34px; font-weight:900 }
+      .rbs-unit-big{ font-size:18px; font-weight:800; opacity:.95 }
+      .rbs-pill{
+        display:inline-block; margin-top:10px; padding:8px 14px; border-radius:999px;
+        border:1px solid rgba(0,0,0,.15); font-weight:800;
+        background:#e5e7eb; color:#0c1230;
+      }
 
-    /* === STRONG TONE STRIP (very visible) === */
-    .tone-strip{
-      height: 8px;
-      border-radius: 10px;
-      margin: -4px -4px 10px -4px; /* bleed to edges inside the rounded card */
-      background: var(--border);
-    }
-    .tint-low  .tone-strip{  background: var(--rbs-low);  }
-    .tint-norm .tone-strip{  background: var(--rbs-norm); }
-    .tint-high .tone-strip{  background: var(--rbs-high); }
+      .rbs-ref-title{ margin:16px 0 6px 0; font-weight:900; }
+      /* Keep reference high-contrast: black in light, white in dark */
+      .rbs-ref-title, .rbs-ref{
+        color:#0c1230;
+      }
+      @media (prefers-color-scheme: dark) {
+        .rbs-ref-title, .rbs-ref { color:#fff; }
+      }
+      .rbs-ref{ white-space:pre-line; line-height:1.35; }
 
-    /* Card tints — LIGHT THEME (stronger) */
-    .tint-low  { background: #ffe8ea;  border-color:#ffb3ba; }
-    .tint-norm { background: #e9f9ee;  border-color:#b6ecc8; }
-    .tint-high { background: #fff1df;  border-color:#ffd4a8; }
+      /* ---------- Dark theme tweaks ---------- */
+      :root[data-theme="dark"] .rbs-input{
+        background:#12151c; border-color:#232a37; color:#eef2ff;
+      }
+      :root[data-theme="dark"] .rbs-card{
+        background:#141a17; border-color:#223029;
+      }
+      :root[data-theme="dark"] .rbs-chip{
+        background:#12151c; border-color:#232a37; color:#e6ebff;
+      }
+      :root[data-theme="dark"] .rbs-btn.ghost{
+        background:#12151c; border:1px solid #232a37; color:#eef2ff;
+      }
+    </style>
 
-    /* Card tints — DARK THEME (high contrast) */
-    [data-theme="dark"] .tint-low  { background:#2b1517; border-color:#5c1e24; }
-    [data-theme="dark"] .tint-norm { background:#132518; border-color:#1e4d2a; }
-    [data-theme="dark"] .tint-high { background:#2b1e0f; border-color:#5a3815; }
+    <div class="rbs-wrap">
+      <div class="rbs-card" id="rbsCard">
+        <div class="rbs-title">Random Blood Sugar</div>
 
-    .lab{
-      display:block; margin: 6px 2px 6px; color: var(--muted); font-weight: 700;
-    }
+        <div class="rbs-input-wrap">
+          <input id="rbsMg" class="rbs-input" inputmode="decimal" placeholder="120">
+          <span class="rbs-unit">mg/dL</span>
+        </div>
 
-    /* Input + unit inside */
-    .input-wrap{ position: relative; }
-    .mg-input{
-      width:100%;
-      background: var(--surface-2);
-      border:1px solid var(--border);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 14px 64px 14px 14px;   /* space for unit on right */
-      font-size: 18px;
-      outline: none;
-      transition: border-color .18s ease, background .18s ease;
-    }
-    .mg-input:focus{ border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
-    .unit{
-      position:absolute; right:12px; top:50%; transform: translateY(-50%);
-      color: var(--muted); font-weight:700; pointer-events:none;
-    }
+        <div class="rbs-row" style="margin-top:12px">
+          ${[50,70,100,180,250].map(v=>`<button class="rbs-chip" data-val="${v}">${v}</button>`).join("")}
+        </div>
 
-    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 8px; }
-    .chip{
-      appearance:none; border:1px solid var(--border); background: var(--surface-2);
-      color: var(--text); font-weight:800; padding:8px 12px; border-radius: 999px; cursor:pointer;
-    }
+        <div class="rbs-actions">
+          <button id="rbsConvert" class="rbs-btn primary">Convert</button>
+          <button id="rbsClear" class="rbs-btn ghost">Clear</button>
+        </div>
 
-    .actions{ display:flex; gap:10px; margin: 8px 0 6px; }
-    .btn{
-      appearance:none; border:1px solid var(--border); background: var(--surface-2);
-      color: var(--text); font-weight:900; padding:10px 14px; border-radius:12px; cursor:pointer;
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-    }
-    .btn:active{ transform: translateY(1px); }
-    .btn.primary{
-      background: linear-gradient(180deg,#6ba3ff,#3b7cff);
-      border-color: color-mix(in oklab, #3b7cff 50%, var(--border));
-      color: #fff;
-      box-shadow: 0 6px 14px rgba(59,124,255,.25);
-    }
+        <div class="rbs-strip" id="rbsStrip"></div>
 
-    .result{ text-align:center; margin: 10px 0 2px; }
-    .big{
-      font-size: 30px; font-weight: 1000; color: var(--text);
-    }
-    .big small{ font-size:18px; font-weight:800; color: var(--muted); margin-left: 6px; }
+        <div class="rbs-result" id="rbsResult" aria-live="polite">
+          <div class="rbs-mm" id="rbsMmol">—</div>
+          <div class="rbs-unit-big">mmol/L</div>
+        </div>
 
-    /* High-contrast status pill */
-    .status{
-      display:inline-block; margin-top:10px; padding:7px 14px; border-radius:999px;
-      font-weight:900; border:1.5px solid transparent;
-    }
-    /* Light */
-    .status.low  { background: #ffd7db; color:#8b0f16; border-color:#ff9aa4; }
-    .status.norm { background: #dff7e7; color:#0f5a24; border-color:#a9e4bf; }
-    .status.high { background: #ffe5c7; color:#8a3b00; border-color:#ffc27a; }
+        <div class="rbs-pill" id="rbsStatus">—</div>
 
-    /* Dark */
-    [data-theme="dark"] .status.low  { background: rgba(255,59,48,.22); color:#ffd1d4; border-color: rgba(255,59,48,.55); }
-    [data-theme="dark"] .status.norm { background: rgba(52,199,89,.22); color:#c7f5d6; border-color: rgba(52,199,89,.55); }
-    [data-theme="dark"] .status.high { background: rgba(255,149,0,.22); color:#ffdcb3; border-color: rgba(255,149,0,.55); }
-
-    /* Reference stays readable */
-    .ref{ margin-top: 14px; }
-    .ref .t{ color: color-mix(in oklab, var(--text) 88%, var(--muted)); font-weight:900; }
-    .ref ul{ margin: 6px 0 0 18px; padding:0; color: color-mix(in oklab, var(--text) 95%, var(--muted)); }
-    .ref li{ line-height:1.45; }
-
-    @media (max-width: 420px){
-      .mg-input { font-size:17px; }
-      .big{ font-size:28px; }
-    }
-  </style>
-
-  <div class="rbs">
-    <div class="rbs-card" id="card">
-      <div class="tone-strip"></div>
-
-      <label class="lab" for="mg">Random Blood Sugar</label>
-
-      <div class="input-wrap">
-        <input id="mg" class="mg-input" inputmode="decimal" autocomplete="off" placeholder="e.g. 120" />
-        <span class="unit">mg/dL</span>
-      </div>
-
-      <div class="chips">
-        <button class="chip" data-val="50">50</button>
-        <button class="chip" data-val="70">70</button>
-        <button class="chip" data-val="100">100</button>
-        <button class="chip" data-val="180">180</button>
-        <button class="chip" data-val="250">250</button>
-      </div>
-
-      <div class="actions">
-        <button id="doConvert" class="btn primary">Convert</button>
-        <button id="doClear"   class="btn">Clear</button>
-      </div>
-
-      <div id="result" class="result" hidden>
-        <div class="big"><span id="mmolVal">–</span><small>mmol/L</small></div>
-        <div id="status" class="status norm">Normal</div>
-      </div>
-
-      <div class="ref">
-        <div class="t">Reference (random glucose, mg/dL)</div>
-        <ul>
-          <li>Hypoglycemia: &lt; 70</li>
-          <li>Normal: 70 – 120</li>
-          <li>Hyperglycemia: &gt; 120</li>
-        </ul>
+        <div class="rbs-ref-title">Reference (random glucose, mg/dL)</div>
+        <div class="rbs-ref" id="rbsRef">- Hypoglycemia: &lt; 70
+- Normal: 70 – 120
+- Hyperglycemia: &gt; 120</div>
       </div>
     </div>
-  </div>
   `;
 
-  const $ = (sel) => root.querySelector(sel);
-  const mgInput  = $('#mg');
-  const result   = $('#result');
-  const mmolVal  = $('#mmolVal');
-  const statusEl = $('#status');
-  const card     = $('#card');
+  /* ===== Helpers ===== */
+  const $ = (sel)=>mountEl.querySelector(sel);
+  const input = $('#rbsMg');
+  const card  = $('#rbsCard');
+  const strip = $('#rbsStrip');
+  const mmolEl= $('#rbsMmol');
+  const status= $('#rbsStatus');
 
-  function round1(x){ return Math.round(x*10)/10; }
-
-  function applyTone(tone){
-    card.classList.remove('tint-low','tint-norm','tint-high');
-    card.classList.add(tone);
-  }
-
-  function show(mg) {
-    const mmol = round1(mg/18);
-    mmolVal.textContent = mmol.toFixed(1);
-
-    if (mg < 70){
-      statusEl.textContent = 'Hypoglycemia';
-      statusEl.className = 'status low';
-      applyTone('tint-low');
-    } else if (mg <= 120){
-      statusEl.textContent = 'Normal';
-      statusEl.className = 'status norm';
-      applyTone('tint-norm');
-    } else {
-      statusEl.textContent = 'Hyperglycemia';
-      statusEl.className = 'status high';
-      applyTone('tint-high');
+  // LANDMARK 1 — category color palettes (light & dark)
+  const COLORS = {
+    light: {
+      hypo: {strip:'#E53935', card:'#FFEBEE', pillBg:'#E53935', pillFg:'#fff'},
+      norm: {strip:'#43A047', card:'#E8F5E9', pillBg:'#C8E6C9', pillFg:'#0c1230'},
+      hyper:{strip:'#FB8C00', card:'#FFF3E0', pillBg:'#FFE0B2', pillFg:'#0c1230'}
+    },
+    dark: {
+      hypo: {strip:'#ef5350', card:'#3a1e1e', pillBg:'#ef5350', pillFg:'#fff'},
+      norm: {strip:'#66bb6a', card:'#1b3b24', pillBg:'#66bb6a', pillFg:'#0c1230'},
+      hyper:{strip:'#ffa726', card:'#402915', pillBg:'#ffa726', pillFg:'#0c1230'}
     }
-    result.hidden = false;
+  };
+
+  // LANDMARK 2 — robust dark-mode check (matches your theme toggle)
+  function isDark() {
+    const manual = document.documentElement.getAttribute('data-theme');
+    if (manual === 'dark') return true;
+    if (manual === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
+  // LANDMARK 3 — apply a full theme for the status
+  function applyTheme(kind) {
+    const mode = isDark() ? 'dark' : 'light';
+    const c = COLORS[mode][kind];
+    card.style.backgroundColor = c.card;
+    strip.style.backgroundColor = c.strip;
+    status.style.backgroundColor = c.pillBg;
+    status.style.color = c.pillFg;
+  }
+
+  // LANDMARK 4 — compute category and update UI
   function convert() {
-    const raw = (mgInput.value || '').trim().replace(',', '.');
-    if (!raw) { result.hidden = true; return; }
-    const mg = Number(raw);
-    if (!isFinite(mg) || mg < 0) { alert('Please enter a valid mg/dL value.'); result.hidden = true; return; }
-    show(mg);
+    const raw = (input.value || '').trim();
+    if (!raw) { resetCard(); return; }
+
+    const mg = Number(raw.replace(',', '.'));
+    if (Number.isNaN(mg) || mg < 0) {
+      mmolEl.textContent = '—';
+      status.textContent = 'Invalid';
+      applyTheme('hyper'); // draw attention
+      return;
+    }
+
+    const mmol = Math.round((mg/18)*10)/10;
+    mmolEl.textContent = mmol.toFixed(1);
+
+    if (mg < 70) {
+      status.textContent = 'Hypoglycemia';
+      applyTheme('hypo');
+    } else if (mg <= 120) {
+      status.textContent = 'Normal';
+      applyTheme('norm');
+    } else {
+      status.textContent = 'Hyperglycemia';
+      applyTheme('hyper');
+    }
   }
 
-  // Events
-  root.querySelectorAll('.chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      mgInput.value = btn.dataset.val;
-      convert();
-      mgInput.focus();
-      mgInput.setSelectionRange(mgInput.value.length, mgInput.value.length);
-    });
+  // LANDMARK 5 — initial/cleared state (no fade-to-gray)
+  function resetCard() {
+    mmolEl.textContent = '—';
+    status.textContent = '—';
+    // Keep baseline backgrounds per theme
+    if (isDark()) {
+      card.style.backgroundColor = '#141a17';
+      strip.style.backgroundColor = '#223029';
+    } else {
+      card.style.backgroundColor = '#e8f5e9';
+      strip.style.backgroundColor = '#224';
+    }
+    status.style.backgroundColor = '#e5e7eb';
+    status.style.color = '#0c1230';
+  }
+
+  // LANDMARK 6 — wire up controls
+  mountEl.querySelectorAll('.rbs-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{ input.value = chip.dataset.val; convert(); });
   });
-  $('#doConvert').addEventListener('click', convert);
-  $('#doClear').addEventListener('click', ()=>{
-    mgInput.value=''; result.hidden = true; card.classList.remove('tint-low','tint-norm','tint-high'); mgInput.focus();
-  });
-  mgInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ convert(); }});
-  mgInput.focus();
+  $('#rbsConvert').addEventListener('click', convert);
+  $('#rbsClear').addEventListener('click', ()=>{ input.value=''; resetCard(); input.focus(); });
+
+  // On mount
+  resetCard();
 }
