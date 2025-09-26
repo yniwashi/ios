@@ -93,19 +93,25 @@
       font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24;
     }
 
-    /* Colors */
-    .c-blue{background:linear-gradient(180deg,#3a7bfd,#2660ea)}
-    .c-teal{background:linear-gradient(180deg,#22c1b9,#169e97)}
-    .c-purple{background:linear-gradient(180deg,#7a5cff,#5a3df0)}
-    .c-pink{background:linear-gradient(180deg,#ff6ea9,#e34e8a)}
-    .c-green{background:linear-gradient(180deg,#2ecc71,#19b36b)}
-    .c-amber{background:linear-gradient(180deg,#ffb43a,#ff9620)}
-    .c-red{background:linear-gradient(180deg,#ff5757,#e23b3b)}
-    .c-cyan{background:linear-gradient(180deg,#12c2e9,#0aa0c2)}
-    .c-slate{background:linear-gradient(180deg,#64748b,#475569)}
-    .c-indigo{background:linear-gradient(180deg,#6366f1,#4f46e5)}
-    .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
-    .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
+    /* Button-specific colors (one per tool) */
+.btn-cpr{background:linear-gradient(180deg,#ff5757,#e23b3b)}
+.btn-rsi{background:linear-gradient(180deg,#0D5BB5,#0D3AB5)}
+.btn-waafelss{background:linear-gradient(180deg,#22c1b9,#169e97)}
+.btn-ccp{background:linear-gradient(180deg,#3a7bfd,#2660ea)}
+.btn-ap{background:linear-gradient(180deg,#2ecc71,#19b36b)}
+.btn-caretools{background:linear-gradient(180deg,#12c2e9,#0aa0c2)}
+.btn-weight{background:linear-gradient(180deg,#ffb43a,#ff9620)}
+.btn-gcs{background:linear-gradient(180deg,#4f8cff,#2a63e5)}
+.btn-apgar{background:linear-gradient(180deg,#b76e3e,#96522a)}
+.btn-sat{background:linear-gradient(180deg,#8cc84b,#6ea934)}
+.btn-flowcharts{background:linear-gradient(180deg,#6366f1,#4f46e5)}
+.btn-rbs{background:linear-gradient(180deg,#7a5cff,#5a3df0)}
+.btn-cpg{background:linear-gradient(180deg,#8b5cf6,#6d28d9)}
+.btn-map{background:linear-gradient(180deg,#5b8cff,#3d6be8)}
+.btn-ascall{background:linear-gradient(180deg,#ffb43a,#ff9620)}
+.btn-hos{background:linear-gradient(180deg,#8cc84b,#6ea934)}
+.btn-websites{background:linear-gradient(180deg,#64748b,#475569)}
+
 
     /* Panel */
     #panel{ position: fixed; inset: 0; background: transparent; z-index: 9999; }
@@ -175,35 +181,36 @@
     const USE_RETURN_URL = false;
     const RETURN_URL    = "https://yourdomain.com/done.html";
 
-    // Buttons (Material Symbols)
+    
     const BUTTONS = [
-      // Row 1 — Resuscitation & Timers
-      { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-      { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"WAAFELSS",         iconType:"material", icon:"baby_changing_station", color:"c-teal", href:"#", showDefault:true, showShortcuts:true },
+  // Row 1 — Resuscitation & Timers
+  { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"btn-cpr",       href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
+  { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"btn-rsi",       href:"#", showDefault:true, showShortcuts:true },
+  { text:"WAAFELSS",         iconType:"material", icon:"baby_changing_station", color:"btn-waafelss", href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 2 — Pediatric Care
-      { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-      { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+  // Row 2 — Pediatric Care
+  { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"btn-ccp",       href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+  { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"btn-ap",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:true },
+  { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"btn-weight",    href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 3 — Assessment Scores
-      { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-      { text:"APGAR Score",      iconType:"material", icon:"child_care",          color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-      { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+  // Row 3 — Assessment Scores
+  { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"btn-gcs",       href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+  { text:"APGAR Score",      iconType:"material", icon:"child_care",          color:"btn-apgar",     href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+  { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"btn-sat",       href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 4 — Calculators · Reference
-      { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-      { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+  // Row 4 — Calculators · Reference
+  { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"btn-flowcharts", href:"#", showDefault:true, showShortcuts:true },
+  { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"btn-rbs",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"btn-cpg",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"btn-map",        href:"#", showDefault:true, showShortcuts:true },
 
-      // Ops / Links
-      { text:"AS-Call",          iconType:"material", icon:"call",                color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"HOS",              iconType:"material", icon:"local_airport",       color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Websites",         iconType:"material", icon:"language",            color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
-    ];
+  // Ops / Links
+  { text:"AS-Call",          iconType:"material", icon:"call",                color:"btn-ascall",     href:"#", showDefault:true, showShortcuts:true },
+  { text:"HOS",              iconType:"material", icon:"local_airport",       color:"btn-hos",        href:"#", showDefault:true, showShortcuts:true },
+  { text:"Websites",         iconType:"material", icon:"language",            color:"btn-websites",   href:"https://example.com", showDefault:true, showShortcuts:false }
+];
+
 
     // ✅ Sections layout (this was missing)
     const SECTIONS = [
