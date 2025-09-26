@@ -1,239 +1,195 @@
-// RBS Converter — mg/dL → mmol/L with category styling
-// Usage: loaded by index.html via run(mountEl, params)
+// tools/rbs.js
+export async function run(root) {
+  root.innerHTML = `
+  <style>
+    .rbs * { box-sizing: border-box; }
+    .rbs { padding: 12px; }
 
-export async function run(mountEl, params = {}) {
-  mountEl.innerHTML = `
-    <style>
-      /* ===== RBS styles (scoped) ===== */
-      .rbs-wrap{ padding:14px 12px 28px; display:flex; flex-direction:column; gap:12px; }
-      .rbs-card{
-        background:var(--surface);
-        border:1px solid var(--border);
-        border-radius:12px;
-        overflow:hidden;
-      }
-      .rbs-card .strip{ height:5px; background:#e5e7eb; }
-      .rbs-body{ padding:12px; display:flex; flex-direction:column; gap:12px; }
+    .rbs-card{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+      max-width: 720px;
+      margin: 0 auto;
+    }
 
-      .rbs-row{ display:flex; align-items:flex-end; gap:10px; }
-      .rbs-field{ flex:1; display:flex; flex-direction:column; gap:6px; }
-      .rbs-label{ font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.02em; }
-      .rbs-input{
-        appearance:none; width:100%;
-        background:var(--surface-2);
-        border:1px solid var(--border);
-        border-radius:10px;
-        padding:12px 12px;
-        font:600 16px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-        color:var(--text);
-      }
-      .rbs-suffix{ font-size:12px; color:var(--muted); padding-bottom:4px; white-space:nowrap; }
+    .rbs-head{
+      display:flex; align-items:center; gap:10px; margin-bottom: 10px;
+    }
+    .rbs-title{
+      margin:0; font-weight:800; font-size:18px; color:var(--text);
+    }
 
-      .rbs-actions{ display:flex; gap:8px; }
-      .rbs-btn{
-        appearance:none; cursor:pointer; user-select:none;
-        border-radius:10px; border:1px solid var(--border);
-        background:linear-gradient(180deg,#3a7bfd,#2660ea);
-        color:#fff; font-weight:800; font-size:14px;
-        padding:10px 12px; flex:0 0 auto; box-shadow:0 8px 18px rgba(0,0,0,.18);
-        transition:transform .2s, box-shadow .2s, filter .2s;
-      }
-      .rbs-btn:active{ transform:scale(.98) }
-      .rbs-btn.secondary{
-        background:var(--surface-2); color:var(--text); border-color:var(--border);
-        box-shadow:none;
-      }
+    .lab{
+      display:block; margin: 6px 2px 6px; color: var(--muted); font-weight: 600;
+    }
 
-      .rbs-result{ display:none; }
-      .rbs-mm{ text-align:center; font-weight:900; }
-      .rbs-mm .big{ font-size:26px; }
-      .rbs-mm .unit{ font-size:18px; margin-left:4px; }
+    /* input with unit inside on the right */
+    .input-wrap{ position: relative; }
+    .mg-input{
+      width:100%;
+      background: var(--surface-2);
+      border:1px solid var(--border);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 14px 64px 14px 14px;   /* space for unit on right */
+      font-size: 18px;
+      outline: none;
+      transition: border-color .18s ease, background .18s ease;
+    }
+    .mg-input:focus{ border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
+    .unit{
+      position:absolute; right:12px; top:50%; transform: translateY(-50%);
+      color: var(--muted); font-weight:600; pointer-events:none;
+    }
 
-      .rbs-status{ display:flex; align-items:center; justify-content:center; }
-      .rbs-pill{
-        display:inline-flex; align-items:center; justify-content:center;
-        border-radius:999px; padding:6px 10px; font-weight:800; font-size:13px;
-        border:1px solid transparent;
-      }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 8px; }
+    .chip{
+      appearance:none; border:1px solid var(--border); background: var(--surface-2);
+      color: var(--text); font-weight:700; padding:8px 12px; border-radius: 999px; cursor:pointer;
+    }
 
-      .rbs-ref{ margin-top:4px; }
-      .rbs-ref-title{ font-size:12px; color:var(--muted); font-weight:700; }
-      .rbs-ref-lines{ font-size:13px; line-height:1.25; white-space:pre-line; }
+    .actions{ display:flex; gap:10px; margin: 8px 0 6px; }
+    .btn{
+      appearance:none; border:1px solid var(--border); background: var(--surface-2);
+      color: var(--text); font-weight:800; padding:10px 14px; border-radius:12px; cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background: linear-gradient(180deg,#6ba3ff,#3b7cff);
+      border-color: color-mix(in oklab, #3b7cff 50%, var(--border));
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(59,124,255,.25);
+    }
 
-      /* Category tints (light backgrounds) */
-      .tint-low   { background:#FFEBEE }  /* very light red */
-      .tint-norm  { background:#E8F5E9 }  /* very light green */
-      .tint-high  { background:#FFF3E0 }  /* very light orange */
+    .result{ text-align:center; margin: 8px 0 2px; }
+    .big{
+      font-size: 28px; font-weight: 900; color: var(--text);
+    }
+    .big small{ font-size:18px; font-weight:800; color: var(--muted); margin-left: 6px; }
 
-      .strip-low  { background:#E53935 }
-      .strip-norm { background:#43A047 }
-      .strip-high { background:#FB8C00 }
+    .status{
+      display:inline-block; margin-top:8px; padding:6px 12px; border-radius:999px;
+      font-weight:800; border:1px solid transparent;
+    }
 
-      .pill-low   { background:#E53935; color:#fff; }
-      .pill-norm  { background:#C8E6C9; color:#0b1b13; border-color:#A5D6A7; }
-      .pill-high  { background:#FFE0B2; color:#281a0a; border-color:#FFCC80; }
+    /* Card tints that work in light & dark (mix with surface) */
+    .tint-low   { background: color-mix(in oklab, #e53935 10%, var(--surface));  border-color: color-mix(in oklab, #e53935 30%, var(--border)); }
+    .tint-norm  { background: color-mix(in oklab, #43A047 10%, var(--surface));  border-color: color-mix(in oklab, #43A047 30%, var(--border)); }
+    .tint-high  { background: color-mix(in oklab, #FB8C00 10%, var(--surface));  border-color: color-mix(in oklab, #FB8C00 30%, var(--border)); }
 
-      /* Tiny error */
-      .rbs-err{ color:#E53935; font-size:12px; display:none; }
+    .status.low  { background:#ffebee;  color:#b71c1c; border-color:#ffcdd2; }
+    .status.norm { background:#e8f5e9;  color:#1b5e20; border-color:#c8e6c9; }
+    .status.high { background:#fff3e0;  color:#e65100; border-color:#ffe0b2; }
 
-      /* Quick presets */
-      .rbs-presets{ display:flex; gap:8px; flex-wrap:wrap; }
-      .rbs-chip{
-        appearance:none; cursor:pointer;
-        padding:6px 10px; border-radius:999px;
-        background:var(--surface-2); border:1px solid var(--border);
-        font-weight:700; font-size:12px; color:var(--text);
-      }
-    </style>
+    /* Keep reference text readable in dark */
+    .ref{ margin-top: 14px; }
+    .ref .t{ color: color-mix(in oklab, var(--text) 86%, var(--muted)); font-weight:800; }
+    .ref ul{ margin: 6px 0 0 18px; padding:0; color: color-mix(in oklab, var(--text) 92%, var(--muted)); }
+    .ref li{ line-height:1.45; }
 
-    <div class="rbs-wrap">
-      <div class="rbs-card" id="rbs-card">
-        <div class="strip" id="rbs-strip"></div>
+    /* make it breathe a bit on small screens */
+    @media (max-width: 420px){
+      .mg-input { font-size:17px; }
+      .big{ font-size:26px; }
+    }
+  </style>
 
-        <div class="rbs-body">
-          <div class="rbs-row">
-            <div class="rbs-field">
-              <label class="rbs-label" for="rbs-mg">Random Blood Sugar</label>
-              <input id="rbs-mg" class="rbs-input" type="number" inputmode="decimal" step="0.1" min="0" placeholder="Enter mg/dL">
-              <div class="rbs-err" id="rbs-err">Please enter a valid number in mg/dL.</div>
-            </div>
-            <div class="rbs-suffix">mg/dL</div>
-          </div>
+  <div class="rbs">
+    <div class="rbs-card" id="card">
+      <label class="lab" for="mg">Random Blood Sugar</label>
 
-          <div class="rbs-presets" aria-label="Quick values">
-            <button type="button" class="rbs-chip" data-v="50">50</button>
-            <button type="button" class="rbs-chip" data-v="70">70</button>
-            <button type="button" class="rbs-chip" data-v="100">100</button>
-            <button type="button" class="rbs-chip" data-v="180">180</button>
-            <button type="button" class="rbs-chip" data-v="250">250</button>
-          </div>
+      <div class="input-wrap">
+        <input id="mg" class="mg-input" inputmode="decimal" autocomplete="off" placeholder="e.g. 120" />
+        <span class="unit">mg/dL</span>
+      </div>
 
-          <div class="rbs-actions">
-            <button id="rbs-convert" class="rbs-btn">Convert</button>
-            <button id="rbs-clear"   class="rbs-btn secondary">Clear</button>
-          </div>
+      <div class="chips">
+        <button class="chip" data-val="50">50</button>
+        <button class="chip" data-val="70">70</button>
+        <button class="chip" data-val="100">100</button>
+        <button class="chip" data-val="180">180</button>
+        <button class="chip" data-val="250">250</button>
+      </div>
 
-          <div id="rbs-result" class="rbs-result">
-            <div class="rbs-mm">
-              <span id="rbs-val" class="big">—</span>
-              <span class="unit">mmol/L</span>
-            </div>
-            <div class="rbs-status">
-              <span id="rbs-pill" class="rbs-pill">—</span>
-            </div>
+      <div class="actions">
+        <button id="doConvert" class="btn primary">Convert</button>
+        <button id="doClear"   class="btn">Clear</button>
+      </div>
 
-            <div class="rbs-ref">
-              <div class="rbs-ref-title">Reference (random glucose, mg/dL)</div>
-              <div class="rbs-ref-lines">- Hypoglycemia: &lt; 70
-- Normal: 70 – 120
-- Hyperglycemia: &gt; 120</div>
-            </div>
-          </div>
-        </div>
+      <div id="result" class="result" hidden>
+        <div class="big"><span id="mmolVal">–</span><small>mmol/L</small></div>
+        <div id="status" class="status norm">Normal</div>
+      </div>
+
+      <div class="ref">
+        <div class="t">Reference (random glucose, mg/dL)</div>
+        <ul>
+          <li>Hypoglycemia: &lt; 70</li>
+          <li>Normal: 70 – 120</li>
+          <li>Hyperglycemia: &gt; 120</li>
+        </ul>
       </div>
     </div>
+  </div>
   `;
 
-  // ----- DOM -----
-  const el = q => mountEl.querySelector(q);
-  const mgInput   = el("#rbs-mg");
-  const btnGo     = el("#rbs-convert");
-  const btnClear  = el("#rbs-clear");
-  const resultBox = el("#rbs-result");
-  const pill      = el("#rbs-pill");
-  const strip     = el("#rbs-strip");
-  const card      = el("#rbs-card");
-  const valOut    = el("#rbs-val");
-  const err       = el("#rbs-err");
+  const $ = (sel) => root.querySelector(sel);
+  const mgInput  = $('#mg');
+  const result   = $('#result');
+  const mmolVal  = $('#mmolVal');
+  const statusEl = $('#status');
+  const card     = $('#card');
 
-  // Quick preset chips
-  mountEl.querySelectorAll(".rbs-chip").forEach(chip=>{
-    chip.addEventListener("click", ()=>{
-      mgInput.value = chip.getAttribute("data-v") || "";
-      err.style.display = "none";
+  function round1(x){ return Math.round(x*10)/10; }
+
+  function show(mg) {
+    const mmol = round1(mg/18);
+    mmolVal.textContent = mmol.toFixed(1);
+
+    // Reset card tint classes
+    card.classList.remove('tint-low','tint-norm','tint-high');
+
+    if (mg < 70){
+      statusEl.textContent = 'Hypoglycemia';
+      statusEl.className = 'status low';
+      card.classList.add('tint-low');
+    } else if (mg <= 120){
+      statusEl.textContent = 'Normal';
+      statusEl.className = 'status norm';
+      card.classList.add('tint-norm');
+    } else {
+      statusEl.textContent = 'Hyperglycemia';
+      statusEl.className = 'status high';
+      card.classList.add('tint-high');
+    }
+    result.hidden = false;
+  }
+
+  function convert() {
+    const raw = (mgInput.value || '').trim().replace(',', '.');
+    if (!raw) { result.hidden = true; return; }
+    const mg = Number(raw);
+    if (!isFinite(mg) || mg < 0) { alert('Please enter a valid mg/dL value.'); result.hidden = true; return; }
+    show(mg);
+  }
+
+  // Events
+  root.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      mgInput.value = btn.dataset.val;
+      convert();
       mgInput.focus();
+      mgInput.setSelectionRange(mgInput.value.length, mgInput.value.length);
     });
   });
-
-  btnGo.addEventListener("click", handleConvert);
-  btnClear.addEventListener("click", () => {
-    mgInput.value = "";
-    resultBox.style.display = "none";
-    err.style.display = "none";
-    // reset tints
-    strip.className = "strip";
-    card.className  = "rbs-card";
+  $('#doConvert').addEventListener('click', convert);
+  $('#doClear').addEventListener('click', ()=>{
+    mgInput.value=''; result.hidden = true; mgInput.focus();
   });
-
-  // Enter key convenience
-  mgInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") { e.preventDefault(); handleConvert(); }
-  });
-
-  // If a hash param like #tool=rbs&mg=110 exists, prefill
-  const mgPrefill = (params && params.mg) || getHashParam("mg");
-  if (mgPrefill) {
-    mgInput.value = mgPrefill;
-    handleConvert();
-  }
-
-  function handleConvert() {
-    const raw = (mgInput.value || "").trim();
-    const mg = Number.parseFloat(raw);
-    if (!raw || !Number.isFinite(mg) || mg < 0) {
-      err.style.display = "block";
-      resultBox.style.display = "none";
-      return;
-    }
-    err.style.display = "none";
-
-    // mg/dL → mmol/L
-    const mmol = mg / 18;
-    const mmolText = formatOneDecimal(mmol);
-    valOut.textContent = mmolText;
-
-    // Categories + visuals
-    let tintClass = "tint-norm";
-    let stripClass = "strip-norm";
-    let pillClass = "pill-norm";
-    let statusText = "Normal";
-
-    if (mg < 70) {
-      tintClass = "tint-low";
-      stripClass = "strip-low";
-      pillClass  = "pill-low";
-      statusText = "Hypoglycemia";
-    } else if (mg > 120) {
-      tintClass = "tint-high";
-      stripClass = "strip-high";
-      pillClass  = "pill-high";
-      statusText = "Hyperglycemia";
-    }
-
-    // apply classes
-    strip.className = `strip ${stripClass}`;
-    card.className  = `rbs-card ${tintClass}`;
-    pill.className  = `rbs-pill ${pillClass}`;
-    pill.textContent = statusText;
-
-    resultBox.style.display = "block";
-
-    // make the result shareable in URL
-    tryUpdateHash({ tool: "rbs", mg: mg.toString() });
-  }
-
-  function formatOneDecimal(value) {
-    // round to 1 decimal like Kotlin version
-    return (Math.round(value * 10) / 10).toFixed(1);
-  }
-
-  function tryUpdateHash(obj) {
-    if (typeof updateHash === "function") updateHash(obj);
-  }
-  function getHashParam(key) {
-    try {
-      const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
-      return h.get(key);
-    } catch { return null; }
-  }
+  mgInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ convert(); }});
+  mgInput.focus();
 }
