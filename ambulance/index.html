@@ -14,7 +14,7 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f1115">
 
   <style>
-    :root{ --radius:12px; --speed:.22s; --shadow:0 8px 18px rgba(0,0,0,.28); --shadow-2:0 12px 28px rgba(0,0,0,.35) }
+    :root{ --radius:12px; --speed:.22s; --shadow:0 8px 18px rgba(0,0,0,.28); --shadow-2:0 12px 28px rgba(0,0,0,.35); --gap:8px }
     @media (prefers-color-scheme: light){ :root{
       --bg:#f7f9fc; --surface:#ffffff; --border:#e7ecf3; --text:#0c1230; --muted:#616b86;
       --accent:#1f6fff; --accent-2:#19b36b; --surface-2:#f1f5fb;
@@ -33,18 +33,12 @@
       /* safe area padding for webclip */
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    .wrap{max-width:980px; margin:0 auto; padding:14px clamp(10px,4vw,20px) 24px; display:flex; flex-direction:column; gap:14px}
+    .wrap{max-width:980px; margin:0 auto; padding:12px clamp(8px,4vw,16px) 18px; display:flex; flex-direction:column; gap:10px}
 
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px}
-    .brand{display:flex; align-items:center; gap:2px}
-.logo {
-  width: 45px;         /* adjust size */
-  height: 45px;
-  object-fit: contain; /* keeps correct proportions */
-  border-radius: 6px;  /* optional if you want rounded corners */
-  transform: scaleX(-1); /* Flip horizontally */
-}
-    .title{margin:0; font-size:clamp(18px,3.8vw,22px); letter-spacing:.2px}
+    .brand{display:flex; align-items:center; gap:6px}
+    .logo{ width:40px; height:40px; object-fit:contain; border-radius:6px; transform:scaleX(-1) }
+    .title{margin:0; font-size:clamp(18px,3.6vw,22px); letter-spacing:.2px}
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
 
@@ -66,17 +60,25 @@
     .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a); border-color:color-mix(in oklab, var(--accent-2) 60%, var(--border))}
     .toggle input:checked + .rail .knob{transform:translateX(26px)}
 
-    .grid{display:grid; gap:8px; grid-template-columns:repeat(auto-fit, minmax(96px,1fr))}
-    @media (orientation:landscape){ .grid{grid-template-columns:repeat(auto-fit, minmax(110px,1fr))} }
+    /* ====== Sections ====== */
+    .sections{display:flex; flex-direction:column; gap:6px}
+    .section{display:flex; flex-direction:column; gap:4px}
+    .section-head{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; padding:2px 2px 0}
+    .section-head::after{content:""; height:1px; background:var(--border); flex:1}
+
+    .grid{display:grid; gap:6px; grid-template-columns:repeat(5, minmax(0, 1fr))}
+    @media (orientation:landscape){ .grid{grid-template-columns:repeat(8, minmax(0, 1fr))} }
+
+    /* Compact cards */
     .btn{
       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-decoration:none; color:#fff;
-      border-radius:10px; min-height:70px; padding:10px 6px; font-size:12px; font-weight:700; letter-spacing:.2px; text-align:center;
+      border-radius:10px; min-height:60px; padding:8px 6px; font-size:11.5px; font-weight:800; letter-spacing:.2px; text-align:center;
       box-shadow:var(--shadow); transition:transform var(--speed), box-shadow var(--speed), filter var(--speed)
     }
     .btn:hover{transform:translateY(-2px); box-shadow:var(--shadow-2)}
     .btn:active{transform:translateY(0) scale(.98)}
-    .ico{width:22px; height:22px; display:block; opacity:.95}
-    .label{opacity:.98}
+    .ico{width:20px; height:20px; display:block; opacity:.95}
+    .label{opacity:.98; line-height:1.1}
     .btn{opacity:0; animation:pop .28s ease-out forwards} .btn:nth-child(odd){animation-delay:.02s} .btn:nth-child(even){animation-delay:.06s}
     @keyframes pop{from{opacity:0; transform:scale(.97)} to{opacity:1; transform:scale(1)}}
 
@@ -93,69 +95,26 @@
     .c-olive{background:linear-gradient(180deg,#8cc84b,#6ea934)}
     .c-brown{background:linear-gradient(180deg,#b76e3e,#96522a)}
 
-   /* Full-screen tool view */
-#panel{
-  position: fixed;
-  inset: 0;
-  background: transparent;             /* was var(--bg) → make transparent so you see the page while swiping */
-  z-index: 9999;
-}
-#panel[hidden]{ display:none }
+    /* Full-screen tool view */
+    #panel{ position: fixed; inset: 0; background: transparent; z-index: 9999; }
+    #panel[hidden]{ display:none }
+    #panel-card{ position: relative; width: 100vw; height: 100dvh; overflow: auto; background: var(--bg); border: 0; border-radius: 0; box-shadow: 0 10px 30px rgba(0,0,0,.35); -webkit-overflow-scrolling: touch; transform: translateZ(0) translateX(0); transition: transform 300ms cubic-bezier(.22,.61,.36,1); will-change: transform; }
 
-#panel-card{
-  position: relative;
-  width: 100vw;
-  height: 100dvh;
-  overflow: auto;
-  background: var(--bg);
-  border: 0;
-  border-radius: 0;
-  /* subtle depth during swipe */
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);   /* was none */
-  -webkit-overflow-scrolling: touch;
-  transform: translateZ(0) translateX(0);     /* ensure a transform exists so we can animate X */
-  transition: transform 300ms cubic-bezier(.22,.61,.36,1); /* smooth snap back/complete */
-  will-change: transform;                      /* hint for better perf */
-}
+    .panel-head{ position: sticky; top: 0; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 6px) 12px 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 1; }
+    .backbtn{ appearance: none; cursor: pointer; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-weight: 800; font-size: 14px; }
+    .panel-title{ margin: 0; font-size: 15px; font-weight: 800 }
 
-/* Sticky header inside tool */
-.panel-head{
-  position: sticky;
-  top: 0;
-  display: flex; align-items: center; gap: 10px;
-  padding: calc(env(safe-area-inset-top) + 6px) 12px 8px 12px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  z-index: 1;
-}
-.backbtn{
-  appearance: none; cursor: pointer;
-  padding: 8px 12px; border-radius: 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-weight: 800; font-size: 14px;
-}
-.panel-title{ margin: 0; font-size: 15px; font-weight: 800 }
-
-/* Optional: slight parallax/dim to the underlying menu while panel is open */
-body.panel-open .wrap{
-  transition: transform 300ms ease, opacity 300ms ease;
-}
-
-
-
-
+    body.panel-open .wrap{ transition: transform 300ms ease, opacity 300ms ease; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <!-- Topbar -->
     <div class="topbar">
-<div class="brand">
-  <img class="logo" src="images/logo.png" alt="Ambulance Logo">
-  <h1 class="title">Ambulance</h1>
-</div>
+      <div class="brand">
+        <img class="logo" src="images/logo.png" alt="Ambulance Logo">
+        <h1 class="title">Ambulance</h1>
+      </div>
       <div class="theme-toggle">
         <span style="font-weight:600">Theme</span>
         <select id="themeSelect" aria-label="Theme">
@@ -181,8 +140,8 @@ body.panel-open .wrap{
       </label>
     </div>
 
-    <!-- Buttons -->
-    <div id="grid" class="grid"></div>
+    <!-- Sections container -->
+    <div id="sections" class="sections"></div>
   </div>
 
   <!-- Results Panel (webapp view) -->
@@ -196,7 +155,7 @@ body.panel-open .wrap{
     </div>
   </section>
 
-  <!-- SVG sprite (you can customize or replace) -->
+  <!-- SVG sprite (icons) -->
   <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
     <symbol id="ico-user" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Zm0 12c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z"/></symbol>
     <symbol id="ico-doc"  viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8Zm-2 14h-2v-2h2Zm0-4h-2v-2h2Zm0-4h-2V6h2Z"/></symbol>
@@ -219,115 +178,128 @@ body.panel-open .wrap{
   /* =========================
        CONFIG — EDIT HERE
     ========================= */
-    const NEWS_MESSAGE = ""; // e.g., "New calculators available."
-    const SHORTCUT_NAME = "Ambulance";
-    const SEPARATOR     = "::";
-    const USE_RETURN_URL = false;
-    const RETURN_URL    = "https://yourdomain.com/done.html";
-    const SORT_MODE     = "alpha"; // "alpha" or "custom"
+  const NEWS_MESSAGE = ""; // e.g., "New calculators available."
+  const SHORTCUT_NAME = "Ambulance";
+  const SEPARATOR     = "::";
+  const USE_RETURN_URL = false;
+  const RETURN_URL    = "https://yourdomain.com/done.html";
 
-    // Buttons (add actionId for webapp tools; if none, uses href or Shortcuts)
-    const BUTTONS = [
-      { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"APGAR Score", iconType:"svg", icon:"ico-star", color:"c-brown", href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-      { text:"AS-Call",          iconType:"svg", icon:"ico-call",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Calculate MAP",    iconType:"svg", icon:"ico-calc",   color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-      { text:"Care Tools",       iconType:"svg", icon:"ico-wrench", color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"CCP Pediatric",    iconType:"svg", icon:"ico-user",   color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-      { text:"CPG Wizard",       iconType:"svg", icon:"ico-plus",   color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"CPR",              iconType:"svg", icon:"ico-heart",  color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-      { text:"Estimated Weight", iconType:"svg", icon:"ico-weight", color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Flowcharts",       iconType:"svg", icon:"ico-flow",   color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-      { text:"GCS Score",        iconType:"svg", icon:"ico-bars",   color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-      { text:"HOS",              iconType:"svg", icon:"ico-home",   color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"RBS Converter",    iconType:"svg", icon:"ico-bars",   color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"RSI Checklist",    iconType:"svg", icon:"ico-clip",   color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"SAT Score",        iconType:"svg", icon:"ico-star",   color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"WAAFELSS",         iconType:"svg", icon:"ico-doc",    color:"c-teal",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"Websites",         iconType:"svg", icon:"ico-globe",  color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
-    ];
+  // Buttons (add actionId for webapp tools; if none, uses href or Shortcuts)
+  const BUTTONS = [
+    { text:"AP Pediatrics",    iconType:"svg", icon:"ico-user",   color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
+    { text:"APGAR Score",      iconType:"svg", icon:"ico-star",  color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+    { text:"AS-Call",          iconType:"svg", icon:"ico-call",  color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+    { text:"Calculate MAP",    iconType:"svg", icon:"ico-calc",  color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+    { text:"Care Tools",       iconType:"svg", icon:"ico-wrench",color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
+    { text:"CCP Pediatric",    iconType:"svg", icon:"ico-user",  color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+    { text:"CPG Wizard",       iconType:"svg", icon:"ico-plus",  color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+    { text:"CPR",              iconType:"svg", icon:"ico-heart", color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
+    { text:"Estimated Weight", iconType:"svg", icon:"ico-weight",color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+    { text:"Flowcharts",       iconType:"svg", icon:"ico-flow",  color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+    { text:"GCS Score",        iconType:"svg", icon:"ico-bars", color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+    { text:"HOS",              iconType:"svg", icon:"ico-home",  color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+    { text:"RBS Converter",    iconType:"svg", icon:"ico-bars", color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+    { text:"RSI Checklist",    iconType:"svg", icon:"ico-clip", color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
+    { text:"SAT Score",        iconType:"svg", icon:"ico-star", color:"c-olive", href:"#", showDefault:true, showShortcuts:true },
+    { text:"WAAFELSS",         iconType:"svg", icon:"ico-doc",  color:"c-teal",  href:"#", showDefault:true, showShortcuts:true },
+    { text:"Websites",         iconType:"svg", icon:"ico-globe",color:"c-slate", href:"https://example.com", showDefault:true, showShortcuts:false }
+  ];
 
-    /* =========================
-       CORE (no edits needed)
-       ========================= */
-    const THEME_KEY = "amb_theme";
-    const themeMeta = document.getElementById("theme-color");
+  // Fixed section order + exact items
+  const SECTIONS = [
+    { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS"] },
+    { title: "Pediatric Care",         items: ["CCP Pediatric","AP Pediatrics","Care Tools","Estimated Weight"] },
+    { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score"] },
+    { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP"] },
+    { title: "Ops / Links",            items: ["AS-Call","HOS","Websites"] } // compact band at bottom
+  ];
 
-    function setThemeColorFromCSS(){
-      // Sync <meta name="theme-color"> to current --bg (helps iOS webclip match page)
-      const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
-      themeMeta.setAttribute("content", bg);
-    }
-    function applyTheme(val){
-      document.documentElement.setAttribute("data-theme", val);
-      localStorage.setItem(THEME_KEY, val);
-      setThemeColorFromCSS();
-    }
-    function initTheme(){
-      const saved = localStorage.getItem(THEME_KEY) || "auto";
-      document.getElementById("themeSelect").value = saved;
-      applyTheme(saved);
-      // Also listen to system changes if on Auto
-      if (saved === "auto"){
-        const mql = window.matchMedia("(prefers-color-scheme: dark)");
-        mql.addEventListener?.("change", setThemeColorFromCSS);
-      }
-    }
+  /* =========================
+       CORE
+     ========================= */
+  const THEME_KEY = "amb_theme";
+  const themeMeta = document.getElementById("theme-color");
 
-    function buildShortcutsUrl(label){
-      const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
-      const payload = USE_RETURN_URL ? `web${SEPARATOR}${label}${SEPARATOR}${RETURN_URL}` : `web${SEPARATOR}${label}`;
-      return base + encodeURIComponent(payload);
+  function setThemeColorFromCSS(){
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
+    themeMeta.setAttribute("content", bg);
+  }
+  function applyTheme(val){
+    document.documentElement.setAttribute("data-theme", val);
+    localStorage.setItem(THEME_KEY, val);
+    setThemeColorFromCSS();
+  }
+  function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY) || "auto";
+    document.getElementById("themeSelect").value = saved;
+    applyTheme(saved);
+    if (saved === "auto"){
+      const mql = window.matchMedia("(prefers-color-scheme: dark)");
+      mql.addEventListener?.("change", setThemeColorFromCSS);
     }
+  }
+
+  function buildShortcutsUrl(label){
+    const base = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=`;
+    const payload = USE_RETURN_URL ? `web${SEPARATOR}${label}${SEPARATOR}${RETURN_URL}` : `web${SEPARATOR}${label}`;
+    return base + encodeURIComponent(payload);
+  }
 
   function openPanel(title){
-  document.getElementById("panel-title").textContent = title || "Tool";
-  document.getElementById("panel").hidden = false;
-  document.body.classList.add("panel-open");
-}
-function closePanel(){
-  document.getElementById("panel").hidden = true;
-  document.getElementById("panel-body").innerHTML = "";
-  document.body.classList.remove("panel-open");
-  updateHash({});
-}
+    document.getElementById("panel-title").textContent = title || "Tool";
+    document.getElementById("panel").hidden = false;
+    document.body.classList.add("panel-open");
+  }
+  function closePanel(){
+    document.getElementById("panel").hidden = true;
+    document.getElementById("panel-body").innerHTML = "";
+    document.body.classList.remove("panel-open");
+    updateHash({});
+  }
 
+  document.addEventListener("DOMContentLoaded", mount);
+  function mount(){
+    initTheme();
+    document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
+    const newsEl = document.getElementById("news");
+    if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.textContent = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
 
-    document.addEventListener("DOMContentLoaded", mount);
-    function mount(){
-      // Theme + webclip status bar color
-      initTheme();
-      document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
+    const toggle = document.getElementById("mode");
+    const sectionsEl = document.getElementById("sections");
 
-      // News
-      const newsEl = document.getElementById("news");
-      if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.textContent = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
+    // build a map for quick lookup
+    const map = new Map(BUTTONS.map(b => [b.text, b]));
 
-      // Buttons
-      const grid = document.getElementById("grid");
-      const toggle = document.getElementById("mode");
+    function render(){
+      const useShortcuts = toggle.checked;
+      sectionsEl.innerHTML = "";
 
-      const data = [...BUTTONS];
-      if (SORT_MODE === "alpha") data.sort((a,b)=>a.text.localeCompare(b.text, undefined, {sensitivity:"base"}));
+      for (const sec of SECTIONS){
+        // pick only items that exist + visible in current mode
+        const items = sec.items
+          .map(name => map.get(name))
+          .filter(Boolean)
+          .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
 
-      function render(){
-        const useShortcuts = toggle.checked;
-        grid.innerHTML = "";
+        if (items.length === 0) continue; // skip empty sections in this mode
 
-        data.forEach((btn, i) => {
-          const show = useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false);
-          if (!show) return;
+        const secEl = document.createElement("section");
+        secEl.className = "section";
+        const head = document.createElement("div");
+        head.className = "section-head";
+        head.textContent = sec.title;
+        const grid = document.createElement("div");
+        grid.className = "grid";
 
+        items.forEach((btn, i) => {
           const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
           const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
-
           const a = document.createElement("a");
           a.className = `btn ${btn.color || "c-blue"}`;
           a.id = id;
           a.href = href;
           a.style.animationDelay = `${i*18}ms`;
-
           const iconHtml = (btn.iconType === "img")
             ? `<img class="ico" src="${btn.icon}" alt="" />`
             : `<svg class="ico" aria-hidden="true"><use href="#${btn.icon}"/></svg>`;
@@ -342,200 +314,77 @@ function closePanel(){
           }
           grid.appendChild(a);
         });
+
+        secEl.appendChild(head);
+        secEl.appendChild(grid);
+        sectionsEl.appendChild(secEl);
       }
-
-      toggle.addEventListener("change", render);
-      document.getElementById("panel-back").addEventListener("click", closePanel);
-      render();
-
-      // Deep-links (e.g., #tool=gcs)
-      const { tool, ...params } = parseHash();
-      if (tool) runAction(tool, params);
     }
-// ---------- Router / action loader ----------
-    // ---------- VERSION Automatic based on date ----------
-async function runAction(actionId, params = {}) {
-  try {
-    // DEV: cache-bust every open; swap back to a fixed string later
-    const ver = Date.now();
-    const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
-    const mountEl = document.getElementById("panel-body");
-    mountEl.innerHTML = "";
-    openPanel(params.title || actionId.toUpperCase());
-    await mod.run(mountEl, params);
-    updateHash({ tool: actionId, ...params });
-  } catch (e) {
-    alert(`Could not load tool: ${actionId}\n${e.message || e}`);
-    console.error(e);
+
+    toggle.addEventListener("change", render);
+    document.getElementById("panel-back").addEventListener("click", closePanel);
+    render();
+
+    // Deep-links (e.g., #tool=gcs)
+    const { tool, ...params } = parseHash();
+    if (tool) runAction(tool, params);
   }
-}
 
-
-    function parseHash(){
-      const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
-      const obj = {}; for (const [k,v] of h.entries()) obj[k]=v; return obj;
+  // ---------- Router / action loader ----------
+  async function runAction(actionId, params = {}) {
+    try {
+      const ver = Date.now();
+      const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
+      const mountEl = document.getElementById("panel-body");
+      mountEl.innerHTML = "";
+      openPanel(params.title || actionId.toUpperCase());
+      await mod.run(mountEl, params);
+      updateHash({ tool: actionId, ...params });
+    } catch (e) {
+      alert(`Could not load tool: ${actionId}\n${e.message || e}`);
+      console.error(e);
     }
-    function updateHash(obj){
-      const h = new URLSearchParams(obj);
-      const s = h.toString();
-      history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search);
-    }
-    window.addEventListener("hashchange", () => {
-      const { tool, ...params } = parseHash();
-      if (tool) runAction(tool, params);
-    });
-
-  // ===== Swipe back support =====
-let touchStartX = 0;
-let touchStartY = 0;
-const SWIPE_THRESHOLD = 60; // px horizontal distance to trigger back
-const VERTICAL_TOLERANCE = 40; // px vertical movement tolerance
-
-document.getElementById("panel-card").addEventListener("touchstart", e => {
-  if (e.touches.length !== 1) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-});
-
-document.getElementById("panel-card").addEventListener("touchend", e => {
-  if (e.changedTouches.length !== 1) return;
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-
-  if (dx > SWIPE_THRESHOLD && dy < VERTICAL_TOLERANCE) {
-    // user swiped right
-    closePanel();
   }
-});
+
+  function parseHash(){
+    const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
+    const obj = {}; for (const [k,v] of h.entries()) obj[k]=v; return obj;
+  }
+  function updateHash(obj){
+    const h = new URLSearchParams(obj);
+    const s = h.toString();
+    history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search);
+  }
+  window.addEventListener("hashchange", () => {
+    const { tool, ...params } = parseHash();
+    if (tool) runAction(tool, params);
+  });
+
+  // ===== Basic swipe back support =====
+  let touchStartX = 0; let touchStartY = 0; const SWIPE_THRESHOLD = 60; const VERTICAL_TOLERANCE = 40;
+  document.getElementById("panel-card").addEventListener("touchstart", e => { if (e.touches.length !== 1) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
+  document.getElementById("panel-card").addEventListener("touchend", e => { if (e.changedTouches.length !== 1) return; const dx = e.changedTouches[0].clientX - touchStartX; const dy = Math.abs(e.changedTouches[0].clientY - touchStartY); if (dx > SWIPE_THRESHOLD && dy < VERTICAL_TOLERANCE) closePanel(); });
 
   // ===== iOS-style interactive edge-swipe back =====
-(() => {
-  const panel      = document.getElementById("panel");
-  const card       = document.getElementById("panel-card");
-  const content    = document.querySelector(".wrap"); // for subtle parallax/dim if you like
+  (() => {
+    const panel = document.getElementById("panel");
+    const card  = document.getElementById("panel-card");
+    const content = document.querySelector(".wrap");
 
-  const EDGE_ZONE = 24;           // px from left edge to allow starting the gesture
-  const COMPLETE_THRESHOLD = 0.28; // fraction of width to trigger close on release
-  const V_TOL = 18;               // vertical movement tolerance before we cancel (px)
-  const MIN_H_START = 6;          // minimum horizontal move to consider (px)
-
-  let startX = 0, startY = 0, dragging = false, width = 0, lastDx = 0;
-  let raf = 0;
-
-  function setX(x) {
-    // move card; add slight parallax to the content beneath if desired
-    card.style.transform = `translateX(${x}px)`;
-    if (content) {
-      const p = Math.min(1, x / (width || 1));
-      content.style.transform = `translateX(${Math.min(12, 12*p)}px)`;
-      content.style.opacity   = String(1 - 0.04*p);
-    }
-  }
-
-  function onStart(e) {
-    if (panel.hidden) return;
-
-    const t = e.touches && e.touches[0];
-    if (!t) return;
-
-    // only start at the very left edge to mimic iOS edge-swipe
-    if (t.clientX > EDGE_ZONE) { dragging = false; return; }
-
-    startX = t.clientX;
-    startY = t.clientY;
-    width  = card.clientWidth || window.innerWidth;
-    dragging = true;
-    lastDx = 0;
-
-    // stop any running transition so we can drag smoothly
-    card.style.transition = "none";
-    if (content) content.style.transition = "none";
-  }
-
-  function onMove(e) {
-    if (!dragging) return;
-    const t = e.touches && e.touches[0];
-    if (!t) return;
-
-    const dx = t.clientX - startX;
-    const dy = Math.abs(t.clientY - startY);
-
-    // cancel if vertical scroll dominates
-    if (dy > V_TOL && dx < MIN_H_START) { cancel(); return; }
-
-    // ignore leftward moves; we only drag right
-    const dragX = Math.max(0, dx);
-    lastDx = dragX;
-
-    // when we’re clearly dragging horizontally, prevent the page from scrolling
-    if (dragX > MIN_H_START && dy < V_TOL) e.preventDefault();
-
-    // rAF for smoothness
-    if (!raf) {
-      raf = requestAnimationFrame(() => {
-        setX(lastDx);
-        raf = 0;
-      });
-    }
-  }
-
-  function finishClose() {
-    // animate off-screen then close
-    card.style.transition = "transform 280ms cubic-bezier(.22,.61,.36,1)";
-    if (content) content.style.transition = "transform 280ms ease, opacity 280ms ease";
-    requestAnimationFrame(() => {
-      setX(width); // slide fully right
-      // after animation completes, actually close the panel and reset transforms
-      setTimeout(() => {
-        closePanel();          // your existing function
-        card.style.transition = "";
-        if (content) {
-          content.style.transition = "";
-          content.style.transform  = "";
-          content.style.opacity    = "";
-        }
-        setX(0);
-      }, 280);
-    });
-  }
-
-  function snapBack() {
-    // animate back to 0
-    card.style.transition = "transform 260ms cubic-bezier(.22,.61,.36,1)";
-    if (content) content.style.transition = "transform 260ms ease, opacity 260ms ease";
-    requestAnimationFrame(() => {
-      setX(0);
-      setTimeout(() => {
-        card.style.transition = "";
-        if (content) {
-          content.style.transition = "";
-          content.style.transform  = "";
-          content.style.opacity    = "";
-        }
-      }, 260);
-    });
-  }
-
-  function onEnd() {
-    if (!dragging) return;
-    dragging = false;
-
-    const shouldClose = lastDx > (width * COMPLETE_THRESHOLD);
-    if (shouldClose) finishClose(); else snapBack();
-  }
-
-  function cancel() {
-    dragging = false;
-    snapBack();
-  }
-
-  card.addEventListener("touchstart", onStart, { passive: true });
-  card.addEventListener("touchmove",  onMove,  { passive: false });
-  card.addEventListener("touchend",   onEnd,   { passive: true });
-  card.addEventListener("touchcancel",cancel,  { passive: true });
-})();
-
-
-  </script>
+    const EDGE_ZONE = 24; const COMPLETE_THRESHOLD = 0.28; const V_TOL = 18; const MIN_H_START = 6;
+    let startX = 0, startY = 0, dragging = false, width = 0, lastDx = 0; let raf = 0;
+    function setX(x){ card.style.transform = `translateX(${x}px)`; if (content){ const p = Math.min(1, x / (width || 1)); content.style.transform = `translateX(${Math.min(12, 12*p)}px)`; content.style.opacity = String(1 - 0.04*p); } }
+    function onStart(e){ if (panel.hidden) return; const t = e.touches && e.touches[0]; if (!t) return; if (t.clientX > EDGE_ZONE) { dragging = false; return; } startX = t.clientX; startY = t.clientY; width = card.clientWidth || window.innerWidth; dragging = true; lastDx = 0; card.style.transition = "none"; if (content) content.style.transition = "none"; }
+    function onMove(e){ if (!dragging) return; const t = e.touches && e.touches[0]; if (!t) return; const dx = t.clientX - startX; const dy = Math.abs(t.clientY - startY); if (dy > V_TOL && dx < MIN_H_START) { cancel(); return; } const dragX = Math.max(0, dx); lastDx = dragX; if (dragX > MIN_H_START && dy < V_TOL) e.preventDefault(); if (!raf){ raf = requestAnimationFrame(() => { setX(lastDx); raf = 0; }); } }
+    function finishClose(){ card.style.transition = "transform 280ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 280ms ease, opacity 280ms ease"; requestAnimationFrame(() => { setX(width); setTimeout(() => { closePanel(); card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } setX(0); }, 280); }); }
+    function snapBack(){ card.style.transition = "transform 260ms cubic-bezier(.22,.61,.36,1)"; if (content) content.style.transition = "transform 260ms ease, opacity 260ms ease"; requestAnimationFrame(() => { setX(0); setTimeout(() => { card.style.transition = ""; if (content){ content.style.transition = ""; content.style.transform = ""; content.style.opacity = ""; } }, 260); }); }
+    function onEnd(){ if (!dragging) return; dragging = false; const shouldClose = lastDx > (width * COMPLETE_THRESHOLD); if (shouldClose) finishClose(); else snapBack(); }
+    function cancel(){ dragging = false; snapBack(); }
+    card.addEventListener("touchstart", onStart, { passive: true });
+    card.addEventListener("touchmove",  onMove,  { passive: false });
+    card.addEventListener("touchend",   onEnd,   { passive: true });
+    card.addEventListener("touchcancel",cancel,  { passive: true });
+  })();
+</script>
 </body>
 </html>
