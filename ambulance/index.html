@@ -199,43 +199,36 @@
     const RETURN_URL    = "https://yourdomain.com/done.html";
 
     // Buttons (Material Symbols)
-    const BUTTONS = [
-      // Row 1 — Resuscitation & Timers
-      { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-      { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"WAAFELSS",         iconType:"material", icon:"baby_changing_station",          color:"c-teal",   href:"#", showDefault:true, showShortcuts:true },
+   const BUTTONS = [
+  // Row 1 — Resuscitation & Timers
+  { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"c-red",    href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
+  { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"c-pink",   href:"#", showDefault:true, showShortcuts:true },
+  { text:"WAAFELSS",         iconType:"material", icon:"baby_changing_station", color:"c-teal", href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 2 — Pediatric Care
-      { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
-      { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
-      { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+  // Row 2 — Pediatric Care
+  { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+  { text:"AP Pediatrics",    iconType:"material", icon:"medical_information", color:"c-green",  href:"#", showDefault:true, showShortcuts:true },
+  { text:"Care Tools",       iconType:"material", icon:"build_circle",        color:"c-cyan",   href:"#", showDefault:true, showShortcuts:true },
+  { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 3 — Assessment Scores
-      { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-      { text:"APGAR Score",      iconType:"material", , icon:"child_care"        color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-      { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+  // Row 3 — Assessment Scores
+  { text:"GCS Score",        iconType:"material", icon:"psychology",          color:"c-blue",   href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+  { text:"APGAR Score",      iconType:"material", icon:"child_care",          color:"c-brown",  href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+  { text:"SAT Score",        iconType:"material", icon:"bed",                 color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
 
-      // Row 4 — Calculators · Reference
-      { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
-      { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
-      { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+  // Row 4 — Calculators · Reference
+  { text:"Flowcharts",       iconType:"material", icon:"schema",              color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
+  { text:"RBS Converter",    iconType:"material", icon:"water_drop",          color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+  { text:"CPG Wizard",       iconType:"material", icon:"auto_fix_high",       color:"c-purple", href:"#", showDefault:true, showShortcuts:true },
+  { text:"Calculate MAP",    iconType:"material", icon:"calculate",           color:"c-indigo", href:"#", showDefault:true, showShortcuts:true },
 
-      // Ops / Links
-      { text:"AS-Call",          iconType:"material", icon:"call",                color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"HOS",              iconType:"material", icon:"helicopter",          color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
-      { text:"Websites",         iconType:"material", icon:"language",            color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
-    ];
+  // Ops / Links
+  { text:"AS-Call",          iconType:"material", icon:"call",                color:"c-amber",  href:"#", showDefault:true, showShortcuts:true },
+  // If 'helicopter' doesn't render on your device, use 'local_airport' or 'flight'
+  { text:"HOS",              iconType:"material", icon:"local_airport",       color:"c-olive",  href:"#", showDefault:true, showShortcuts:true },
+  { text:"Websites",         iconType:"material", icon:"language",            color:"c-slate",  href:"https://example.com", showDefault:true, showShortcuts:false }
+];
 
-    // Sections layout
-    const SECTIONS = [
-      { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS"] },
-      { title: "Pediatric Care",         items: ["CCP Pediatric","AP Pediatrics","Care Tools","Estimated Weight"] },
-      { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score"] },
-      { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP"] },
-      { title: "Ops / Links",            items: ["AS-Call","HOS","Websites"] }
-    ];
 
     /* =========================
          CORE
