@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Install Ambulance App</title>
+  <title>Install the App</title>
 
   <!-- Theme color -->
   <meta id="theme-color" name="theme-color" content="#0f1115" />
@@ -25,63 +25,142 @@
       background:var(--bg); color:var(--text);
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    .wrap{max-width:700px; margin:0 auto; padding:20px clamp(8px,4vw,24px) 40px; display:flex; flex-direction:column; gap:24px}
+    .wrap{max-width:760px; margin:0 auto; padding:20px clamp(10px,4vw,28px) 40px; display:flex; flex-direction:column; gap:24px}
 
+    /* Topbar */
     .topbar{display:flex; align-items:center; gap:12px}
     .logo{width:56px;height:56px;object-fit:contain;border-radius:8px}
     .title{font-size:clamp(22px,4vw,30px);font-weight:800;margin:0}
 
+    /* Intro / feature list */
+    .intro{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow)}
+    .features{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-top:10px}
+    .chip{background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:8px 12px; font-weight:700; font-size:13px; text-align:center}
+
+    /* Download button */
     .btn-download{
-      display:inline-block; text-align:center; font-weight:700; font-size:17px;
+      display:inline-block; text-align:center; font-weight:800; font-size:17px;
       color:#fff; background:linear-gradient(180deg,var(--accent),#0a57d9);
-      padding:14px 24px; border-radius:14px; text-decoration:none;
+      padding:14px 22px; border-radius:14px; text-decoration:none;
       box-shadow:var(--shadow);
+      align-self:flex-start;
     }
     .btn-download:hover{box-shadow:var(--shadow-2); transform:translateY(-1px)}
 
-    .steps{display:flex; flex-direction:column; gap:20px}
-    .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+    /* Steps */
+    .steps{display:flex; flex-direction:column; gap:16px}
+    .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+    .step h3{margin:0;font-size:16px}
+    .step p{margin:0;font-size:14px;color:var(--muted)}
     .step img{width:100%;border-radius:10px}
 
+    /* Video (optional) */
     .video{aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
     iframe,video{width:100%;height:100%;border:none}
 
+    .muted{color:var(--muted)}
   </style>
 </head>
 <body>
   <div class="wrap">
+    <!-- Topbar -->
     <div class="topbar">
-      <img class="logo" src="../ambulance/images/logo.png" alt="Ambulance Logo">
-      <h1 class="title">Install Ambulance App</h1>
+      <img class="logo" src="../ambulance/images/logo.png" alt="App Logo">
+      <h1 class="title">Install the App</h1>
     </div>
 
-    <p>This app is designed to run as a secure web clip on your iPhone or iPad. Please install it once so you can access all protected tools like <strong>Ambulance</strong> and <strong>CPR</strong>.</p>
-
-    <a class="btn-download" href="AmbulanceApp.mobileconfig">⬇️ Download Configuration Profile</a>
-
-    <section class="steps">
-      <div class="step">
-        <h3>1. Download the Profile</h3>
-        <p>Tap the button above. Safari will say “Profile Downloaded”.</p>
-        <img src="images/step1.png" alt="Profile downloaded">
-      </div>
-      <div class="step">
-        <h3>2. Open Settings</h3>
-        <p>Go to Settings → Profile Downloaded at the top.</p>
-        <img src="images/step2.png" alt="Open Settings Profile Downloaded">
-      </div>
-      <div class="step">
-        <h3>3. Install the Profile</h3>
-        <p>Tap Install, enter passcode if asked, then tap Install again to confirm.</p>
-        <img src="images/step3.png" alt="Install profile">
-      </div>
-      <div class="step">
-        <h3>4. Done</h3>
-        <p>Your Ambulance app will now appear on your Home Screen.</p>
-        <img src="images/step4.png" alt="Home screen icon">
+    <!-- Intro & features -->
+    <section class="intro">
+      <p><strong>Install this app</strong> to get quick access to tools such as <strong>CPR Timer</strong>, <strong>WAAFELLS</strong>, <strong>Pediatrics Calculations</strong>, <strong>RSI Checklist</strong>, <strong>GCS/APGAR/SAT Scores</strong>, <strong>MAP Calculator</strong>, and more. It also supports running actions via the <strong>Shortcuts</strong> app.</p>
+      <div class="features">
+        <div class="chip">CPR Timer</div>
+        <div class="chip">WAAFELLS</div>
+        <div class="chip">Pediatrics Calculations</div>
+        <div class="chip">RSI Checklist</div>
+        <div class="chip">Care Tools</div>
+        <div class="chip">Estimated Weight</div>
+        <div class="chip">GCS / APGAR / SAT</div>
+        <div class="chip">Flowcharts</div>
+        <div class="chip">RBS Converter</div>
+        <div class="chip">CPG Wizard</div>
+        <div class="chip">MAP Calculator</div>
+        <div class="chip">Shortcuts Support</div>
       </div>
     </section>
 
+    <!-- Download -->
+    <a class="btn-download" href="AmbulanceApp.mobileconfig">⬇️ Download Configuration Profile</a>
+    <p class="muted">If the download doesn’t start, make sure you’re using Safari on iPhone/iPad.</p>
+
+    <!-- Steps -->
+    <section class="steps">
+      <div class="step">
+        <h3>1. Tap “Download Configuration Profile”</h3>
+        <p>No screenshot for this step.</p>
+      </div>
+
+      <div class="step">
+        <h3>2. Allow the download</h3>
+        <p>When you see “<em>ios.niwashibase.com is trying to download a configuration profile</em>”, tap <strong>Allow</strong>.</p>
+        <img src="images/step2.png" alt="Allow profile download">
+      </div>
+
+      <div class="step">
+        <h3>3. Profile Downloaded</h3>
+        <p>Safari will show “<em>Profile Downloaded</em>”. Tap <strong>Close</strong>.</p>
+        <img src="images/step3.png" alt="Profile downloaded alert">
+      </div>
+
+      <div class="step">
+        <h3>4. Open Settings</h3>
+        <p>Open the <strong>Settings</strong> app.</p>
+        <img src="images/step4.png" alt="Open Settings">
+      </div>
+
+      <div class="step">
+        <h3>5. Go to General</h3>
+        <p>In Settings, tap <strong>General</strong>.</p>
+        <img src="images/step5.png" alt="General settings">
+      </div>
+
+      <div class="step">
+        <h3>6. VPN &amp; Device Management</h3>
+        <p>Scroll down and tap <strong>VPN &amp; Device Management</strong>.</p>
+        <img src="images/step6.png" alt="VPN & Device Management">
+      </div>
+
+      <div class="step">
+        <h3>7. Downloaded Profile</h3>
+        <p>Under <strong>Downloaded Profile</strong>, tap <strong>Ambulance App</strong>. If you don’t see it, return here and download again.</p>
+        <img src="images/step7.png" alt="Downloaded Profile appears">
+      </div>
+
+      <div class="step">
+        <h3>8. Install</h3>
+        <p>Tap <strong>Install</strong> at the top right.</p>
+        <img src="images/step8.png" alt="Tap Install">
+      </div>
+
+      <div class="step">
+        <h3>9. Enter Passcode</h3>
+        <p>Enter your iPhone passcode when prompted.</p>
+        <img src="images/step9.png" alt="Enter passcode">
+      </div>
+
+      <div class="step">
+        <h3>10. Confirm Install</h3>
+        <p>On the “<strong>Unsigned Profile</strong>” screen, tap <strong>Install</strong> at the top right, then confirm when asked.</p>
+        <img src="images/step10.png" alt="Unsigned profile confirmation">
+      </div>
+
+      <div class="step">
+        <h3>11. Profile Installed</h3>
+        <p>You’ll see <strong>Profile Installed</strong>. Tap <strong>Done</strong>. The app icon will now appear in your App Library / Home Screen.</p>
+        <img src="images/step11.png" alt="Profile installed success">
+      </div>
+    </section>
+
+    <!-- Optional video -->
     <div class="video">
       <!-- Option 1: Local MP4 -->
       <!-- <video controls src="video.mp4"></video> -->
