@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ambulance</title>
+<style>
+  :root{color-scheme:light dark}
+  body{font:16px system-ui,-apple-system,Segoe UI,Roboto;margin:3rem;line-height:1.4}
+  .muted{color:#777} @media (prefers-color-scheme:dark){ .muted{color:#9aa} }
+</style>
+
+<div id="app" hidden>
+  <h1>Launching…</h1>
+  <p class="muted">Please wait.</p>
+</div>
+
+<div id="blocked" hidden>
+  <h1>Access blocked</h1>
+  <p>This app is only available when installed on your Home Screen.</p>
+</div>
+
+<script>
+(async () => {
+  // Detect Home-Screen / Web Clip / PWA
+  const inStandalone =
+    (window.navigator.standalone === true) ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+  if (!inStandalone) {
+    document.getElementById('blocked').hidden = false;
+    return;
+  }
+
+  // Ask the Worker to mint a short-lived HttpOnly session cookie
+  document.getElementById('app').hidden = false;
+  try {
+    const r = await fetch('/session', { method: 'POST', credentials: 'include' });
+    if (!r.ok) throw new Error('session failed');
+    // Go straight into your Ambulance app (gated)
+    location.replace('/ambulance/');
+  } catch {
+    document.body.innerHTML = '<h1>Couldn’t start</h1><p>Close and reopen the app.</p>';
+  }
+})();
+</script>
