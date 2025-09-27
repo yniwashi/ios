@@ -52,12 +52,8 @@
       width:20px; height:20px; display:inline-block;
     }
 
-    .install-steps img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.12);
-}
+
+
 
 
     /* Steps */
@@ -65,7 +61,14 @@
     .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
     .step h3{margin:0;font-size:16px}
     .step p{margin:0;font-size:14px;color:var(--muted)}
-    .step img{width:100%;border-radius:10px}
+    .steps img {
+  display: block;
+  max-width: 100%;
+  height: auto;       /* keeps original ratio */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+
 
     /* Video (optional) */
     .video{aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
