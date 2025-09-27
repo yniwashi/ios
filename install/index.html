@@ -27,9 +27,9 @@
     }
     .wrap{max-width:760px; margin:0 auto; padding:20px clamp(10px,4vw,28px) 40px; display:flex; flex-direction:column; gap:24px}
 
-    /* Topbar */
-    .topbar{display:flex; align-items:center; gap:12px}
-    .logo{width:56px;height:56px;object-fit:contain;border-radius:8px}
+    /* Hero / logo */
+    .hero{display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center}
+    .hero-logo{width:88px; height:88px; object-fit:contain; border-radius:16px}
     .title{font-size:clamp(22px,4vw,30px);font-weight:800;margin:0}
 
     /* Intro / feature list */
@@ -37,15 +37,20 @@
     .features{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-top:10px}
     .chip{background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:8px 12px; font-weight:700; font-size:13px; text-align:center}
 
-    /* Download button */
+    /* Centered CTA */
+    .cta{display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center}
     .btn-download{
-      display:inline-block; text-align:center; font-weight:800; font-size:17px;
-      color:#fff; background:linear-gradient(180deg,var(--accent),#0a57d9);
-      padding:14px 22px; border-radius:14px; text-decoration:none;
-      box-shadow:var(--shadow);
-      align-self:flex-start;
+      display:inline-flex; align-items:center; gap:10px; justify-content:center;
+      font-weight:800; font-size:17px; color:#fff; text-decoration:none;
+      background:linear-gradient(180deg,var(--accent),#0a57d9);
+      padding:14px 22px; border-radius:14px; box-shadow:var(--shadow);
+      min-width:280px;
     }
     .btn-download:hover{box-shadow:var(--shadow-2); transform:translateY(-1px)}
+    .cta-sub{font-size:13px; color:var(--muted)}
+    .apple{
+      width:20px; height:20px; display:inline-block;
+    }
 
     /* Steps */
     .steps{display:flex; flex-direction:column; gap:16px}
@@ -63,51 +68,43 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- Topbar -->
-    <div class="topbar">
-      <img class="logo" src="../ambulance/images/logo.png" alt="App Logo">
+    <!-- Hero -->
+    <header class="hero">
+      <!-- Update the logo path if needed -->
+      <img class="hero-logo" src="../ambulance/images/logo.png" alt="App Logo">
       <h1 class="title">Install the App</h1>
+      <p class="muted" style="max-width:56ch">Get quick access to tools like <strong>CPR Timer</strong>, <strong>WAAFELLS</strong>, <strong>Pediatrics Calculations</strong>, <strong>RSI Checklist</strong>, <strong>GCS/APGAR/SAT scores</strong>, <strong>MAP Calculator</strong>, and more. It also supports running actions via the <strong>Shortcuts</strong> app.</p>
+    </header>
+
+    <!-- Centered Download CTA -->
+    <div class="cta">
+      <a class="btn-download" href="AmbulanceApp.mobileconfig" download>
+        <!-- Apple logo (inline SVG) -->
+        <svg class="apple" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M212.1 167.1c-4.3 9.8-6.5 14.6-12.2 23.6-7.9 12.4-19.1 27.9-33 28-12.3.1-15.5-8-32.2-8c-16.7 0-20.3 8-32.6 7.9-13.9-.1-24.5-14.1-32.4-26.4-22.2-33.9-24.6-73.7-10.8-94.8 9.7-15 25-23.9 42.5-24.1 13.3-.3 25.9 8.9 32.2 8.9 6.1 0 21.9-11 36.9-9.4 6.3.3 24.1 2.6 35.4 19.8-1 0-21.3 12.4-21.1 36.8.3 29.2 25.6 38.8 27.3 39.7zM156.1 51c6.3-7.6 10.7-18.3 9.5-28.9-9.2.4-20.2 6.2-26.7 13.8-5.9 6.8-11.1 17.7-9.7 28.1 10.2.8 20.6-5.2 26.9-13z"/>
+        </svg>
+        Download Ambulance App
+      </a>
+      <div class="cta-sub">Configuration Profile</div>
+      <p class="muted" style="margin-top:6px">If the download doesn’t start, use Safari on iPhone/iPad.</p>
     </div>
-
-    <!-- Intro & features -->
-    <section class="intro">
-      <p><strong>Install this app</strong> to get quick access to tools such as <strong>CPR Timer</strong>, <strong>WAAFELLS</strong>, <strong>Pediatrics Calculations</strong>, <strong>RSI Checklist</strong>, <strong>GCS/APGAR/SAT Scores</strong>, <strong>MAP Calculator</strong>, and more. It also supports running actions via the <strong>Shortcuts</strong> app.</p>
-      <div class="features">
-        <div class="chip">CPR Timer</div>
-        <div class="chip">WAAFELLS</div>
-        <div class="chip">Pediatrics Calculations</div>
-        <div class="chip">RSI Checklist</div>
-        <div class="chip">Care Tools</div>
-        <div class="chip">Estimated Weight</div>
-        <div class="chip">GCS / APGAR / SAT</div>
-        <div class="chip">Flowcharts</div>
-        <div class="chip">RBS Converter</div>
-        <div class="chip">CPG Wizard</div>
-        <div class="chip">MAP Calculator</div>
-        <div class="chip">Shortcuts Support</div>
-      </div>
-    </section>
-
-    <!-- Download -->
-    <a class="btn-download" href="AmbulanceApp.mobileconfig">⬇️ Download Configuration Profile</a>
-    <p class="muted">If the download doesn’t start, make sure you’re using Safari on iPhone/iPad.</p>
 
     <!-- Steps -->
     <section class="steps">
       <div class="step">
-        <h3>1. Tap “Download Configuration Profile”</h3>
+        <h3>1. Tap “Download Ambulance App”</h3>
         <p>No screenshot for this step.</p>
       </div>
 
       <div class="step">
         <h3>2. Allow the download</h3>
-        <p>When you see “<em>ios.niwashibase.com is trying to download a configuration profile</em>”, tap <strong>Allow</strong>.</p>
+        <p>When you see “<em>ios.niwashibase.com</em> is trying to download a configuration profile…”, tap <strong>Allow</strong>.</p>
         <img src="images/step2.png" alt="Allow profile download">
       </div>
 
       <div class="step">
         <h3>3. Profile Downloaded</h3>
-        <p>Safari will show “<em>Profile Downloaded</em>”. Tap <strong>Close</strong>.</p>
+        <p>Safari shows “<em>Profile Downloaded</em>”. Tap <strong>Close</strong>.</p>
         <img src="images/step3.png" alt="Profile downloaded alert">
       </div>
 
@@ -131,7 +128,7 @@
 
       <div class="step">
         <h3>7. Downloaded Profile</h3>
-        <p>Under <strong>Downloaded Profile</strong>, tap <strong>Ambulance App</strong>. If you don’t see it, return here and download again.</p>
+        <p>Under <strong>Downloaded Profile</strong>, tap <strong>Ambulance App</strong>. If it’s missing, return here and download again.</p>
         <img src="images/step7.png" alt="Downloaded Profile appears">
       </div>
 
@@ -162,9 +159,7 @@
 
     <!-- Optional video -->
     <div class="video">
-      <!-- Option 1: Local MP4 -->
       <!-- <video controls src="video.mp4"></video> -->
-      <!-- Option 2: YouTube embed -->
       <!-- <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
     </div>
 
