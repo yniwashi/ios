@@ -1,1 +1,94 @@
-fdfg
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Install Ambulance App</title>
+
+  <!-- Theme color -->
+  <meta id="theme-color" name="theme-color" content="#0f1115" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f9fc">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f1115">
+
+  <style>
+    :root{ --radius:12px; --speed:.22s; --shadow:0 8px 18px rgba(0,0,0,.28); --shadow-2:0 12px 28px rgba(0,0,0,.35); --gap:8px }
+    @media (prefers-color-scheme: light){ :root{
+      --bg:#f7f9fc; --surface:#ffffff; --border:#e7ecf3; --text:#0c1230; --muted:#616b86;
+      --accent:#1f6fff; --accent-2:#19b36b; --surface-2:#f1f5fb;
+    }}
+    @media (prefers-color-scheme: dark){ :root{
+      --bg:#0f1115; --surface:#171a21; --border:#232a37; --text:#eef2ff; --muted:#9aa6c3;
+      --accent:#2f81f7; --accent-2:#20c385; --surface-2:#12151c;
+    }}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .wrap{max-width:700px; margin:0 auto; padding:20px clamp(8px,4vw,24px) 40px; display:flex; flex-direction:column; gap:24px}
+
+    .topbar{display:flex; align-items:center; gap:12px}
+    .logo{width:56px;height:56px;object-fit:contain;border-radius:8px}
+    .title{font-size:clamp(22px,4vw,30px);font-weight:800;margin:0}
+
+    .btn-download{
+      display:inline-block; text-align:center; font-weight:700; font-size:17px;
+      color:#fff; background:linear-gradient(180deg,var(--accent),#0a57d9);
+      padding:14px 24px; border-radius:14px; text-decoration:none;
+      box-shadow:var(--shadow);
+    }
+    .btn-download:hover{box-shadow:var(--shadow-2); transform:translateY(-1px)}
+
+    .steps{display:flex; flex-direction:column; gap:20px}
+    .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+    .step img{width:100%;border-radius:10px}
+
+    .video{aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+    iframe,video{width:100%;height:100%;border:none}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <img class="logo" src="../ambulance/images/logo.png" alt="Ambulance Logo">
+      <h1 class="title">Install Ambulance App</h1>
+    </div>
+
+    <p>This app is designed to run as a secure web clip on your iPhone or iPad. Please install it once so you can access all protected tools like <strong>Ambulance</strong> and <strong>CPR</strong>.</p>
+
+    <a class="btn-download" href="AmbulanceApp.mobileconfig">⬇️ Download Configuration Profile</a>
+
+    <section class="steps">
+      <div class="step">
+        <h3>1. Download the Profile</h3>
+        <p>Tap the button above. Safari will say “Profile Downloaded”.</p>
+        <img src="images/step1.png" alt="Profile downloaded">
+      </div>
+      <div class="step">
+        <h3>2. Open Settings</h3>
+        <p>Go to Settings → Profile Downloaded at the top.</p>
+        <img src="images/step2.png" alt="Open Settings Profile Downloaded">
+      </div>
+      <div class="step">
+        <h3>3. Install the Profile</h3>
+        <p>Tap Install, enter passcode if asked, then tap Install again to confirm.</p>
+        <img src="images/step3.png" alt="Install profile">
+      </div>
+      <div class="step">
+        <h3>4. Done</h3>
+        <p>Your Ambulance app will now appear on your Home Screen.</p>
+        <img src="images/step4.png" alt="Home screen icon">
+      </div>
+    </section>
+
+    <div class="video">
+      <!-- Option 1: Local MP4 -->
+      <!-- <video controls src="video.mp4"></video> -->
+      <!-- Option 2: YouTube embed -->
+      <!-- <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
+    </div>
+
+  </div>
+</body>
+</html>
