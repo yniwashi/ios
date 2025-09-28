@@ -124,6 +124,9 @@
 #hos               { --btn-fg:#fff; }   /* HOS white */
 #websites          { --btn-fg:#fff; }   /* Websites white */
 
+    
+  
+
 
     /* Material icon styling */
     .material-symbols-rounded{
@@ -152,6 +155,14 @@
 .btn-ascall{background:linear-gradient(180deg,#FFEA94,#FFDB00)}
 .btn-hos{background:linear-gradient(180deg,#577CE6,#003DEB)}
 .btn-websites{background:linear-gradient(180deg,#64748b,#475569)}
+/* New: distinct gradients for Shortcuts-only tools */
+.btn-westly{background:linear-gradient(180deg,#FFE26D,#FFC107); --btn-fg:#000}            /* Yellow */
+.btn-overtime{background:linear-gradient(180deg,#4CAF50,#2E7D32); --btn-fg:#fff}          /* Deep green */
+.btn-address{background:linear-gradient(180deg,#2FD7A7,#12A085); --btn-fg:#fff}           /* Teal/emerald */
+.btn-shifts{background:linear-gradient(180deg,#9AD9FF,#57B6FF); --btn-fg:#000}            /* Light blue */
+.btn-meds{background:linear-gradient(180deg,#8EA4B8,#5E7A92); --btn-fg:#fff}              /* Grey–blueish */
+.btn-vent{background:linear-gradient(180deg,#7EC8FF,#3FA9FF); --btn-fg:#fff}              /* Sky blue */
+
 
 
     /* Panel */
@@ -230,9 +241,9 @@
   { text:"WAAFELSS",         iconType:"material", icon:"face", color:"btn-waafelss", href:"#", showDefault:true, showShortcuts:true, actionId:"waafels" },
 
   // Row 2 — Pediatric Care
-  { text:"CCP Pediatric",    iconType:"material", icon:"vaccines",            color:"btn-ccp",       href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
+ { text:"CCP Pediatrics",   iconType:"material", icon:"vaccines",            color:"btn-ccp",       href:"#", showDefault:true, showShortcuts:true, actionId:"ccp" },
   { text:"AP Pediatrics",    iconType:"material", icon:"medication", color:"btn-ap",        href:"#", showDefault:true, showShortcuts:true },
-  { text:"Care Tools",       iconType:"material", icon:"widgets",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:true },
+  { text:"Care Tools",       iconType:"material", icon:"widgets",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:false },
   { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"btn-weight",    href:"#", showDefault:true, showShortcuts:true },
 
   // Row 3 — Assessment Scores
@@ -250,17 +261,25 @@
   { text:"AS-Call",          iconType:"material", icon:"call",                color:"btn-ascall",     href:"#", showDefault:false, showShortcuts:true },
   { text:"HOS",              iconType:"material", icon:"local_airport",       color:"btn-hos",        href:"#", showDefault:false, showShortcuts:true },
   { text:"Websites",         iconType:"material", icon:"language",            color:"btn-websites",   href:"https://example.com", showDefault:true, showShortcuts:true }
+      /* ===== New: Shortcuts-mode only ===== */
+  { text:"Westly Score",        iconType:"material", icon:"stethoscope",     color:"btn-westly",  href:"#", showDefault:false, showShortcuts:true },
+  { text:"Overtime Calculator", iconType:"material", icon:"schedule",        color:"btn-overtime", href:"#", showDefault:false, showShortcuts:true },
+  { text:"HMC Address Book",    iconType:"material", icon:"contacts",        color:"btn-address", href:"#", showDefault:false, showShortcuts:true },
+  { text:"Shifts",              iconType:"material", icon:"calendar_month",  color:"btn-shifts",  href:"#", showDefault:false, showShortcuts:true },
+  { text:"Meds Calculator",     iconType:"material", icon:"vaccines",        color:"btn-meds",    href:"#", showDefault:false, showShortcuts:true },
+  { text:"Ventilator Settings", iconType:"material", icon:"airwave",         color:"btn-vent",    href:"#", showDefault:false, showShortcuts:true },
 ];
 
 
     // ✅ Sections layout (this was missing)
-    const SECTIONS = [
-      { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS"] },
-      { title: "Pediatric Care",         items: ["CCP Pediatric","AP Pediatrics","Care Tools","Estimated Weight"] },
-      { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score"] },
-      { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP"] },
-      { title: "Ops / Links",            items: ["AS-Call","HOS","Websites"] }
-    ];
+   const SECTIONS = [
+  { title: "Resuscitation & Timers", items: ["CPR","RSI Checklist","WAAFELSS","Ventilator Settings"] },
+  { title: "Pediatric Care",         items: ["CCP Pediatrics","AP Pediatrics","Care Tools","Estimated Weight"] },
+  { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score","Westly Score"] },
+  { title: "Calculators · Reference", items: ["Flowcharts","RBS Converter","CPG Wizard","Calculate MAP","Overtime Calculator","Meds Calculator"] },
+  { title: "Ops / Links",            items: ["AS-Call","HOS","Websites","HMC Address Book","Shifts"] }
+];
+
 
     /* =========================
          CORE
