@@ -207,12 +207,12 @@
 </head>
 <body>
 
- <!-- ---------- HEADER ---------- -->
+<!-- ---------- HEADER ---------- -->
 <style>
   :root{
-    --chip-h:54px;              /* taller than CPR default */
-    --chip-pad-x:14px;
-    --title-size:clamp(22px,4vw,30px);
+    --chip-h:48px;
+    --chip-pad-x:12px;
+    --title-size:clamp(22px,4vw,28px);
     --btn-bd:var(--border);
     --btn-bg:var(--surface-2);
     --fg:var(--text);
@@ -220,34 +220,29 @@
   .header{display:grid;gap:8px;margin-bottom:12px}
   .controls-row{display:flex;align-items:center;gap:var(--chip-pad-x);justify-content:space-between}
   .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-  .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
   #backBtn.icon-toggle{
+    display:flex;align-items:center;justify-content:center;
     border:1px solid var(--btn-bd);
     background:var(--btn-bg);
-    font-size:24px;            /* bigger icon */
-    padding:0 16px;
-    font-weight:800;
-    height:var(--chip-h);
-  }
-  .icon-toggle{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
     border-radius:12px;
-    border:1px solid var(--btn-bd);
-    background:var(--btn-bg);
+    height:var(--chip-h);
+    width:var(--chip-h);
     color:var(--fg);
-    text-decoration:none;
   }
+  #backBtn svg{width:24px;height:24px}
 </style>
 
 <header class="header">
   <div class="controls-row">
     <button id="backBtn" class="icon-toggle" aria-label="Back">
-      Back
+      <!-- arrow icon only -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+           stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
     </button>
     <div class="brand">RSI Quick Ref. Guide & Checklist</div>
-    <div style="width:54px"></div> <!-- spacer keeps title centered -->
+    <div style="width:48px"></div> <!-- spacer keeps title centered -->
   </div>
 </header>
 
@@ -258,6 +253,7 @@
     else location.href = HOME;
   });
 </script>
+
 
 
 <!-- Countdown Button at Top -->
