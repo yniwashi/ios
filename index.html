@@ -8,15 +8,13 @@
   #splash {
     position: fixed; inset: 0;
     background: #000 center/cover no-repeat;
-    /* 👇 your image */
     background-image: url("/splash.png");
     z-index: 9999;
     opacity: 1;
     transform: scale(1);
-    transition: opacity 260ms ease, transform 260ms ease; /* FADE_MS should match JS */
+    transition: opacity 260ms ease, transform 260ms ease; /* FADE_MS must match JS */
     display: flex; align-items: flex-end; justify-content: center;
   }
-  /* Optional tiny “loading” hint on the splash */
   #splash .hint {
     color: rgba(255,255,255,.9);
     font: 14px system-ui,-apple-system,Segoe UI,Roboto;
@@ -24,25 +22,20 @@
     letter-spacing: .2px;
     text-shadow: 0 1px 2px rgba(0,0,0,.5);
   }
-  /* When we’re fading out */
   #splash.fade-out {
     opacity: 0;
     transform: scale(0.985);
     pointer-events: none;
   }
 
-  /* Regular page content (only seen briefly) */
   body { font: 16px system-ui,-apple-system, Segoe UI, Roboto; margin: 3rem; line-height: 1.4 }
   .muted { color: #777 }
   @media (prefers-color-scheme: dark) { .muted { color: #9aa } }
-
-  /* Respect users who prefer less motion */
   @media (prefers-reduced-motion: reduce) {
     #splash { transition: opacity 1ms linear, transform 1ms linear }
   }
 </style>
 
-<!-- Minimal content (rarely visible because we redirect) -->
 <div id="app" hidden>
   <h1>Launching…</h1>
   <p class="muted">Please wait.</p>
@@ -53,48 +46,42 @@
   <p>This app is only available when installed on your Home Screen.</p>
 </div>
 
-<!-- Splash overlay -->
 <div id="splash" aria-hidden="true">
   <div class="hint">Loading…</div>
 </div>
 
 <script>
 (async () => {
-  // ====== Tweak these ======
-  const SPLASH_MIN_TIME = 450;  // minimum time to keep splash visible (ms)
-  const FADE_MS = 260;          // must match the CSS transition duration
-  // =========================
+  // ====== adjust splash timing ======
+  const SPLASH_MIN_TIME = 2500; // << stays on screen at least 2.5s
+  const FADE_MS = 260;          // fade-out duration (match CSS)
+  // ================================
 
   const splashEl = document.getElementById('splash');
   const showStart = performance.now();
 
-  // Helper: fade the splash smoothly, then wait FADE_MS
-  function fadeOutSplash() {
-    if (!splashEl) return Promise.resolve();
+  const fadeOutSplash = () => {
     splashEl.classList.add('fade-out');
     return new Promise(res => setTimeout(res, FADE_MS));
-  }
-  // Helper: ensure we keep splash for at least SPLASH_MIN_TIME
-  async function honorMinTime() {
+  };
+
+  const honorMinTime = async () => {
     const elapsed = performance.now() - showStart;
     const left = Math.max(0, SPLASH_MIN_TIME - elapsed);
     if (left > 0) await new Promise(res => setTimeout(res, left));
-  }
+  };
 
-  // Detect Home-Screen / Web Clip / PWA
   const inStandalone =
     (window.navigator.standalone === true) ||
     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 
   if (!inStandalone) {
-    // Not installed → go to your install guide
     await honorMinTime();
     await fadeOutSplash();
     location.replace('/install/');
     return;
   }
 
-  // Quick cookie check first (to avoid calling /session every time if already set)
   let hasWc = false;
   try {
     const r = await fetch('/cookie-check', { credentials: 'include', cache: 'no-store' });
@@ -105,7 +92,6 @@
   } catch {}
 
   if (!hasWc) {
-    // Mint cookie
     try {
       const r = await fetch('/session', { method: 'POST', credentials: 'include' });
       if (!r.ok) throw new Error('session failed');
@@ -117,7 +103,6 @@
     }
   }
 
-  // Navigate into the gated app with a smooth splash fade
   await honorMinTime();
   await fadeOutSplash();
   location.replace('/ambulance/');
