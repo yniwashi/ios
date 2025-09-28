@@ -78,6 +78,42 @@
     iframe,video{width:100%;height:100%;border:none}
 
     .muted{color:var(--muted)}
+
+    /* Media card for the demo video */
+.media-card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Dark surround so the black video blends nicely in light mode too */
+.video-frame{
+  background: #000;           /* creates a tasteful bezel around the phone */
+  border-radius: 12px;
+  padding: 8px;               /* thickness of the bezel */
+}
+
+/* The video itself */
+.media-card video{
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border-radius: 10px;        /* inner corner radius to match the bezel */
+  outline: none;
+}
+
+/* Optional small caption */
+.media-caption{
+  font-size: 13px;
+  color: var(--muted);
+}
+
   </style>
 </head>
 <body>
@@ -173,11 +209,26 @@
       </div>
     </section>
 
-    <!-- Optional video -->
-    <div class="video">
-      <!-- <video controls src="video.mp4"></video> -->
-      <!-- <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe> -->
-    </div>
+    <!-- Demo Video -->
+<section class="media-card">
+  <h3 style="margin:0;font-size:16px">Quick Look</h3>
+  <div class="video-frame">
+    <video
+      controls
+      playsinline
+      preload="metadata"
+      poster="/install/images/demo-poster.jpg"
+    >
+      <source src="/install/images/demo.mp4" type="video/mp4">
+      <!-- iOS Safari prefers MP4 (H.264). WEBM is typically not supported on iOS. -->
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  <div class="media-caption">
+    Short walkthrough of the app’s install and key tools (CPR Timer, WAAFELLS, Pediatrics Calculations, RSI Checklist, etc.).
+  </div>
+</section>
+
 
   </div>
 </body>
