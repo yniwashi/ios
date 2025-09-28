@@ -454,5 +454,27 @@
       card.addEventListener("touchcancel",cancel,  { passive: true });
     })();
   </script>
+
+    // ===== TEMP: Triple-tap the logo → shows the cookie status =====
+  <script>
+  (function(){
+    let taps = 0, timer = 0;
+    const logo = document.querySelector('.logo'); // adjust selector to your logo element
+    if (!logo) return;
+    logo.addEventListener('click', () => {
+      taps++;
+      clearTimeout(timer);
+      timer = setTimeout(() => taps = 0, 500); // 500ms window
+      if (taps >= 3) {
+        taps = 0;
+        fetch('/cookie-check', { credentials: 'include' })
+          .then(r => r.json())
+          .then(d => alert('Cookie present: ' + d.hasWc))
+          .catch(() => alert('Check failed'));
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>
