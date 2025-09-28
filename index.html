@@ -3,54 +3,68 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ambulance</title>
 <style>
-  :root{color-scheme:light dark}
-  body{font:16px system-ui,-apple-system,Segoe UI,Roboto;margin:3rem;line-height:1.4}
-  .muted{color:#777} @media (prefers-color-scheme:dark){ .muted{color:#9aa} }
+  :root { color-scheme: light dark; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%; width: 100%;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: #000 url('/splash.png') no-repeat center center;
+    background-size: cover;
+  }
 </style>
 
-<div id="app" hidden>
-  <h1>Launching…</h1>
-  <p class="muted">Please wait.</p>
-</div>
-
-<div id="blocked" hidden>
-  <h1>Access blocked</h1>
-  <p>This app is only available when installed on your Home Screen.</p>
-</div>
+<div id="splash"></div>
 
 <script>
 (async () => {
-  // Detect Home-Screen / Web Clip / PWA
+  // ⚡ Redirect anyone who’s NOT using the Home Screen webclip
   const inStandalone =
     (window.navigator.standalone === true) ||
     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-
   if (!inStandalone) {
-    document.getElementById('blocked').hidden = false;
+    window.location.replace('/install/');
     return;
   }
 
-  // 1) Ask the Worker if the HttpOnly cookie is already present.
+  // ⚡ Optional: keep splash visible for a bit if you want a delay (adjust here)
+  const SPLASH_MIN_TIME = 1000; // milliseconds to keep splash on screen
+  const start = Date.now();
+
+  // 1) Ask worker if cookie already exists
+  let hasCookie = false;
   try {
     const r = await fetch('/cookie-check', { credentials: 'include', cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.hasWc) {
-        // Already authorized — go straight in, no splash
-        location.replace('/ambulance/');
-        return;
-      }
+      hasCookie = !!d.hasWc;
     }
   } catch {}
 
-  // 2) No cookie → show Launching and mint.
-  document.getElementById('app').hidden = false;
+  if (hasCookie) {
+    const wait = SPLASH_MIN_TIME - (Date.now() - start);
+    if (wait > 0) await new Promise(res => setTimeout(res, wait));
+    window.location.replace('/ambulance/');
+    return;
+  }
+
+  // 2) Mint a new cookie
   try {
     const r = await fetch('/session', { method: 'POST', credentials: 'include' });
     if (!r.ok) throw new Error('session failed');
-    location.replace('/ambulance/');
+    const wait = SPLASH_MIN_TIME - (Date.now() - start);
+    if (wait > 0) await new Promise(res => setTimeout(res, wait));
+    window.location.replace('/ambulance/');
   } catch {
-    document.body.innerHTML = '<h1>Couldn’t start</h1><p>Close and reopen the app.</p>';
+    document.body.innerHTML = '<h1 style="color:white;text-align:center;">Couldn’t start</h1><p style="color:white;text-align:center;">Close and reopen the app.</p>';
   }
 })();
 </script>
