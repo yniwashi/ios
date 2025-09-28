@@ -1,120 +1,105 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Ambulance</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-  <!-- iOS standalone bar + theme color (white splash => dark text in the status bar) -->
+  <!-- Force a light, white status bar during splash -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta id="apple-bar"   name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta id="theme-color" name="theme-color" content="#ffffff">
-
-  <!-- Prevent stale cached splash -->
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-  <meta http-equiv="Pragma"        content="no-cache">
-  <meta http-equiv="Expires"       content="0">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
 
   <style>
     :root { color-scheme: light dark; }
-    /* Full-bleed surface behind everything (white to match splash) */
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: #ffffff;
-      font: 16px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
-
-    /* --- Splash layer --- */
-    .splash {
-      position: fixed;
-      inset: 0;
-      /* SAFARI SAFE-AREA PADDING (keeps image centered nicely if it contains logo) */
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: #fff;               /* fallback while image loads */
+      overscroll-behavior: none;
+      /* safe area so the screenshot looks nice under the system bar */
       padding: env(safe-area-inset-top) env(safe-area-inset-right)
                env(safe-area-inset-bottom) env(safe-area-inset-left);
-      background: #ffffff center center / cover no-repeat;
-      background-image: url("/images/splash.png"); /* <-- put your file here */
-      /* Start visible; we’ll fade to 0 in JS */
-      opacity: 1;
-      transition: opacity 380ms ease;  /* fade duration */
-      z-index: 9999;
-    }
-    .splash.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
 
-    /* Minimal content blocks (only shown if not standalone) */
-    .wrap {
-      max-width: 680px;
-      margin: 3rem auto;
-      padding: 0 1rem;
-      line-height: 1.45;
+    /* Fullscreen splash */
+    #splash {
+      position: fixed; inset: 0;
+      background: #fff url("/splash.png") center center / cover no-repeat;
+      /* If your image has transparency and you want dark in dark mode,
+         uncomment the next two lines:
+      @media (prefers-color-scheme: dark) {
+        background-color: #0f1115;
+      }
+      */
+      opacity: 1;
+      transition: opacity 260ms ease-out; /* fade duration */
+      z-index: 9999;
     }
-    .muted { color: #666; }
-    @media (prefers-color-scheme: dark){
-      .muted { color: #9aa6c3; }
-    }
-    #blocked { display: none; }
-    #blocked.show { display: block; }
+    #splash.hide { opacity: 0; pointer-events: none; }
+
+    /* Minimal copy for “Launching…” fallback (rarely seen) */
+    #app { display: none; font: 16px system-ui,-apple-system,Segoe UI,Roboto; margin: 3rem; line-height: 1.4; }
+    .muted { color: #777; }
+    @media (prefers-color-scheme: dark) { .muted { color: #9aa; } }
+    #blocked { display: none; font: 16px system-ui,-apple-system,Segoe UI,Roboto; margin: 3rem; line-height: 1.4; }
   </style>
 </head>
 <body>
-  <!-- Fullscreen splash image -->
-  <div id="splash" class="splash" aria-hidden="true"></div>
+  <div id="splash" aria-hidden="true"></div>
 
-  <!-- Fallback message if opened in Safari (not standalone) -->
-  <div id="blocked" class="wrap">
-    <h1>Install required</h1>
-    <p class="muted">
-      This app runs from your Home Screen. You’ll be redirected to the install page…
-    </p>
+  <div id="app">
+    <h1>Launching…</h1>
+    <p class="muted">Please wait.</p>
+  </div>
+
+  <div id="blocked">
+    <h1>Access blocked</h1>
+    <p>This app is only available when installed on your Home Screen.</p>
   </div>
 
   <script>
-    // ===== CONFIG =====
-    const SPLASH_MIN_MS = 2500; // <-- adjust how long the splash stays visible on each launch
-    const DEST = "/ambulance/";
+  (async () => {
+    const inStandalone =
+      (navigator.standalone === true) ||
+      (matchMedia && matchMedia('(display-mode: standalone)').matches);
 
-    // Keep status bar consistent with white splash (dark text).
-    (function initBar() {
-      const themeMeta = document.getElementById('theme-color');
-      const appleBar  = document.getElementById('apple-bar');
-      if (themeMeta) themeMeta.setAttribute('content', '#ffffff');
-      if (appleBar)  appleBar.setAttribute('content', 'default');
-    })();
+    if (!inStandalone) {
+      // Not a web clip/PWA → send to install
+      document.getElementById('blocked').style.display = 'block';
+      return;
+    }
 
-    (async () => {
-      // Detect standalone (webclip / PWA)
-      const inStandalone =
-        (window.navigator.standalone === true) ||
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    // Optional: show the splash for a minimum time so the fade feels deliberate.
+    const MIN_SPLASH_MS = 2500; // ← adjust how long the splash stays visible
+    const t0 = performance.now();
 
-      if (!inStandalone) {
-        // Not installed → send to install page (after brief hint)
-        document.getElementById('blocked').classList.add('show');
-        setTimeout(() => { location.replace('/install/'); }, 800);
-        return;
+    // If cookie already present, we still show the splash briefly for consistency.
+    let hasCookie = false;
+    try {
+      const r = await fetch('/cookie-check', { credentials: 'include', cache: 'no-store' });
+      hasCookie = r.ok && (await r.json()).hasWc;
+    } catch {}
+
+    if (!hasCookie) {
+      // Mint session
+      try {
+        const r = await fetch('/session', { method: 'POST', credentials: 'include' });
+        if (!r.ok) throw new Error('session failed');
+      } catch {
+        // fallback – show tiny message
+        document.getElementById('app').style.display = 'block';
       }
+    }
 
-      const splashEl = document.getElementById('splash');
-      const start = performance.now();
+    // Respect minimum splash duration
+    const dt = performance.now() - t0;
+    if (dt < MIN_SPLASH_MS) await new Promise(r => setTimeout(r, MIN_SPLASH_MS - dt));
 
-      // Always mint/refresh the HttpOnly session cookie on launch.
-      // We don't wait for it to finish to start the timer; we race with SPLASH_MIN_MS.
-      const mint = fetch('/session', { method: 'POST', credentials: 'include', cache: 'no-store' })
-        .catch(() => null);
-
-      // Enforce a minimum visible splash duration.
-      const sleep = ms => new Promise(r => setTimeout(r, ms));
-      const remaining = Math.max(0, SPLASH_MIN_MS - (performance.now() - start));
-      await Promise.all([mint, sleep(remaining)]);
-
-      // Smoothly fade out splash, then navigate.
-      splashEl.classList.add('hidden');
-      // Small delay so the fade completes before Safari snapshot
-      setTimeout(() => { location.replace(DEST); }, 420);
-    })();
+    // Fade out and navigate
+    const splash = document.getElementById('splash');
+    splash.classList.add('hide');
+    setTimeout(() => { location.replace('/ambulance/'); }, 260); // match CSS fade
+  })();
   </script>
 </body>
 </html>
