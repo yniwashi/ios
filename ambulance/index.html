@@ -5,11 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Ambulance</title>
 
+
+
+
   <!-- Webclip / PWA friendliness -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- Theme color for light/dark -->
   <meta id="theme-color" name="theme-color" content="#0f1115" />
+  <script>
+  (function () {
+    var prefersDark = matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+    var el = document.querySelector('meta[name="theme-color"]');
+    if (el) el.setAttribute('content', prefersDark ? '#0f1115' : '#f7f9fc');
+  })();
+</script>
+
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f9fc">
   <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f1115">
 
