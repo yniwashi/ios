@@ -207,53 +207,72 @@
 </head>
 <body>
 
-<!-- ---------- HEADER ---------- -->
+<!-- ---------- LIGHT HEADER (RSI) ---------- -->
 <style>
-  :root{
-    --chip-h:48px;
-    --chip-pad-x:12px;
-    --title-size:clamp(22px,4vw,28px);
-    --btn-bd:var(--border);
-    --btn-bg:var(--surface-2);
-    --fg:var(--text);
+  /* Fixed light palette (ignores dark mode) */
+  .rsi-header{
+    position: sticky; top: 0; z-index: 999;
+    background: #FFFFFF; color: #0c1230;
+    border-bottom: 1px solid #e7ecf3;
+    padding: calc(env(safe-area-inset-top) + 8px) 12px 10px;
   }
-  .header{display:grid;gap:8px;margin-bottom:12px}
-  .controls-row{display:flex;align-items:center;gap:var(--chip-pad-x);justify-content:space-between}
-  .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-  #backBtn.icon-toggle{
-    display:flex;align-items:center;justify-content:center;
-    border:1px solid var(--btn-bd);
-    background:var(--btn-bg);
-    border-radius:12px;
-    height:var(--chip-h);
-    width:var(--chip-h);
-    color:var(--fg);
+  .rsi-row{
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    max-width: 980px; margin: 0 auto;
   }
-  #backBtn svg{width:24px;height:24px}
+
+  /* BIG arrow button in a chip */
+  .rsi-back{
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px;               /* bigger tap target */
+    border-radius: 14px;
+    background: #f1f5fb;
+    border: 1px solid #e7ecf3;
+    color: #0c1230;
+    box-shadow: 0 1px 0 rgba(0,0,0,.02);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rsi-back svg{ width: 28px; height: 28px; } /* bigger arrow */
+
+  /* Title: same size as your old H1 (30px) */
+  .rsi-title{
+    margin: 0; flex: 1; text-align: center;
+    font-family: Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-weight: 800; font-size: 30px; line-height: 1.1;
+    color: #0c1230;
+  }
+
+  /* Spacer keeps the title visually centered */
+  .rsi-spacer{ width: 56px; height: 56px; flex: 0 0 56px; }
 </style>
 
-<header class="header">
-  <div class="controls-row">
-    <button id="backBtn" class="icon-toggle" aria-label="Back">
-      <!-- arrow icon only -->
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-           stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+<header class="rsi-header" role="banner">
+  <div class="rsi-row">
+    <button id="backBtn" class="rsi-back" aria-label="Back">
+      <!-- arrow only, inside button shape -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
       </svg>
     </button>
-    <div class="brand">RSI Quick Ref. Guide & Checklist</div>
-    <div style="width:48px"></div> <!-- spacer keeps title centered -->
+
+    <h1 class="rsi-title">RSI Quick Ref. Guide &amp; Checklist</h1>
+
+    <div class="rsi-spacer" aria-hidden="true"></div>
   </div>
 </header>
 
 <script>
+  // Smart back: history if available, else go home
   const HOME = "https://ios.niwashibase.com/ambulance";
-  document.getElementById('backBtn').addEventListener('click',()=>{
-    if (document.referrer && document.referrer !== location.href) history.back();
-    else location.href = HOME;
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (document.referrer && document.referrer !== location.href && history.length > 1){
+      history.back();
+    } else {
+      location.href = HOME;
+    }
   });
 </script>
-
 
 
 <!-- Countdown Button at Top -->
