@@ -207,13 +207,12 @@
 </head>
 <body>
 
-  <!-- ---------- HEADER ---------- -->
+ <!-- ---------- HEADER ---------- -->
 <style>
   :root{
-    --chip-h:44px;
-    --chip-pad-x:12px;
-    --title-size:clamp(20px,3.8vw,26px);
-    --subtitle-size:13px;
+    --chip-h:54px;              /* taller than CPR default */
+    --chip-pad-x:14px;
+    --title-size:clamp(22px,4vw,30px);
     --btn-bd:var(--border);
     --btn-bg:var(--surface-2);
     --fg:var(--text);
@@ -221,24 +220,34 @@
   .header{display:grid;gap:8px;margin-bottom:12px}
   .controls-row{display:flex;align-items:center;gap:var(--chip-pad-x);justify-content:space-between}
   .brand{justify-self:center;font-weight:900;font-size:var(--title-size);letter-spacing:.2px;text-align:center}
-  .brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
   .chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
-  #backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
-  .icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
-  .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
+  #backBtn.icon-toggle{
+    border:1px solid var(--btn-bd);
+    background:var(--btn-bg);
+    font-size:24px;            /* bigger icon */
+    padding:0 16px;
+    font-weight:800;
+    height:var(--chip-h);
+  }
+  .icon-toggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    border:1px solid var(--btn-bd);
+    background:var(--btn-bg);
+    color:var(--fg);
+    text-decoration:none;
+  }
 </style>
 
 <header class="header">
   <div class="controls-row">
     <button id="backBtn" class="icon-toggle" aria-label="Back">
-      <!-- same back arrow SVG used in CPR -->
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-           stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-      </svg>
+      Back
     </button>
-    <div class="brand">RSI Checklist</div>
-    <div style="width:44px"></div> <!-- spacer so title stays centered -->
+    <div class="brand">RSI Quick Ref. Guide & Checklist</div>
+    <div style="width:54px"></div> <!-- spacer keeps title centered -->
   </div>
 </header>
 
@@ -249,10 +258,6 @@
     else location.href = HOME;
   });
 </script>
-
-
-  
-<h1 style="color: black; background-color: #FFFFFF; text-align: center; font-size: 30px; font-family: Tahoma, sans-serif; font-weight: bold;padding: 18px;">RSI Quick Ref. Guide & Checklist</h1>
 
 
 <!-- Countdown Button at Top -->
