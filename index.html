@@ -30,12 +30,24 @@
     return;
   }
 
-  // Ask the Worker to mint a short-lived HttpOnly session cookie
+  // 1) Ask the Worker if the HttpOnly cookie is already present.
+  try {
+    const r = await fetch('/cookie-check', { credentials: 'include', cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.hasWc) {
+        // Already authorized — go straight in, no splash
+        location.replace('/ambulance/');
+        return;
+      }
+    }
+  } catch {}
+
+  // 2) No cookie → show Launching and mint.
   document.getElementById('app').hidden = false;
   try {
     const r = await fetch('/session', { method: 'POST', credentials: 'include' });
     if (!r.ok) throw new Error('session failed');
-    // Go straight into your Ambulance app (gated)
     location.replace('/ambulance/');
   } catch {
     document.body.innerHTML = '<h1>Couldn’t start</h1><p>Close and reopen the app.</p>';
