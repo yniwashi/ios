@@ -84,7 +84,6 @@
       font-size: 18px;
     }
 
-    /* --- NEW: image + SI card spacing & styling --- */
     .hero-img{
       display:block;
       width:100%;
@@ -132,7 +131,6 @@
     }
     .block-gap{ height: 30px; }
 
-    /* Countdown UI */
     .countdown-btn{
       display:block;
       margin:16px auto;
@@ -256,6 +254,136 @@
   });
 </script>
 
+<!-- ===== AUDIO (CPR-style priming, using Web Audio) ===== -->
+<script>
+let audioCtx;
+const audioBuffers = {};
+const audioFiles = {
+  s30: '../ambulance/audio/sec30.mp3',
+  s20: '../ambulance/audio/sec20.mp3',
+  s10: '../ambulance/audio/sec10.mp3',
+  s5:  '../ambulance/audio/sec5.mp3',
+  s4:  '../ambulance/audio/sec4.mp3',
+  s3:  '../ambulance/audio/sec3.mp3',
+  s2:  '../ambulance/audio/sec2.mp3',
+  s1:  '../ambulance/audio/sec1.mp3',
+  time: '../ambulance/audio/time.mp3'
+};
+
+function primeAudio(){
+  try {
+    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if(audioCtx.state === 'suspended'){ audioCtx.resume().catch(()=>{}); }
+    // iOS unlock hack (silent blip)
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    g.gain.value = 0.0001;
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start();
+    setTimeout(()=>{ try{osc.stop();}catch{} }, 1);
+
+    // Preload all files (once)
+    (async ()=>{
+      for(const [k, url] of Object.entries(audioFiles)){
+        if(audioBuffers[k]) continue;
+        try{
+          const ab = await fetch(url, {cache:'force-cache'}).then(r=>r.arrayBuffer());
+          audioBuffers[k] = await audioCtx.decodeAudioData(ab);
+        }catch(e){}
+      }
+    })();
+  } catch(e){}
+}
+
+async function ensureAudioReady(){
+  if(!audioCtx) primeAudio();
+  if(audioCtx && audioCtx.state === 'suspended'){
+    try{ await audioCtx.resume(); }catch(e){}
+  }
+}
+
+function playBuffer(key, vol=1){
+  const buf = audioBuffers[key];
+  if(!audioCtx || !buf) return false;
+  try{
+    const src = audioCtx.createBufferSource();
+    const g = audioCtx.createGain();
+    g.gain.value = vol;
+    src.buffer = buf;
+    src.connect(g).connect(audioCtx.destination);
+    src.start();
+    return true;
+  }catch(e){ return false; }
+}
+
+// Fallback beep if buffer isn't ready
+function beep(vol=1){
+  try{
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type='square'; o.frequency.value=800;
+    g.gain.value = 0.08 * vol;
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    setTimeout(()=>{ try{o.stop();}catch{} }, 120);
+  }catch(e){}
+}
+
+function playSecond(n){
+  ensureAudioReady().then(()=>{
+    const key = 's'+String(n);
+    if(!playBuffer(key)) beep();
+  });
+}
+
+function playTime(){
+  ensureAudioReady().then(()=>{
+    if(!playBuffer('time')) beep();
+  });
+}
+
+// Prime on first user interaction (covers iOS)
+['pointerdown','touchstart','click','keydown'].forEach(ev=>{
+  window.addEventListener(ev, primeAudio, {once:true, passive:true});
+});
+</script>
+
+<!-- ===== WAKE LOCK (prevent dimming/sleep while timer runs) ===== -->
+<script>
+let wakeLock = null;
+let keepAliveTimer = null; // tiny fallback nudge for older iOS
+
+async function requestWake(){
+  try{
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener?.('release', ()=>{ /* released */ });
+    } else {
+      // Fallback: periodic no-op to keep JS active (helps on some browsers)
+      clearInterval(keepAliveTimer);
+      keepAliveTimer = setInterval(()=>{ /* noop */ }, 30000);
+    }
+  }catch(e){
+    // ignore
+  }
+}
+async function releaseWake(){
+  try{
+    if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+  }catch(e){}
+  clearInterval(keepAliveTimer); keepAliveTimer = null;
+}
+
+// Reacquire if tab becomes visible again and timer is running
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState === 'visible' && window.__rsiTimerRunning) {
+    requestWake();
+  }
+});
+window.addEventListener('beforeunload', releaseWake);
+</script>
+
 <!-- Countdown Button at Top -->
 <button class="countdown-btn" id="countdownTop">Start 60s Countdown</button>
 <div class="timer" id="timerTop" aria-live="polite"></div>
@@ -281,13 +409,13 @@
 <div class="block-gap"></div>
 
 <table id="soapmetable">
-  <!-- (unchanged table content) -->
-  <!-- ... your full SOAPPPME table as provided ... -->
+  <!-- (your full SOAPPPME table stays unchanged) -->
+  <!-- ... -->
 </table>
 
 <table id="soapmetable2">
-  <!-- (unchanged dosing table content) -->
-  <!-- ... your full dosing table as provided ... -->
+  <!-- (your full dosing table stays unchanged) -->
+  <!-- ... -->
 </table>
 
 <h6 style="color: black; text-align: right; font-size: 18px; font-family: Tahoma, sans-serif; font-weight: bold;margin-right:15px;margin-top:10px">Version 3.1</h6>
@@ -298,7 +426,6 @@
 
 <script>
   (function(){
-    // Build one shared fullscreen overlay for the timer
     const overlay = document.createElement('div');
     overlay.className = 'timer-overlay';
     overlay.innerHTML = `
@@ -319,30 +446,7 @@
       return `${m}:${s}`;
     };
 
-    // ------- Audio (web paths relative to /ios/helpers/) -------
-    const audio = {
-       30: new Audio('../ambulance/audio/sec30.mp3'),
-       20: new Audio('../ambulance/audio/sec20.mp3'),
-       10: new Audio('../ambulance/audio/sec10.mp3'),
-        5: new Audio('../ambulance/audio/sec5.mp3'),
-        4: new Audio('../ambulance/audio/sec4.mp3'),
-        3: new Audio('../ambulance/audio/sec3.mp3'),
-        2: new Audio('../ambulance/audio/sec2.mp3'),
-        1: new Audio('../ambulance/audio/sec1.mp3'),
-      time: new Audio('../ambulance/audio/time.mp3')
-    };
-    Object.values(audio).forEach(a => { try { a.load(); } catch(e){} });
-
-    function playSecond(n){
-      const a = audio[n];
-      if (!a) return;
-      try { a.currentTime = 0; a.play(); } catch(e){}
-    }
-    function playTime(){
-      try { audio.time.currentTime = 0; audio.time.play(); } catch(e){}
-    }
-
-    let running = false;
+    window.__rsiTimerRunning = false;  // shared flag for wake lock
     let interval = null;
     let remaining = 60;
 
@@ -357,8 +461,10 @@
     function hideOverlay(){ overlay.style.display = 'none'; }
 
     function start(){
-      if (running) { stop(); return; }
-      running = true;
+      if (window.__rsiTimerRunning) { stop(); return; }
+      window.__rsiTimerRunning = true;
+      requestWake();                // keep screen on
+      ensureAudioReady();           // unlock audio immediately
       setButtonsLabel('Stop 60s');
 
       remaining = 60;
@@ -387,7 +493,8 @@
 
     function stop(){
       if (interval) { clearInterval(interval); interval = null; }
-      running = false;
+      window.__rsiTimerRunning = false;
+      releaseWake();                // allow sleep again
       hideOverlay();
       setButtonsLabel('Start 60s Countdown');
       if (topOut) topOut.style.display = 'none';
