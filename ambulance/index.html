@@ -184,6 +184,55 @@
     .backbtn{ appearance: none; cursor: pointer; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-weight: 800; font-size: 14px; }
     .panel-title{ margin: 0; font-size: 15px; font-weight: 800 }
     body.panel-open .wrap{ transition: transform 300ms ease, opacity 300ms ease; }
+
+
+/* -------- Shortcuts Banner to make the user download the shortcut-------- */
+.sc-banner{
+  display:none;                        /* default hidden */
+  background:linear-gradient(180deg,rgba(47,129,247,.10),rgba(47,129,247,.06));
+  border:1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  border-radius:14px;
+  padding:14px;
+  margin-top:8px;
+}
+.sc-row{ display:flex; gap:12px; align-items:center }
+.sc-thumb{
+  width:54px; height:54px; flex:0 0 54px;
+  border-radius:12px; overflow:hidden;
+  border:1px solid var(--border);
+  background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+}
+.sc-thumb img{ width:100%; height:100%; object-fit:cover }
+
+.sc-copy{ flex:1 1 auto; min-width:0 }
+.sc-title{ margin:0 0 4px 0; font-weight:800; font-size:16px }
+.sc-desc{ margin:0; font-size:13px; color:var(--muted); line-height:1.35 }
+
+.sc-cta{
+  display:flex; flex-direction:column; gap:8px; align-items:flex-end; flex:0 0 auto;
+}
+.sc-btn{
+  appearance:none; text-decoration:none; cursor:pointer;
+  padding:10px 14px; font-weight:800; font-size:14px;
+  color:#fff; background:linear-gradient(180deg,var(--accent),#0D5BB5);
+  border:1px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  border-radius:10px; box-shadow:var(--shadow);
+}
+.sc-note{
+  margin:6px 0 0 0; font-size:12px; color:var(--muted); line-height:1.35;
+}
+.sc-imp{
+  margin:10px 0 0 0; padding:10px; border-radius:10px;
+  background:color-mix(in oklab, var(--accent) 10%, var(--surface));
+  border:1px dashed color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.sc-imp-title{ margin:0 0 6px 0; font-size:13px; font-weight:900; letter-spacing:.02em }
+.sc-imp ul{ margin:0; padding-left:16px }
+.sc-imp li{ font-size:12px; color:var(--muted); margin:4px 0 }
+
+
+    
   </style>
 </head>
 <body>
@@ -204,42 +253,7 @@
       </div>
     </div>
 
-    <!-- 🚑 Shortcuts Required Banner -->
-<div id="shortcutBanner" style="
-  display:none;
-  background:linear-gradient(180deg,rgba(255,215,64,.16),rgba(255,215,64,.1));
-  border:1px solid rgba(255,193,7,.35);
-  color:#0c1230;
-  padding:14px 16px;
-  border-radius:12px;
-  margin-top:10px;
-  line-height:1.4;
-">
-  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <img src="images/ambulance_shortcut_icon.png" alt="Ambulance Shortcut" style="width:44px; height:44px; border-radius:10px;">
-    <div style="flex:1; min-width:200px;">
-      <div style="font-size:17px; font-weight:700;">🚑 Ambulance Shortcut Required</div>
-      <div style="font-size:14px; margin-top:4px;">
-        To use <strong>Shortcuts Mode</strong>, you must install the new <strong>Ambulance</strong> shortcut.
-        This single shortcut replaces all older Ambulance shortcuts and works as the helper engine for the app.
-      </div>
-      <div style="font-size:13px; margin-top:6px; color:#555;">
-        ⚠️ <strong>Important:</strong> If the Shortcuts app asks “Replace Existing Shortcut?”, tap <strong>Replace</strong>.<br>
-        It will also ask for privacy permissions the first time certain actions run — choose <strong>Always Allow</strong> if available, or <strong>Allow/OK</strong>.
-      </div>
-    </div>
-    <a href="https://www.icloud.com/shortcuts/YOUR-LINK" style="
-      display:inline-block;
-      padding:10px 16px;
-      background:#1f6fff;
-      color:#fff;
-      font-weight:600;
-      text-decoration:none;
-      border-radius:10px;
-      white-space:nowrap;
-    ">Download</a>
-  </div>
-</div>
+
 
 
     <!-- News -->
@@ -256,6 +270,38 @@
         <div class="rail"><div class="knob"></div></div>
       </label>
     </div>
+
+
+    <!-- Shortcuts banner (shown only when Shortcuts Mode is enabled and you choose to show it) -->
+<div id="scBanner" class="sc-banner" hidden>
+  <div class="sc-row">
+    <div class="sc-thumb" aria-hidden="true">
+      <!-- Replace the image file if you want a custom tile -->
+      <img src="images/shortcut-ambulance.png" alt="Ambulance Shortcut">
+    </div>
+    <div class="sc-copy">
+      <p class="sc-title">Ambulance Shortcut Required</p>
+      <p class="sc-desc">
+        To use <strong>Shortcuts Mode</strong>, install the new <strong>Ambulance</strong> shortcut.
+        This single shortcut replaces all older Ambulance shortcuts and powers the app.
+      </p>
+      <div class="sc-imp">
+        <p class="sc-imp-title">Important</p>
+        <ul>
+          <li>If Shortcuts asks <em>“Replace Existing Shortcut?”</em>, tap <strong>Replace</strong>.</li>
+          <li>The first time an action runs, Shortcuts will ask for permission. Choose
+              <strong>Always Allow</strong> (if available) or <strong>Allow/OK</strong>.</li>
+        </ul>
+      </div>
+      <p class="sc-note">You can hide or edit this banner anytime (developer-controlled).</p>
+    </div>
+    <div class="sc-cta">
+      <!-- Put your real iCloud shortcut link below -->
+      <a id="scDownload" class="sc-btn" href="#" rel="noopener">Download Shortcut</a>
+    </div>
+  </div>
+</div>
+
 
     <!-- Sections container -->
     <div id="sections" class="sections"></div>
@@ -281,6 +327,8 @@
     const SEPARATOR     = "::";
     const USE_RETURN_URL = false;
     const RETURN_URL    = "https://yourdomain.com/done.html";
+    const SHOW_SHORTCUTS_BANNER = true;   // <-- you control visibility here
+    const SHORTCUT_DOWNLOAD_URL = "https://www.icloud.com/shortcuts/8f6a7a5be8b74e3dbd6fffa97d06274d";    // <-- replace with your iCloud Shortcut URL or keep it #
 
     
     const BUTTONS = [
@@ -373,79 +421,90 @@
       updateHash({});
     }
 
-    document.addEventListener("DOMContentLoaded", mount);
-    function mount(){
-      initTheme();
-      document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
+ document.addEventListener("DOMContentLoaded", mount);
+function mount(){
+  initTheme();
+  document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
-      const newsEl = document.getElementById("news");
-      if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.textContent = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
+  const newsEl = document.getElementById("news");
+  if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.innerHTML = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
 
-      const toggle = document.getElementById("mode");
-      const sectionsEl = document.getElementById("sections");
+  const toggle      = document.getElementById("mode");
+  const sectionsEl  = document.getElementById("sections");
+  const scBannerEl  = document.getElementById("scBanner");      // shortcuts banner container
+  const scDownloadEl= document.getElementById("scDownload");    // download button in banner
+  if (scDownloadEl) scDownloadEl.href = (typeof SHORTCUT_DOWNLOAD_URL !== "undefined" && SHORTCUT_DOWNLOAD_URL) ? SHORTCUT_DOWNLOAD_URL : "#";
 
-      const map = new Map(BUTTONS.map(b => [b.text, b]));
+  const map = new Map(BUTTONS.map(b => [b.text, b]));
 
-      function render(){
-        const useShortcuts = toggle.checked;
-        sectionsEl.innerHTML = "";
+  function render(){
+    const useShortcuts = toggle.checked;
+    sectionsEl.innerHTML = "";
 
-        for (const sec of SECTIONS){
-          const items = sec.items
-            .map(name => map.get(name))
-            .filter(Boolean)
-            .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
-          if (!items.length) continue;
-
-          const secEl = document.createElement("section");
-          secEl.className = "section";
-          const head = document.createElement("div");
-          head.className = "section-head";
-          head.textContent = sec.title;
-          const grid = document.createElement("div");
-          grid.className = "grid";
-
-          items.forEach((btn, i) => {
-            const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
-            const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
-
-            const a = document.createElement("a");
-            a.className = `btn ${btn.color || "c-blue"}`;
-            a.id = id;
-            a.href = href;
-            a.style.animationDelay = `${i*18}ms`;
-
-            const iconHtml =
-              btn.iconType === "material"
-                ? `<span class="material-symbols-rounded" aria-hidden="true">${btn.icon}</span>`
-                : "";
-
-            a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
-
-            if (!useShortcuts){
-              if (btn.actionId){
-                a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
-              } else if (!btn.href || btn.href === "#"){
-                a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href"); });
-              }
-            }
-            grid.appendChild(a);
-          });
-
-          secEl.appendChild(head);
-          secEl.appendChild(grid);
-          sectionsEl.appendChild(secEl);
-        }
-      }
-
-      toggle.addEventListener("change", render);
-      document.getElementById("panel-back").addEventListener("click", closePanel);
-      render();
-
-      // Deep-links (e.g., #tool=gcs)
-      const { tool, ...params } = parseHash();
-      if (tool) runAction(tool, params);
+    // Show/hide the Shortcuts banner (dev-controlled)
+    if (scBannerEl){
+      const shouldShow = useShortcuts && (typeof SHOW_SHORTCUTS_BANNER !== "undefined" ? SHOW_SHORTCUTS_BANNER : true);
+      scBannerEl.hidden = !shouldShow;
+      scBannerEl.style.display = shouldShow ? "block" : "none";
     }
+
+    for (const sec of SECTIONS){
+      const items = sec.items
+        .map(name => map.get(name))
+        .filter(Boolean)
+        .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
+      if (!items.length) continue;
+
+      const secEl = document.createElement("section");
+      secEl.className = "section";
+      const head = document.createElement("div");
+      head.className = "section-head";
+      head.textContent = sec.title;
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      items.forEach((btn, i) => {
+        const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
+        const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
+
+        const a = document.createElement("a");
+        a.className = `btn ${btn.color || "c-blue"}`;
+        a.id = id;
+        a.href = href;
+        a.style.animationDelay = `${i*18}ms`;
+
+        const iconHtml =
+          btn.iconType === "material"
+            ? `<span class="material-symbols-rounded" aria-hidden="true">${btn.icon}</span>`
+            : "";
+
+        a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
+
+        if (!useShortcuts){
+          if (btn.actionId){
+            a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
+          } else if (!btn.href || btn.href === "#"){
+            a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href"); });
+          }
+        }
+        grid.appendChild(a);
+      });
+
+      secEl.appendChild(head);
+      secEl.appendChild(grid);
+      sectionsEl.appendChild(secEl);
+    }
+  }
+
+  toggle.addEventListener("change", render);
+  document.getElementById("panel-back").addEventListener("click", closePanel);
+  render();
+
+  // Deep-links (e.g., #tool=gcs)
+  const { tool, ...params } = parseHash();
+  if (tool) runAction(tool, params);
+}
+
 
     // ---------- Router / action loader ----------
     async function runAction(actionId, params = {}) {
@@ -504,11 +563,7 @@
     })();
 
 
-    // Show/hide the banner — set to true when you want to display it
-const SHOW_SHORTCUT_BANNER = true; 
-if (SHOW_SHORTCUT_BANNER) {
-  document.getElementById('shortcutBanner').style.display = 'block';
-}
+
 
   </script>
 
