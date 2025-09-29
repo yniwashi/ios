@@ -282,7 +282,7 @@
 
 
 <!-- Image -->
-<img class="hero-img" src="file:///android_asset/rsi_quick_ref.jpg" alt="RSI quick reference" />
+<img class="hero-img" src="/ios/ambulance/images/rsi_quick_ref.jpg" alt="RSI quick reference" />
 
 <!-- Shock Index card -->
 <section class="si-card" aria-label="Shock Index guidance">
@@ -624,15 +624,15 @@
 
     // ------- Audio from res/raw (preload) -------
     const audio = {
-       30: new Audio('file:///android_res/raw/sec30.mp3'),
-       20: new Audio('file:///android_res/raw/sec20.mp3'),
-       10: new Audio('file:///android_res/raw/sec10.mp3'),
-        5: new Audio('file:///android_res/raw/sec5.mp3'),
-        4: new Audio('file:///android_res/raw/sec4.mp3'),
-        3: new Audio('file:///android_res/raw/sec3.mp3'),
-        2: new Audio('file:///android_res/raw/sec2.mp3'),
-        1: new Audio('file:///android_res/raw/sec1.mp3'),
-      time: new Audio('file:///android_res/raw/time.mp3')
+       30: new Audio('/ios/ambulance/audio/sec30.mp3'),
+       20: new Audio('/ios/ambulance/audio/sec20.mp3'),
+       10: new Audio('/ios/ambulance/audio/sec10.mp3'),
+        5: new Audio('/ios/ambulance/audio/sec5.mp3'),
+        4: new Audio('/ios/ambulance/audio/sec4.mp3'),
+        3: new Audio('/ios/ambulance/audio/sec3.mp3'),
+        2: new Audio('/ios/ambulance/audio/sec2.mp3'),
+        1: new Audio('/ios/ambulance/audio/sec1.mp3'),
+      time: new Audio('/ios/ambulance/audio/time.mp3')
     };
     Object.values(audio).forEach(a => { try { a.load(); } catch(e){} });
 
