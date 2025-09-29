@@ -204,6 +204,44 @@
       </div>
     </div>
 
+    <!-- 🚑 Shortcuts Required Banner -->
+<div id="shortcutBanner" style="
+  display:none;
+  background:linear-gradient(180deg,rgba(255,215,64,.16),rgba(255,215,64,.1));
+  border:1px solid rgba(255,193,7,.35);
+  color:#0c1230;
+  padding:14px 16px;
+  border-radius:12px;
+  margin-top:10px;
+  line-height:1.4;
+">
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <img src="images/ambulance_shortcut_icon.png" alt="Ambulance Shortcut" style="width:44px; height:44px; border-radius:10px;">
+    <div style="flex:1; min-width:200px;">
+      <div style="font-size:17px; font-weight:700;">🚑 Ambulance Shortcut Required</div>
+      <div style="font-size:14px; margin-top:4px;">
+        To use <strong>Shortcuts Mode</strong>, you must install the new <strong>Ambulance</strong> shortcut.
+        This single shortcut replaces all older Ambulance shortcuts and works as the helper engine for the app.
+      </div>
+      <div style="font-size:13px; margin-top:6px; color:#555;">
+        ⚠️ <strong>Important:</strong> If the Shortcuts app asks “Replace Existing Shortcut?”, tap <strong>Replace</strong>.<br>
+        It will also ask for privacy permissions the first time certain actions run — choose <strong>Always Allow</strong> if available, or <strong>Allow/OK</strong>.
+      </div>
+    </div>
+    <a href="https://www.icloud.com/shortcuts/YOUR-LINK" style="
+      display:inline-block;
+      padding:10px 16px;
+      background:#1f6fff;
+      color:#fff;
+      font-weight:600;
+      text-decoration:none;
+      border-radius:10px;
+      white-space:nowrap;
+    ">Download</a>
+  </div>
+</div>
+
+
     <!-- News -->
     <div id="news" class="news"></div>
 
@@ -238,7 +276,7 @@
     /* =========================
          CONFIG
        ========================= */
-    const NEWS_MESSAGE = "This is a test<br>This is a new line";
+    const NEWS_MESSAGE = "This is a test\nThis is a new line";
     const SHORTCUT_NAME = "Ambulance";
     const SEPARATOR     = "::";
     const USE_RETURN_URL = false;
@@ -464,6 +502,14 @@
       card.addEventListener("touchend",   onEnd,   { passive: true });
       card.addEventListener("touchcancel",cancel,  { passive: true });
     })();
+
+
+    // Show/hide the banner — set to true when you want to display it
+const SHOW_SHORTCUT_BANNER = true; 
+if (SHOW_SHORTCUT_BANNER) {
+  document.getElementById('shortcutBanner').style.display = 'block';
+}
+
   </script>
 
 </body>
