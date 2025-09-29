@@ -187,49 +187,22 @@
 
 
 /* -------- Shortcuts Banner to make the user download the shortcut-------- */
-.sc-banner{
-  display:none;                        /* default hidden */
-  background:linear-gradient(180deg,rgba(47,129,247,.10),rgba(47,129,247,.06));
-  border:1px solid color-mix(in oklab, var(--accent) 35%, transparent);
-  border-radius:14px;
-  padding:14px;
-  margin-top:8px;
+/* --- Shortcuts banner (compact) --- */
+.sc-banner{display:none;background:linear-gradient(180deg,rgba(47,129,247,.08),rgba(47,129,247,.04));border:1px solid color-mix(in oklab,var(--accent) 30%,transparent);border-radius:12px;padding:10px;margin-top:8px}
+.sc-row{display:flex;align-items:center;gap:10px}
+.sc-thumb{width:40px;height:40px;flex:0 0 40px;border-radius:9px;overflow:hidden;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center}
+.sc-thumb img{width:100%;height:100%;object-fit:cover}
+.sc-copy{flex:1 1 auto;min-width:0}
+.sc-title{margin:0;font:800 14px/1.2 system-ui}
+.sc-desc{margin:2px 0 0 0;font-size:12px;color:var(--muted)}
+.sc-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sc-badge{font-size:11px;font-weight:700;color:var(--text);background:color-mix(in oklab,var(--accent) 12%,var(--surface));border:1px dashed color-mix(in oklab,var(--accent) 35%,transparent);padding:4px 6px;border-radius:8px}
+.sc-cta{flex:0 0 auto}
+.sc-btn{appearance:none;text-decoration:none;cursor:pointer;padding:8px 12px;font:800 13px/1 system-ui;color:#fff;background:linear-gradient(180deg,var(--accent),#0D5BB5);border:1px solid color-mix(in oklab,var(--accent) 60%,transparent);border-radius:10px;box-shadow:var(--shadow)}
+@media (max-width:420px){
+  .sc-desc{display:none}          /* hide subline on very small screens */
 }
-.sc-row{ display:flex; gap:12px; align-items:center }
-.sc-thumb{
-  width:54px; height:54px; flex:0 0 54px;
-  border-radius:12px; overflow:hidden;
-  border:1px solid var(--border);
-  background:var(--surface);
-  display:flex; align-items:center; justify-content:center;
-}
-.sc-thumb img{ width:100%; height:100%; object-fit:cover }
 
-.sc-copy{ flex:1 1 auto; min-width:0 }
-.sc-title{ margin:0 0 4px 0; font-weight:800; font-size:16px }
-.sc-desc{ margin:0; font-size:13px; color:var(--muted); line-height:1.35 }
-
-.sc-cta{
-  display:flex; flex-direction:column; gap:8px; align-items:flex-end; flex:0 0 auto;
-}
-.sc-btn{
-  appearance:none; text-decoration:none; cursor:pointer;
-  padding:10px 14px; font-weight:800; font-size:14px;
-  color:#fff; background:linear-gradient(180deg,var(--accent),#0D5BB5);
-  border:1px solid color-mix(in oklab, var(--accent) 60%, transparent);
-  border-radius:10px; box-shadow:var(--shadow);
-}
-.sc-note{
-  margin:6px 0 0 0; font-size:12px; color:var(--muted); line-height:1.35;
-}
-.sc-imp{
-  margin:10px 0 0 0; padding:10px; border-radius:10px;
-  background:color-mix(in oklab, var(--accent) 10%, var(--surface));
-  border:1px dashed color-mix(in oklab, var(--accent) 35%, transparent);
-}
-.sc-imp-title{ margin:0 0 6px 0; font-size:13px; font-weight:900; letter-spacing:.02em }
-.sc-imp ul{ margin:0; padding-left:16px }
-.sc-imp li{ font-size:12px; color:var(--muted); margin:4px 0 }
 
 
     
@@ -273,34 +246,30 @@
 
 
     <!-- Shortcuts banner (shown only when Shortcuts Mode is enabled and you choose to show it) -->
+<!-- Shortcuts banner (shows only when Shortcuts Mode is ON) -->
 <div id="scBanner" class="sc-banner" hidden>
   <div class="sc-row">
     <div class="sc-thumb" aria-hidden="true">
-      <!-- Replace the image file if you want a custom tile -->
-      <img src="images/shortcut-ambulance.png" alt="Ambulance Shortcut">
+      <!-- Use the EXACT filename you have on disk -->
+      <img src="images/shortcut-ambulance.png" alt="Ambulance Shortcut"
+           onerror="this.src='images/logo.png'">
     </div>
+
     <div class="sc-copy">
-      <p class="sc-title">Ambulance Shortcut Required</p>
-      <p class="sc-desc">
-        To use <strong>Shortcuts Mode</strong>, install the new <strong>Ambulance</strong> shortcut.
-        This single shortcut replaces all older Ambulance shortcuts and powers the app.
-      </p>
-      <div class="sc-imp">
-        <p class="sc-imp-title">Important</p>
-        <ul>
-          <li>If Shortcuts asks <em>“Replace Existing Shortcut?”</em>, tap <strong>Replace</strong>.</li>
-          <li>The first time an action runs, Shortcuts will ask for permission. Choose
-              <strong>Always Allow</strong> (if available) or <strong>Allow/OK</strong>.</li>
-        </ul>
+      <p class="sc-title">Install the “Ambulance” Shortcut</p>
+      <p class="sc-desc">Required for Shortcuts Mode.</p>
+      <div class="sc-badges">
+        <span class="sc-badge">Tap <strong>Replace</strong> if asked</span>
+        <span class="sc-badge">Allow permissions on first use</span>
       </div>
-      <p class="sc-note">You can hide or edit this banner anytime (developer-controlled).</p>
     </div>
+
     <div class="sc-cta">
-      <!-- Put your real iCloud shortcut link below -->
-      <a id="scDownload" class="sc-btn" href="#" rel="noopener">Download Shortcut</a>
+      <a id="scDownload" class="sc-btn" href="#" rel="noopener">Download</a>
     </div>
   </div>
 </div>
+
 
 
     <!-- Sections container -->
