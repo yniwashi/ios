@@ -220,6 +220,68 @@
   .sc-desc{display:none}          /* hide subline on very small screens */
 }
 
+/* News content: rich text, links, images, CTA */
+.news {
+  /* if you want to keep supporting \n in plain text messages, leave this line; 
+     otherwise you can remove it when you switch to full HTML */
+  white-space: normal; 
+}
+
+.news h3 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.news p {
+  margin: 6px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.news a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in oklab, var(--accent) 60%, transparent);
+}
+.news a:hover { text-decoration: underline; }
+
+.news img, .news figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  margin: 8px 0;
+  border: 1px solid var(--border);
+}
+
+.news figure {
+  padding: 6px;
+  background: var(--surface);
+}
+
+.news figcaption {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.news .btn {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--accent), #0D5BB5);
+  color: #fff !important;
+  border: 1px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  margin-top: 6px;
+}
 
 
     
@@ -315,6 +377,19 @@
     const RETURN_URL    = "https://yourdomain.com/done.html";
     const SHOW_SHORTCUTS_BANNER = true;   // <-- you control visibility here
     const SHORTCUT_DOWNLOAD_URL = "https://www.icloud.com/shortcuts/8f6a7a5be8b74e3dbd6fffa97d06274d";    // <-- replace with your iCloud Shortcut URL or keep it #
+    // Example: rich news with heading, link, image, and a CTA button
+    const NEWS_MESSAGE = `
+    <h3>Update: Pediatric tools refreshed</h3>
+   <p>We’ve updated dosing tables and added a new <a href="#"
+     rel="noopener">Meds Calculator</a> in Shortcuts Mode.</p>
+
+  <figure>
+    <img src="images/shortcuts.png" alt="Pediatric tools preview">
+    <figcaption>New quick-access tiles and dosing references.</figcaption>
+  </figure>
+
+  <a class="btn" href="#" rel="noopener">Read the Release Notes</a>
+`;
 
     
     const BUTTONS = [
