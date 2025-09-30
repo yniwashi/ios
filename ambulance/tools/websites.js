@@ -121,11 +121,18 @@ export async function run(mountEl){
   `;
 
   /* ========= LANDMARK F1 — Robust JSON fetch (tries 3 paths) ========= */
-  const CANDIDATE_PATHS = [
-    '../ios/helpers/websites.json',  // from /tools/ -> /ios/
-    './ios/helpers/websites.json',   // if tools is at root
-    '/ios/helpers/websites.json',    // absolute from domain root
-  ];
+ /* ========= LANDMARK F1 — Robust JSON fetch (paths for your repo layout) ========= */
+const CANDIDATE_PATHS = [
+  // index.html is at ios/ambulance → helpers is one level up
+  '../helpers/websites.json',
+
+  // if the app ever serves from the site root (absolute)
+  '/ios/helpers/websites.json',
+
+  // (rare fallback) if index is moved one level deeper later
+  '../../helpers/websites.json',
+];
+
 
   const listEl   = mountEl.querySelector('#webList');
   const searchEl = mountEl.querySelector('#webSearch');
