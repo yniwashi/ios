@@ -227,19 +227,22 @@ const CANDIDATE_PATHS = [
       if (!arr.length) throw new Error('Empty websites list');
 
       // Render list
-      wsList.innerHTML = arr.map(obj => {
-        const label = Object.keys(obj)[0];
-        const u     = obj[label];
-        const id    = 'ws_' + btoa(label).replace(/=/g,'');
-        return `
-          <div class="ws-item" data-url="${encodeURIComponent(u)}" id="${id}">
-            <div class="ws-name">${label}</div>
-            <button class="ws-open" aria-label="Open ${label}">
-              <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
-            </button>
-          </div>
-        `;
-      }).join('');
+// LANDMARK FIX A — render without btoa()
+wsList.innerHTML = arr.map(obj => {
+  const label = Object.keys(obj)[0];
+  const u     = obj[label];
+  // keep URL safe for a data-attribute
+  const urlAttr = encodeURIComponent(u);
+  return `
+    <div class="ws-item" data-url="${urlAttr}">
+      <div class="ws-name">${label}</div>
+      <button class="ws-open" aria-label="Open ${label}">
+        <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+      </button>
+    </div>
+  `;
+}).join('');
+
 
       // Wire items (open in the in-app browser with toolbar)
       wsList.querySelectorAll('.ws-item').forEach(item => {
