@@ -266,6 +266,7 @@ const CANDIDATE_PATHS = [
   `;
 }
 
+await loadSites();  // <-- this actually runs the loader
 
   // Start on list
   showList();
