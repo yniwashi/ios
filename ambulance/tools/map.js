@@ -18,16 +18,32 @@ export async function run(mountEl){
         background:linear-gradient(90deg,#2196f3,#4f46e5);
       }
 
-      .map-field{ margin-bottom:10px }
+  
       .map-label{ font-size:12px; font-weight:800; color:#6e7b91; margin:0 0 6px 2px }
-      .map-input{
-        width:100%; font-size:18px; font-weight:800; color:var(--text,#0c1230);
-        background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
-        border-radius:12px; padding:12px 14px; outline:none;
-      }
+.map-row{ display:flex; gap:10px; flex-wrap:wrap }
 
-      .map-row{ display:flex; gap:10px; flex-wrap:wrap }
-      .map-col{ flex:1 1 220px; min-width:200px }
+.map-col{
+  flex:1 1 220px;
+  min-width:200px;
+  display:flex;              /* LANDMARK: align like Age */
+  flex-direction:column;
+  justify-content:flex-start;
+}
+
+.map-field{
+  margin-bottom:10px;
+  width:100%;                /* LANDMARK: make the field span the column */
+}
+
+.map-input{
+  width:100%;
+  box-sizing:border-box;     /* LANDMARK: prevents right-shift / overflow */
+  font-size:18px; font-weight:800; color:var(--text,#0c1230);
+  background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
+  border-radius:12px; padding:12px 14px; outline:none;
+}
+
+
 
       .map-chips{ display:flex; flex-wrap:wrap; gap:10px; margin-top:8px }
       .map-chip{
