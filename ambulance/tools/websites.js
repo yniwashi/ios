@@ -7,6 +7,7 @@ export async function run(mountEl){
         border-radius:14px;padding:14px;box-shadow:0 8px 18px rgba(0,0,0,.12)}
       .ws-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
       .ws-title{margin:0;font-weight:900;font-size:16px;color:var(--text,#0c1230)}
+      .ws-note{margin:6px 0 10px;font-size:12px; line-height:1.4; color:#6e7b91;}
       .ws-strip{height:6px;border-radius:6px;margin:10px 0 14px 0;
         background:linear-gradient(90deg,#16a34a,#22c55e)}
       .ws-list{display:flex;flex-direction:column;gap:8px}
@@ -25,6 +26,11 @@ export async function run(mountEl){
     <div class="ws-wrap">
       <div class="ws-card">
         <div class="ws-head"><h3 class="ws-title">Websites</h3></div>
+        <p class="ws-note">
+         Tip: If you choose to open a site inside the Ambulance App, you can swipe from
+        left to right to go back. Or use the <strong>Share</strong> button to open the link
+        in Safari or copy it to another browser.
+       </p>
         <div class="ws-strip"></div>
         <div id="wsList" class="ws-list"></div>
       </div>
