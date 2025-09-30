@@ -41,16 +41,21 @@ export async function run(mountEl){
       .web-item:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(0,0,0,.12) }
       .web-emoji{ font-size:18px; width:22px; text-align:center; }
       .web-label{ flex:1; line-height:1.2 }
-
-      /* small "open" chevron */
       .web-open{ font-size:18px; opacity:.7 }
+
+      .web-empty{
+        padding:16px; border-radius:12px; text-align:center; font-weight:700;
+        background:var(--surface,#f6f8fd); border:1px solid var(--border,#e7ecf3);
+        color:var(--muted,#667085);
+      }
 
       /* Dark theme */
       :root[data-theme="dark"] .web-card{ background:#151921; border-color:#232a37 }
       :root[data-theme="dark"] .web-filter{
         background:#12151c; border-color:#232a37; color:#eef2ff;
       }
-      :root[data-theme="dark"] .web-item{
+      :root[data-theme="dark"] .web-item,
+      :root[data-theme="dark"] .web-empty{
         background:#12151c; border-color:#232a37; color:#eef2ff;
       }
     </style>
@@ -72,47 +77,80 @@ export async function run(mountEl){
     </div>
   `;
 
-  // ----- Data (from your Kotlin list) -----
-  const LINKS = [
-    { emoji:"🔗", label:"Ambulance App Linktree",              url:"https://bit.ly/qambulance" },
-    { emoji:"🌐", label:"Oracle - Leave, Salary, etc.",        url:"http://ebusiness.hamad.qa" },
-    { emoji:"📧", label:"HMC - Email",                         url:"https://outlook.office365.com/mail" },
-    { emoji:"🚨", label:"HMC - OVA",                           url:"https://rmpf-hamadqa.msappproxy.net/RL6_Prod/Homecenter/Client/Login.aspx/" },
-    { emoji:"📱", label:"Hamad App Store",                     url:"https://mobilestore.hamad.qa/" },
-    { emoji:"🖥", label:"HMC Apps - Azure Portal",             url:"https://myapps.hamad.qa/" },
-    { emoji:"🛠", label:"HMC - SelfService Portal",            url:"https://selfservice.hamad.qa/m/home" },
-    { emoji:"🎓", label:"E-Taleem - Training Courses",         url:"https://lms.etaleem.qa/index" },
-    { emoji:"📝", label:"Questbase - Training Tests",          url:"https://auth.questbase.com/#/account/emstraining.ems" },
-    { emoji:"📂", label:"DHP - CPD Portfolio",                 url:"https://accreditation.moph.gov.qa/_layouts/15/Accred_Website/Login/AccreditationUserLogin.aspx?ReturnUrl=%2f_layouts%2f15%2fAuthenticate.aspx%3fSource%3d%252F&Source=%2F" },
-    { emoji:"🛂", label:"DHP - Licensing Login Page",          url:"https://dhpportal.moph.gov.qa/en/_layouts/15/LogIn.aspx?ReturnUrl=%2fen%2f_layouts%2fAuthenticate.aspx%3fSource=%2Fen%2FPages%2Fdefault%2Easpx" },
-    { emoji:"🗓️", label:"Upcoming CPD Activities",            url:"https://accreditation.moph.gov.qa/_layouts/15/Accred_Website/Other/UpcomingCPDActivityList.aspx" },
-    { emoji:"🎙️", label:"PICU Doc On Call Podcast",           url:"https://picudoconcall.org/episodes" },
-    { emoji:"🏥", label:"HMC - My Health",                     url:"https://www.hamad.qa/EN/Patient-Information/Patient-Portal/Pages/default.aspx" },
-    { emoji:"🔗", label:"HMC - Sogha Website",                 url:"https://soghahealth-hamadqa.msappproxy.net/Pages/default.aspx" },
-    { emoji:"📥", label:"Install MS Office",                   url:"https://portal.office.com/account#installs" },
-    { emoji:"💳", label:"Download Sogha Digital Card",         url:"https://itawasol.hamad.qa/EN/HR-Portal/Sogha/Pages/SOGHA-Digital-Card.aspx" },
-    { emoji:"🔒", label:"HMC - Account Security Settings",     url:"https://mysignins.microsoft.com/security-info" },
-    { emoji:"📱", label:"My HMC Account Devices",              url:"https://myaccount.microsoft.com/device-list" },
-    { emoji:"🌍", label:"Ambulance App Website",               url:"https://niwashibase.com" },
-  ];
+  /* =========================
+     LANDMARK 1 — Fetch JSON
+     Path is relative to /tools/, so we go up one level:
+     ../ios/helpers/websites.json
+     ========================= */
+  const JSON_PATH = '../ios/helpers/websites.json';
 
-  const listEl = mountEl.querySelector('#webList');
+  const listEl   = mountEl.querySelector('#webList');
   const searchEl = mountEl.querySelector('#webSearch');
 
+  // Temporary loading state
+  listEl.innerHTML = `<div class="web-empty">Loading…</div>`;
+
+  // Fetch + parse "{ websites: [ { "<emoji> Label": "url" }, ... ] }"
+  let LINKS = [];
+  try{
+    const res = await fetch(JSON_PATH, { cache: 'no-cache' });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // LANDMARK 2 — Normalize JSON into {emoji,label,url}
+    LINKS = (data.websites || []).map(entry => {
+      // each entry is an object with a single key => value
+      const key = Object.keys(entry)[0];
+      const url = entry[key];
+
+      // split the emoji (first char or first grapheme) from the label
+      // we’ll assume the format "<emoji><space>Label"
+      let emoji = '';
+      let label = key;
+      const m = key.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s+(.*)$/u);
+      if (m){
+        emoji = m[1];
+        label = m[2];
+      } else {
+        // fallback: first char then trim
+        const idx = key.indexOf(' ');
+        if (idx > 0){
+          emoji = key.slice(0, idx).trim();
+          label = key.slice(idx).trim();
+        }
+      }
+      return { emoji, label, url };
+    });
+  } catch (e){
+    console.error('Websites load failed:', e);
+    listEl.innerHTML = `<div class="web-empty">Couldn’t load websites. Check <code>ios/helpers/websites.json</code>.</div>`;
+    return;
+  }
+
+  /* =========================
+     LANDMARK 3 — Render helper
+     ========================= */
   function render(filter=''){
     const q = filter.trim().toLowerCase();
     listEl.innerHTML = '';
-    LINKS.filter(item => {
-      if (!q) return true;
-      return (item.label.toLowerCase().includes(q));
-    }).forEach(item => {
+
+    const filtered = LINKS.filter(item =>
+      !q || item.label.toLowerCase().includes(q)
+    );
+
+    if (!filtered.length){
+      listEl.innerHTML = `<div class="web-empty">No matches.</div>`;
+      return;
+    }
+
+    filtered.forEach(item => {
       const a = document.createElement('a');
       a.className = 'web-item';
       a.href = item.url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.innerHTML = `
-        <span class="web-emoji">${item.emoji}</span>
+        <span class="web-emoji">${item.emoji || '🔗'}</span>
         <span class="web-label">${item.label}</span>
         <span class="web-open">↗</span>
       `;
@@ -120,6 +158,11 @@ export async function run(mountEl){
     });
   }
 
+  /* =========================
+     LANDMARK 4 — Wire up filter
+     ========================= */
   searchEl.addEventListener('input', () => render(searchEl.value));
+
+  // Initial paint
   render();
 }
