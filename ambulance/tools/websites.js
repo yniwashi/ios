@@ -3,7 +3,7 @@ export async function run(mountEl) {
   mountEl.innerHTML = `
     <style>
       /* ===== Websites (scoped) ===== */
-      .ws-wrap{ padding:12px }
+      .ws-wrap{ padding:12px; display:flex; flex-direction:column; gap:12px; }
       .ws-card{
         background:var(--surface,#fff);
         border:1px solid var(--border,#e7ecf3);
@@ -16,10 +16,10 @@ export async function run(mountEl) {
         background:linear-gradient(90deg,#14b8a6,#3b82f6);
       }
 
-      /* LANDMARK W1 — list as external links (no mini browser) */
+      /* Website list */
       .ws-list{ display:flex; flex-direction:column; gap:8px }
       .ws-item{
-        display:flex; align-items:center; gap:10px;
+        display:flex; align-items:center; justify-content:space-between;
         text-decoration:none;
         background:var(--surface,#f6f8fd);
         border:1px solid var(--border,#e7ecf3);
@@ -29,12 +29,26 @@ export async function run(mountEl) {
         transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
       }
       .ws-item:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(0,0,0,.12) }
-      .ws-k{ flex:1 1 auto; }
-      .ws-ext{ font-size:12px; font-weight:900; opacity:.7 }
+      .ws-arrow{ font-size:16px; opacity:.7 }
+
+      /* Toolbar */
+      .ws-toolbar{
+        display:flex; gap:8px; justify-content:space-between;
+      }
+      .ws-nav-btn{
+        flex:1; text-align:center;
+        border:none; border-radius:10px; padding:10px;
+        font-weight:800; font-size:14px;
+        background:var(--surface,#f3f6fb); border:1px solid var(--border,#dbe0ea);
+        color:var(--text,#0c1230); cursor:pointer;
+        box-shadow:0 4px 12px rgba(0,0,0,.06);
+      }
+      .ws-nav-btn:disabled{ opacity:.4; cursor:default }
 
       /* Dark theme */
       :root[data-theme="dark"] .ws-card{ background:#151921; border-color:#232a37 }
       :root[data-theme="dark"] .ws-item{ background:#12151c; border-color:#232a37; color:#eef2ff }
+      :root[data-theme="dark"] .ws-nav-btn{ background:#12151c; border-color:#232a37; color:#eef2ff }
     </style>
 
     <div class="ws-wrap">
@@ -45,14 +59,21 @@ export async function run(mountEl) {
         <div class="ws-strip"></div>
         <div id="wsList" class="ws-list" role="list"></div>
       </div>
+
+      <!-- LANDMARK T1 — Toolbar -->
+      <div class="ws-toolbar">
+        <button id="btnBack" class="ws-nav-btn" disabled>← Back</button>
+        <button id="btnFwd"  class="ws-nav-btn" disabled>Forward →</button>
+        <button id="btnHome" class="ws-nav-btn">🏠 Home</button>
+      </div>
     </div>
   `;
 
-  /* ========= LANDMARK F1 — Robust JSON fetch (paths for your repo layout) ========= */
+  /* ========= Fetch JSON ========= */
   const CANDIDATE_PATHS = [
-    '../helpers/websites.json',      // index.html at ios/ambulance/
-    '/ios/helpers/websites.json',    // absolute (if served from site root)
-    '../../helpers/websites.json',   // safety net if folder depth changes
+    '../helpers/websites.json',
+    '/ios/helpers/websites.json',
+    '../../helpers/websites.json',
   ];
 
   async function loadWebsites() {
@@ -68,7 +89,6 @@ export async function run(mountEl) {
   }
 
   function asPairs(json) {
-    // JSON shape is: { "websites": [ { "Label": "https://..." }, ... ] }
     const src = (json && Array.isArray(json.websites)) ? json.websites : [];
     return src.map(obj => {
       const label = Object.keys(obj)[0];
@@ -77,40 +97,29 @@ export async function run(mountEl) {
     }).filter(([k,v]) => k && v);
   }
 
-  function openExternal(url) {
-    // LANDMARK W2 — try to open in Safari / default browser
-    // On iOS PWAs, target="_blank" usually opens Safari; this is an extra nudge.
-    const w = window.open(url, '_blank');
-    if (!w) {
-      // Fallback: navigate current context
-      location.href = url;
-    }
-  }
-
-  function render(pairs) {
+  /* ========= Render ========= */
+  function renderList(pairs) {
     const list = mountEl.querySelector('#wsList');
     list.innerHTML = pairs.map(([label, url]) => {
-      // target+rel to strongly hint external open
       return `
-        <a class="ws-item" href="${url}"
-           target="_blank" rel="noopener noreferrer external" role="listitem" data-url="${url}">
-          <span class="ws-k">${label}</span>
-          <span class="ws-ext">Open</span>
+        <a class="ws-item" href="${url}" target="_blank" rel="noopener" data-url="${url}">
+          <span>${label}</span>
+          <span class="ws-arrow">→</span>
         </a>
       `;
     }).join('');
-    // Extra safety: intercept click and call window.open
     list.querySelectorAll('.ws-item').forEach(a => {
-      a.addEventListener('click', (e) => {
+      a.addEventListener('click', e => {
         e.preventDefault();
-        openExternal(a.dataset.url);
+        // let user navigate inside Web App
+        window.location.href = a.dataset.url;
       });
     });
   }
 
   try {
     const data = await loadWebsites();
-    render(asPairs(data));
+    renderList(asPairs(data));
   } catch (e) {
     const list = mountEl.querySelector('#wsList');
     list.innerHTML = `
@@ -120,4 +129,19 @@ export async function run(mountEl) {
     `;
     console.error('websites.js: load error:', e);
   }
+
+  /* ========= Toolbar Nav ========= */
+  const btnBack = mountEl.querySelector('#btnBack');
+  const btnFwd  = mountEl.querySelector('#btnFwd');
+  const btnHome = mountEl.querySelector('#btnHome');
+
+  function updateNavButtons() {
+    btnBack.disabled = !window.history.state && window.history.length <= 1;
+    btnFwd.disabled  = true; // forward tracking limited in PWA
+  }
+  btnBack.addEventListener('click', ()=> history.back());
+  btnFwd.addEventListener('click', ()=> history.forward());
+  btnHome.addEventListener('click', ()=> window.location.href = '/ios/ambulance/');
+
+  updateNavButtons();
 }
