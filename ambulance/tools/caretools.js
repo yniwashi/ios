@@ -96,7 +96,7 @@ export async function run(mountEl){
           </div>
         </div>
 
-        <p class="ct-note">Tip: Months ≤ 12, Years ≤ 14. Preterm ignores the numeric age field.</p>
+        <p class="ct-note">Tip: Press Preterm to get info without entering age.</p>
 
         <!-- LANDMARK 4 — validation messages -->
         <div id="ctAlert" class="ct-alert"></div>
