@@ -117,7 +117,13 @@ export async function run(mountEl){
     </div>
   `;
 
-  const JSON_PATH = '/ios/helpers/websites.json';
+  // AFTER: try multiple locations; fetch is relative to index.html
+const CANDIDATE_PATHS = [
+  '../helpers/websites.json',        // ← correct for ios/ambulance → ios/helpers
+  '/ios/helpers/websites.json',      // if served from site root
+  '../../helpers/websites.json'      // safety if index moves deeper
+];
+
 
   /* ---------- state & helpers ---------- */
   const $  = sel => mountEl.querySelector(sel);
@@ -209,47 +215,57 @@ export async function run(mountEl){
   });
 
   /* ---------- load websites.json ---------- */
-  async function loadSites(){
-    const res = await fetch(JSON_PATH, { cache:'no-store' });
-    if (!res.ok) throw new Error('Fetch failed');
-    const data = await res.json();
-    const arr = (data && Array.isArray(data.websites)) ? data.websites : [];
-    // Each item is an object with a single { "Label": "URL" }
-    wsList.innerHTML = arr.map(obj => {
-      const label = Object.keys(obj)[0];
-      const url   = obj[label];
-      const id = 'ws_' + btoa(label).replace(/=/g,'');
-      return `
-        <div class="ws-item" data-url="${encodeURIComponent(url)}" id="${id}">
-          <div class="ws-name">${label}</div>
-          <button class="ws-open" aria-label="Open ${label}">
-            <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
-          </button>
-        </div>
-      `;
-    }).join('');
+ async function loadSites(){
+  let lastErr;
+  for (const basePath of CANDIDATE_PATHS){
+    const url = `${basePath}?v=${Date.now()}`; // cache-bust
+    try {
+      const res = await fetch(url, { cache:'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const arr = (data && Array.isArray(data.websites)) ? data.websites : [];
+      if (!arr.length) throw new Error('Empty websites list');
 
-    // Wire each item
-    wsList.querySelectorAll('.ws-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        const url = decodeURIComponent(item.dataset.url || '');
-        if (!url) return;
-        // Open inside our browser view (toolbar appears)
-        navigateTo(url, true);
+      // Render list
+      wsList.innerHTML = arr.map(obj => {
+        const label = Object.keys(obj)[0];
+        const u     = obj[label];
+        const id    = 'ws_' + btoa(label).replace(/=/g,'');
+        return `
+          <div class="ws-item" data-url="${encodeURIComponent(u)}" id="${id}">
+            <div class="ws-name">${label}</div>
+            <button class="ws-open" aria-label="Open ${label}">
+              <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // Wire items (open in the in-app browser with toolbar)
+      wsList.querySelectorAll('.ws-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const u = decodeURIComponent(item.dataset.url || '');
+          if (u) navigateTo(u, true);
+        });
       });
-    });
+
+      console.log('[websites] loaded from', url);
+      return; // ✅ success, stop trying others
+    } catch (err){
+      lastErr = err;
+      console.warn('[websites] failed', url, err);
+      // try next candidate
+    }
   }
 
-  try {
-    await loadSites();
-  } catch (e){
-    wsList.innerHTML = `
-      <div class="ws-item">
-        <div class="ws-name">Couldn’t load websites. Check <code>helperssss/websites.json</code>.</div>
-      </div>
-    `;
-    console.error(e);
-  }
+  // All attempts failed — show a friendly error
+  wsList.innerHTML = `
+    <div class="ws-item">
+      <div class="ws-name">Couldn’t load websites. Make sure <code>ios/helpers/websites.json</code> exists and is served. (${lastErr?.message || 'Unknown error'})</div>
+    </div>
+  `;
+}
+
 
   // Start on list
   showList();
