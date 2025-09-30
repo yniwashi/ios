@@ -39,34 +39,87 @@ export async function run(mountEl){
 
   const wsList = mountEl.querySelector('#wsList');
 
-  async function loadSites(){
-    let lastErr;
-    for (const basePath of CANDIDATE_PATHS){
-      try{
-        const res = await fetch(`${basePath}?v=${Date.now()}`);
-        if(!res.ok) throw new Error(res.status);
-        const data = await res.json();
-        const arr = Array.isArray(data.websites)?data.websites:[];
-        if(!arr.length) throw new Error('empty');
-        wsList.innerHTML = arr.map(obj=>{
-          const label = Object.keys(obj)[0];
-          const url = obj[label];
-          return `
-            <div class="ws-item" data-url="${encodeURIComponent(url)}">
-              <div class="ws-name">${label}</div>
-              <div class="ws-open"><span class="material-symbols-rounded">open_in_new</span></div>
-            </div>`;
-        }).join('');
-        wsList.querySelectorAll('.ws-item').forEach(item=>{
-          item.addEventListener('click',()=>{
-            const u = decodeURIComponent(item.dataset.url||'');
-            if(u) window.open(u,'_blank'); // always Safari
-          });
+// LANDMARK — drop-in replacement for loadSites()
+async function loadSites(){
+  let lastErr;
+
+  for (const basePath of CANDIDATE_PATHS){
+    try{
+      const res  = await fetch(`${basePath}?v=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const arr  = Array.isArray(data?.websites) ? data.websites : [];
+      if (!arr.length) throw new Error('Empty websites list');
+
+      // Render list
+      wsList.innerHTML = arr.map(obj => {
+        const label = Object.keys(obj)[0];
+        const u     = obj[label];
+
+        // safe id for arbitrary unicode label
+        const id = 'ws_' + btoa(unescape(encodeURIComponent(label))).replace(/=+$/,'');
+
+        return `
+          <div class="ws-item" data-url="${encodeURIComponent(u)}" id="${id}">
+            <div class="ws-name">${label}</div>
+            <div style="display:flex; gap:8px;">
+              <button class="ws-open" data-action="open"  aria-label="Open ${label}">
+                <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+              </button>
+              <button class="ws-open" data-action="share" aria-label="Share ${label}">
+                <span class="material-symbols-rounded" aria-hidden="true">ios_share</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Wire Open / Share actions
+      wsList.querySelectorAll('.ws-item').forEach(item => {
+        const url = decodeURIComponent(item.dataset.url || '');
+
+        item.addEventListener('click', async (e) => {
+          const btn = e.target.closest('button.ws-open');
+          if (!btn) return; // ignore clicks not on the buttons
+
+          const action = btn.dataset.action;
+          if (action === 'open') {
+            // Best-possible external open from a WebClip (new Safari tab/window)
+            window.open(url, '_blank', 'noopener,noreferrer');
+          } else if (action === 'share') {
+            try {
+              if (navigator.share) {
+                await navigator.share({ url, title: 'Open in Safari', text: 'Ambulance – Useful website' });
+              } else if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(url);
+                alert('Link copied. Paste into Safari to open.');
+              } else {
+                location.href = url; // last resort
+              }
+            } catch (err) {
+              console.debug('Share cancelled:', err);
+            }
+          }
         });
-        return;
-      }catch(e){lastErr=e;}
+      });
+
+      console.log('[websites] loaded from', basePath);
+      return; // ✅ success, stop trying other paths
+    } catch (err){
+      lastErr = err;
+      console.warn('[websites] failed', basePath, err);
+      // try next candidate path
     }
-    wsList.innerHTML=`<div class="ws-item"><div class="ws-name">Could not load websites (${lastErr?.message||''})</div></div>`;
   }
-  await loadSites();
+
+  // If we reach here, all paths failed
+  wsList.innerHTML = `
+    <div class="ws-item">
+      <div class="ws-name">Couldn’t load websites. Make sure <code>ios/helpers/websites.json</code> exists and is served. (${lastErr?.message || 'Unknown error'})</div>
+    </div>
+  `;
 }
+
+// LANDMARK — call it after building the DOM
+await loadSites();
