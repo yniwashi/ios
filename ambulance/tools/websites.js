@@ -245,7 +245,7 @@ export async function run(mountEl){
   } catch (e){
     wsList.innerHTML = `
       <div class="ws-item">
-        <div class="ws-name">Couldn’t load websites. Check <code>ios/helpers/websites.json</code>.</div>
+        <div class="ws-name">Couldn’t load websites. Check <code>helpers/websites.json</code>.</div>
       </div>
     `;
     console.error(e);
