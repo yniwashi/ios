@@ -49,15 +49,41 @@ export async function run(mountEl){
         color:var(--muted,#667085);
       }
 
+      /* Viewer */
+      .web-viewer{ display:none; margin-top:10px }
+      .web-toolbar{
+        display:flex; gap:8px; align-items:center; justify-content:space-between;
+        background:var(--surface,#f6f8fd); border:1px solid var(--border,#e7ecf3);
+        border-radius:12px; padding:8px;
+      }
+      .web-nav{ display:flex; gap:8px; align-items:center }
+      .web-btn{
+        border:1px solid var(--border,#dbe0ea); background:var(--surface,#f3f6fb);
+        color:var(--text,#0c1230); font-weight:800; padding:8px 10px; border-radius:10px;
+        cursor:pointer;
+      }
+      .web-btn[disabled]{ opacity:.5; cursor:default }
+      .web-url{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        font-size:12px; font-weight:800; color:var(--muted,#6e7b91);
+      }
+      .web-iframe{
+        width:100%; height:70vh; border:1px solid var(--border,#e7ecf3); border-radius:12px; margin-top:8px;
+        background:#fff;
+      }
+      .web-hint{ font-size:12px; color:var(--muted,#6e7b91); margin-top:6px }
+
       /* Dark theme */
       :root[data-theme="dark"] .web-card{ background:#151921; border-color:#232a37 }
       :root[data-theme="dark"] .web-filter{
         background:#12151c; border-color:#232a37; color:#eef2ff;
       }
       :root[data-theme="dark"] .web-item,
-      :root[data-theme="dark"] .web-empty{
+      :root[data-theme="dark"] .web-empty,
+      :root[data-theme="dark"] .web-toolbar{
         background:#12151c; border-color:#232a37; color:#eef2ff;
       }
+      :root[data-theme="dark"] .web-btn{ background:#12151c; border-color:#232a37; color:#eef2ff }
+      :root[data-theme="dark"] .web-iframe{ background:#0f1115 }
     </style>
 
     <div class="web-wrap">
@@ -73,71 +99,82 @@ export async function run(mountEl){
         </div>
 
         <div id="webList" class="web-list"></div>
+
+        <!-- LANDMARK V1 — Mini-browser viewer -->
+        <div id="webViewer" class="web-viewer">
+          <div class="web-toolbar">
+            <div class="web-nav">
+              <button id="navBack" class="web-btn" title="Back">←</button>
+              <button id="navFwd"  class="web-btn" title="Forward">→</button>
+              <button id="navHome" class="web-btn" title="Home">Home</button>
+            </div>
+            <div id="webUrl" class="web-url"></div>
+            <button id="navOpen" class="web-btn" title="Open in browser">Open</button>
+          </div>
+          <iframe id="webFrame" class="web-iframe" sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+          <div class="web-hint" id="webHint" style="display:none">
+            If the page doesn't load here (some sites block embedding), tap <b>Open</b>.
+          </div>
+        </div>
       </div>
     </div>
   `;
 
-  /* =========================
-     LANDMARK 1 — Fetch JSON
-     Path is relative to /tools/, so we go up one level:
-     ../ios/helpers/websites.json
-     ========================= */
-  const JSON_PATH = '../ios/helpers/websites.json';
+  /* ========= LANDMARK F1 — Robust JSON fetch (tries 3 paths) ========= */
+  const CANDIDATE_PATHS = [
+    '../ios/helpers/websites.json',  // from /tools/ -> /ios/
+    './ios/helpers/websites.json',   // if tools is at root
+    '/ios/helpers/websites.json',    // absolute from domain root
+  ];
 
   const listEl   = mountEl.querySelector('#webList');
   const searchEl = mountEl.querySelector('#webSearch');
 
-  // Temporary loading state
-  listEl.innerHTML = `<div class="web-empty">Loading…</div>`;
-
-  // Fetch + parse "{ websites: [ { "<emoji> Label": "url" }, ... ] }"
   let LINKS = [];
-  try{
-    const res = await fetch(JSON_PATH, { cache: 'no-cache' });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+  let lastErr = null;
 
-    // LANDMARK 2 — Normalize JSON into {emoji,label,url}
-    LINKS = (data.websites || []).map(entry => {
-      // each entry is an object with a single key => value
-      const key = Object.keys(entry)[0];
-      const url = entry[key];
+  for (const path of CANDIDATE_PATHS){
+    try{
+      const res = await fetch(path, { cache:'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      LINKS = normalizeLinks(data);
+      lastErr = null;
+      break;
+    } catch (e){
+      lastErr = e;
+    }
+  }
 
-      // split the emoji (first char or first grapheme) from the label
-      // we’ll assume the format "<emoji><space>Label"
-      let emoji = '';
-      let label = key;
-      const m = key.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s+(.*)$/u);
-      if (m){
-        emoji = m[1];
-        label = m[2];
-      } else {
-        // fallback: first char then trim
-        const idx = key.indexOf(' ');
-        if (idx > 0){
-          emoji = key.slice(0, idx).trim();
-          label = key.slice(idx).trim();
-        }
-      }
-      return { emoji, label, url };
-    });
-  } catch (e){
-    console.error('Websites load failed:', e);
-    listEl.innerHTML = `<div class="web-empty">Couldn’t load websites. Check <code>ios/helpers/websites.json</code>.</div>`;
+  if (lastErr){
+    listEl.innerHTML = `<div class="web-empty">Couldn’t load websites. Check <code>ios/helpers/websites.json</code> path.</div>`;
+    console.error('Websites load failed:', lastErr);
     return;
   }
 
-  /* =========================
-     LANDMARK 3 — Render helper
-     ========================= */
+  /* ========= LANDMARK R1 — Render list & filter ========= */
+  function normalizeLinks(data){
+    const src = Array.isArray(data) ? data : (data.websites || []);
+    return src.map(entry => {
+      const key = Object.keys(entry)[0];
+      const url = entry[key];
+
+      // Extract emoji + label ("🔗 Label")
+      let emoji = '🔗', label = key;
+      const m = key.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s+(.*)$/u);
+      if (m){ emoji = m[1]; label = m[2]; }
+      else {
+        const idx = key.indexOf(' ');
+        if (idx > 0){ emoji = key.slice(0, idx).trim(); label = key.slice(idx).trim(); }
+      }
+      return { emoji, label, url };
+    });
+  }
+
   function render(filter=''){
     const q = filter.trim().toLowerCase();
     listEl.innerHTML = '';
-
-    const filtered = LINKS.filter(item =>
-      !q || item.label.toLowerCase().includes(q)
-    );
-
+    const filtered = LINKS.filter(item => !q || item.label.toLowerCase().includes(q));
     if (!filtered.length){
       listEl.innerHTML = `<div class="web-empty">No matches.</div>`;
       return;
@@ -147,22 +184,93 @@ export async function run(mountEl){
       const a = document.createElement('a');
       a.className = 'web-item';
       a.href = item.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
       a.innerHTML = `
-        <span class="web-emoji">${item.emoji || '🔗'}</span>
+        <span class="web-emoji">${item.emoji}</span>
         <span class="web-label">${item.label}</span>
         <span class="web-open">↗</span>
       `;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        openViewer(item.url);
+      });
       listEl.appendChild(a);
     });
   }
 
-  /* =========================
-     LANDMARK 4 — Wire up filter
-     ========================= */
   searchEl.addEventListener('input', () => render(searchEl.value));
-
-  // Initial paint
   render();
+
+  /* ========= LANDMARK V2 — Mini browser history + controls ========= */
+  const viewer   = mountEl.querySelector('#webViewer');
+  const iframe   = mountEl.querySelector('#webFrame');
+  const urlBox   = mountEl.querySelector('#webUrl');
+  const hint     = mountEl.querySelector('#webHint');
+  const btnBack  = mountEl.querySelector('#navBack');
+  const btnFwd   = mountEl.querySelector('#navFwd');
+  const btnHome  = mountEl.querySelector('#navHome');
+  const btnOpen  = mountEl.querySelector('#navOpen');
+
+  const history = [];
+  let index = -1;
+
+  function updateNav(){
+    btnBack.disabled = !(index > 0);
+    btnFwd.disabled  = !(index >= 0 && index < history.length - 1);
+    urlBox.textContent = index >= 0 ? history[index] : '';
+  }
+
+  function showViewer(show){
+    viewer.style.display = show ? 'block' : 'none';
+  }
+
+  function setIframe(src){
+    iframe.src = src;
+    urlBox.textContent = src;
+    hint.style.display = 'none';
+    // Some sites block iframes; show hint after a short delay if nothing paints.
+    // (We can't reliably detect X-Frame-Options, so we give a gentle nudge.)
+    setTimeout(() => { hint.style.display = 'block'; }, 1200);
+    iframe.addEventListener('load', ()=>{ hint.style.display = 'none'; }, { once:true });
+  }
+
+  function openViewer(url){
+    // push new URL
+    if (index < history.length - 1) history.splice(index + 1);
+    history.push(url);
+    index = history.length - 1;
+
+    setIframe(url);
+    showViewer(true);
+    updateNav();
+  }
+
+  btnBack.addEventListener('click', () => {
+    if (index > 0){
+      index -= 1;
+      setIframe(history[index]);
+      updateNav();
+    } else {
+      // Nothing to go back to: route to "home" (list)
+      showViewer(false);
+    }
+  });
+
+  btnFwd.addEventListener('click', () => {
+    if (index < history.length - 1){
+      index += 1;
+      setIframe(history[index]);
+      updateNav();
+    }
+  });
+
+  btnHome.addEventListener('click', () => {
+    // Clear viewer, show list (root/home)
+    showViewer(false);
+  });
+
+  btnOpen.addEventListener('click', () => {
+    if (index >= 0){
+      window.location.href = history[index]; // iOS webclip: open directly
+    }
+  });
 }
