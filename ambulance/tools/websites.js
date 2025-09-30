@@ -123,3 +123,5 @@ async function loadSites(){
 
 // LANDMARK — call it after building the DOM
 await loadSites();
+
+}
