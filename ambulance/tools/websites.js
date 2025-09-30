@@ -117,7 +117,7 @@ export async function run(mountEl){
     </div>
   `;
 
-  const JSON_PATH = '../../helpers/websites.json';
+  const JSON_PATH = '/ios/helpers/websites.json';
 
   /* ---------- state & helpers ---------- */
   const $  = sel => mountEl.querySelector(sel);
@@ -245,7 +245,7 @@ export async function run(mountEl){
   } catch (e){
     wsList.innerHTML = `
       <div class="ws-item">
-        <div class="ws-name">Couldn’t load websites. Check <code>helpers/websites.json</code>.</div>
+        <div class="ws-name">Couldn’t load websites. Check <code>helperssss/websites.json</code>.</div>
       </div>
     `;
     console.error(e);
