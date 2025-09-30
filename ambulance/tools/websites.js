@@ -117,7 +117,7 @@ export async function run(mountEl){
     </div>
   `;
 
-  const JSON_PATH = '../helpers/websites.json';
+  const JSON_PATH = '../../helpers/websites.json';
 
   /* ---------- state & helpers ---------- */
   const $  = sel => mountEl.querySelector(sel);
