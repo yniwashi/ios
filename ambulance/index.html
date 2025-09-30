@@ -377,6 +377,7 @@
     const SHOW_SHORTCUTS_BANNER = true;   // <-- you control visibility here
     const SHORTCUT_DOWNLOAD_URL = "https://www.icloud.com/shortcuts/8f6a7a5be8b74e3dbd6fffa97d06274d";    // <-- replace with your iCloud Shortcut URL or keep it #
     // Example: rich news with heading, link, image, and a CTA button
+    const SHOW_NEWS = false; // flip to true when you want to show
     const NEWS_MESSAGE = `
     <h3>Update: Pediatric tools refreshed</h3>
    <p>We’ve updated dosing tables and added a new <a href="#"
@@ -487,7 +488,10 @@ function mount(){
   document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
   const newsEl = document.getElementById("news");
-  if (NEWS_MESSAGE && NEWS_MESSAGE.trim() !== ""){ newsEl.innerHTML = NEWS_MESSAGE.trim(); newsEl.style.display = "block" }
+  if (SHOW_NEWS && NEWS_MESSAGE.trim() !== "") {
+    newsEl.innerHTML = NEWS_MESSAGE.trim();
+    newsEl.style.display = "block";
+    }
 
   const toggle      = document.getElementById("mode");
   const sectionsEl  = document.getElementById("sections");
