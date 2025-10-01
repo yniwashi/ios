@@ -68,7 +68,7 @@
 /* ---------- BASE ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;ground:var(--bg);color:var(--fg)}
 .container{max-width:1200px;margin:0 auto;padding:var(--container-pad)}
 
 /* ---------- HEADER ---------- */
@@ -78,12 +78,12 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .brand .trial{margin-left:8px;color:#ff3535;font-weight:800;font-size:.55em;white-space:nowrap}
 
 /* chips */
-.chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.chip{display:flex;align-items:center;gap:8px;padding:0 var(--chip-pad-x);height:var(--chip-h);border-radius:12px;ground:var(--card);border:1px solid var(--border);color:var(--muted)}
 .chip .chip-label{font-weight:800;font-size:var(--subtitle-size);text-transform:uppercase;letter-spacing:.08em}
-.chip input[type=number]{width:clamp(60px,10vw,86px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-#backChip,#themeChip,#muteChip{background:transparent;border:none;padding:0}
-#backBtn.icon-toggle{border:1px solid var(--btn-bd);background:var(--btn-bg);font-size:22px}
-.icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--fg)}
+.chip input[type=number]{width:clamp(60px,10vw,86px);padding:6px 8px;border-radius:10px;border:1px solid var(--border);ground:var(--bg);color:var(--fg)}
+#Chip,#themeChip,#muteChip{ground:transparent;border:none;padding:0}
+#Btn.icon-toggle{border:1px solid var(--btn-bd);ground:var(--btn-bg);font-size:22px}
+.icon-toggle{display:inline-flex;align-items:center;justify-content:center;width:var(--chip-h);height:var(--chip-h);border-radius:12px;border:1px solid var(--btn-bd);ground:var(--btn-bg);color:var(--fg)}
 .icon-toggle svg{width:clamp(20px,3.4vw,28px);height:clamp(20px,3.4vw,28px)}
 
 /* ---------- TOTAL CPR ---------- */
@@ -180,7 +180,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 
 /* Start/Pause */
 .icon-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
-.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--btn-bd);background:var(--btn-bg);color:var(--btn-fg);font-size: clamp(13px, 2vw, 16px);font-weight:700}
+.icon-ctrl{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--btn-bd);ground:var(--btn-bg);color:var(--btn-fg);font-size: clamp(13px, 2vw, 16px);font-weight:700}
 .icon-ctrl svg{width:22px;height:22px;fill:currentColor}
 .icon-ctrl[disabled]{opacity:.45;filter:grayscale(.1);cursor:not-allowed}
 
@@ -196,10 +196,10 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn .ico{width:18px;height:18px}
 .btn:active{transform:translateY(1px)}
 .btn.is-disabled{opacity:.48;filter:grayscale(.2);cursor:not-allowed}
-.btn-rosc{ background:linear-gradient(180deg,var(--rosc-1),var(--rosc-2)); border-color:var(--rosc-bd) }
-.btn-stop{ background:linear-gradient(180deg,var(--stop-1),var(--stop-2)); border-color:var(--stop-bd) }
-.btn-shock{ background:linear-gradient(180deg,var(--shock-1),var(--shock-2)); border-color:var(--shock-bd); color:#1a1a1a }
-.btn-amio{ background:linear-gradient(180deg,var(--amio-1),var(--amio-2)); border-color:var(--amio-bd) }
+.btn-rosc{ ground:linear-gradient(180deg,var(--rosc-1),var(--rosc-2)); border-color:var(--rosc-bd) }
+.btn-stop{ ground:linear-gradient(180deg,var(--stop-1),var(--stop-2)); border-color:var(--stop-bd) }
+.btn-shock{ ground:linear-gradient(180deg,var(--shock-1),var(--shock-2)); border-color:var(--shock-bd); color:#1a1a1a }
+.btn-amio{ ground:linear-gradient(180deg,var(--amio-1),var(--amio-2)); border-color:var(--amio-bd) }
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
@@ -475,10 +475,36 @@ applyTheme();
 
 /* Back */
 const HOME = "https://ios.niwashibase.com/ambulance";
-document.getElementById('backBtn')?.addEventListener('click',()=>{
-  if (document.referrer && document.referrer !== location.href) history.back();
-  else location.href = HOME;
+const backEl = document.getElementById('backBtn');
+backEl?.addEventListener('click', () => {
+  const ok = confirm('Are you sure you want to exit?\nAny running timers will be stopped.');
+  if (!ok) return;
+
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = HOME;
+  }
 });
+
+
+   // Optional: confirm on browser/gesture back as well
+(function setupBackTrap(){
+  // Push a dummy state so the first back triggers popstate here
+  try { history.pushState({cpr:"guard"}, "", location.href); } catch {}
+  window.addEventListener('popstate', (e) => {
+    const ok = confirm('Are you sure you want to exit?\nAny running timers will be stopped.');
+    if (ok) {
+      // Allow leaving: remove our guard state then go back again
+      window.removeEventListener('popstate', this);
+      history.back();
+    } else {
+      // User canceled: push the guard state again to stay on page
+      try { history.pushState({cpr:"guard"}, "", location.href); } catch {}
+    }
+  });
+})();
+
 
 /* ===== HELPERS ===== */
 const $ = id => document.getElementById(id);
