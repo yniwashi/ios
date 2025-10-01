@@ -13,6 +13,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- Theme color for light/dark -->
   <meta id="theme-color" name="theme-color" content="#0f1115" />
+
+<script>
+  window.__DEV__ =
+    ['localhost','127.0.0.1'].includes(location.hostname) ||
+    /^192\./.test(location.hostname) || /^10\./.test(location.hostname);
+</script>
+
   <script>
   (function () {
     var prefersDark = matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
@@ -174,6 +181,8 @@
 .btn-meds{background:linear-gradient(180deg,#8EA4B8,#5E7A92); --btn-fg:#fff}              /* Grey–blueish */
 .btn-vent{background:linear-gradient(180deg,#7EC8FF,#3FA9FF); --btn-fg:#fff}              /* Sky blue */
 .btn-formulary{background:linear-gradient(180deg,#5EB0EF,#2684FF);--btn-fg:#fff;}         /* Mid–sky blue
+.btn-community{background:linear-gradient(180deg,#6AA9FF,#2F81F7); --btn-fg:#fff}
+
 
 
 
@@ -286,10 +295,64 @@
 }
 
 
+
+/* === T&C Gate (minimal, iOS-friendly, no <dialog>) === */
+#tacGate {
+  position: fixed; inset: 0; z-index: 99999;
+  display: none; /* shown by JS if not consented */
+  background: color-mix(in oklab, var(--bg) 90%, #000);
+  backdrop-filter: blur(6px);
+}
+#tacCard{
+  position: absolute; left: 50%; top: 12vh; transform: translateX(-50%);
+  width: min(640px, calc(100vw - 28px));
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.35);
+  padding: 14px;
+}
+#tacCard h2{ margin: 0 0 6px 0; font-size: 18px; font-weight: 800 }
+#tacCard p { margin: 8px 0; font-size: 14px; line-height: 1.45; color: var(--muted) }
+#tacActions{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px }
+.tac-btn {
+  appearance: none; cursor: pointer;
+  padding: 10px 12px; border-radius: 10px; font-weight: 800; font-size: 14px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+}
+.tac-btn.primary{
+  background: linear-gradient(180deg, var(--accent), #0D5BB5); color: #fff;
+  border: 1px solid color-mix(in oklab, var(--accent) 60%, transparent);
+}
+.tac-link{ color: var(--accent); font-weight: 800; text-decoration: none }
+
+
+
     
   </style>
 </head>
 <body>
+
+<!-- === Terms & Conditions Gate === -->
+<section id="tacGate" aria-modal="true" role="dialog">
+  <div id="tacCard">
+    <h2>Terms & Conditions</h2>
+    <p>To use the <strong>Ambulance</strong> app, you must agree to our
+      <a class="tac-link" href="https://www.niwashibase.com/terms-conditions" target="_blank" rel="noopener">Terms &amp; Conditions</a>.
+    </p>
+    <div id="tacActions">
+      <button id="tacAgree" class="tac-btn primary">Agree & Continue</button>
+      <button id="tacCancel" class="tac-btn">Cancel</button>
+    </div>
+    <p style="margin-top:8px; font-size:12px; color:var(--muted)">
+      You can review the Terms anytime from the app menu.
+    </p>
+  </div>
+</section>
+
+
+
+
+
   <div class="wrap">
     <!-- Topbar -->
     <div class="topbar">
@@ -372,11 +435,12 @@
     /* =========================
          CONFIG
        ========================= */
+const HOST = window.__DEV__ ? '' : 'https://ios.niwashibase.com';
     const SHORTCUT_NAME = "Ambulance";
     const SEPARATOR     = "::";
     const USE_RETURN_URL = false;
     const RETURN_URL    = "https://yourdomain.com/done.html";
-    const SHOW_SHORTCUTS_BANNER = true;   // <-- you control visibility here
+   const SHOW_SHORTCUTS_BANNER = window.__DEV__ ? false : true;
     const SHORTCUT_DOWNLOAD_URL = "https://ios.niwashibase.com/s/ambulance";    // <-- replace with your iCloud Shortcut URL or keep it #
     // Example: rich news with heading, link, image, and a CTA button
     const SHOW_NEWS = false; // flip to true when you want to show
@@ -394,43 +458,90 @@
 `;
 
     
-    const BUTTONS = [
-  // Row 1 — Resuscitation & Timers
-  { text:"CPR",              iconType:"material", icon:"monitor_heart",       color:"btn-cpr",       href:"https://ios.niwashibase.com/cpr", showDefault:true, showShortcuts:false },
-  { text:"RSI Checklist",    iconType:"material", icon:"checklist",           color:"btn-rsi",       href:"https://ios.niwashibase.com/helpers/rsi_checklist_js.html", showDefault:true, showShortcuts:true },
-  { text:"WAAFELSS",         iconType:"material", icon:"face",                color:"btn-waafelss",  href:"#", showDefault:true, showShortcuts:true, actionId:"waafels" },
+   const BUTTONS = [
+    // Resuscitation & Timers
+    { text:"CPR",              iconType:"material", icon:"monitor_heart", color:"btn-cpr",
+      href: window.__DEV__ ? "../cpr/" : `${HOST}/cpr`, showDefault:true, showShortcuts:false },
 
-  // Row 2 — Pediatric Care
- { text:"CCP Pediatrics",   iconType:"material", icon:"vaccines",            color:"btn-ccp",       href:"#", showDefault:true, showShortcuts:true, actionId:"ccp_peds" },
-  { text:"AP Pediatrics",    iconType:"material", icon:"medication", color:"btn-ap",        href:"#", showDefault:true, showShortcuts:true, actionId:"ap_peds" },
-  { text:"Care Tools",       iconType:"material", icon:"widgets",        color:"btn-caretools", href:"#", showDefault:true, showShortcuts:false, actionId:"caretools" },
-  { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",      color:"btn-weight",    href:"#", showDefault:true, showShortcuts:true, actionId:"estweight" },
+    { text:"RSI Checklist",    iconType:"material", icon:"checklist",     color:"btn-rsi",
+      href: window.__DEV__ ? "../helpers/rsi_checklist_js.html" : `${HOST}/helpers/rsi_checklist_js.html`,
+      showDefault:true, showShortcuts:true },
 
-  // Row 3 — Assessment Scores
-  { text:"GCS Score",        iconType:"material", icon:"psychology_alt",          color:"btn-gcs",       href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
-  { text:"APGAR Score",      iconType:"material", icon:"child_care",          color:"btn-apgar",     href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
-  { text:"SAT Score",        iconType:"material", icon:"syringe",                 color:"btn-sat",       href:"#", showDefault:true, showShortcuts:true, actionId:"sat" },
+    { text:"WAAFELSS",         iconType:"material", icon:"face",          color:"btn-waafelss",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"waafels" },
 
-  // Row 4 — Calculators · Reference
-  { text:"Flowcharts",       iconType:"material", icon:"apps",              color:"btn-flowcharts", href:"#", showDefault:false, showShortcuts:true },
-  { text:"RBS Converter",    iconType:"material", icon:"glucose",          color:"btn-rbs",        href:"#", showDefault:true, showShortcuts:true, actionId:"rbs" },
-  { text:"CPG Wizard",       iconType:"material", icon:"wand_stars",       color:"btn-cpg",        href:"#", showDefault:false, showShortcuts:true },
-  { text:"MAP Calculator",    iconType:"material", icon:"calculate",           color:"btn-map",        href:"#", showDefault:true, showShortcuts:true, actionId:"map" },
+    // Pediatric Care
+    { text:"CCP Pediatrics",   iconType:"material", icon:"vaccines",      color:"btn-ccp",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"ccp_peds" },
 
-  // Ops / Links
-  { text:"AS-Call",          iconType:"material", icon:"call",                color:"btn-ascall",     href:"#", showDefault:false, showShortcuts:true },
-  { text:"HOS",              iconType:"material", icon:"local_airport",       color:"btn-hos",        href:"#", showDefault:false, showShortcuts:true },
-  { text:"Websites",         iconType:"material", icon:"language",            color:"btn-websites",   href:"#", showDefault:true, showShortcuts:true, actionId:"websites" },
-      /* ===== New: Shortcuts-mode only ===== */
-  { text:"Westley Score",        iconType:"material", icon:"stethoscope",     color:"btn-westley",  href:"#", showDefault:false, showShortcuts:true },
-  { text:"Overtime Calculator", iconType:"material", icon:"schedule",        color:"btn-overtime", href:"#", showDefault:false, showShortcuts:true },
-  { text:"HMC Address Book",    iconType:"material", icon:"contacts",        color:"btn-address", href:"#", showDefault:false, showShortcuts:true },
-  { text:"Shifts",              iconType:"material", icon:"calendar_month",  color:"btn-shifts",  href:"#", showDefault:false, showShortcuts:true },
-  { text:"Meds Calculator",     iconType:"material", icon:"vaccines",        color:"btn-meds",    href:"#", showDefault:false, showShortcuts:true },
-  { text:"Ventilator Settings", iconType:"material", icon:"airwave",         color:"btn-vent",    href:"#", showDefault:false, showShortcuts:true },
-  { text:"Formulary",           iconType:"material", icon:"medication",      color:"btn-formulary", href:"#", showDefault:false, showShortcuts:true },
+    { text:"AP Pediatrics",    iconType:"material", icon:"medication",    color:"btn-ap",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"ap_peds" },
 
-];
+    { text:"Care Tools",       iconType:"material", icon:"widgets",       color:"btn-caretools",
+      href:"#", showDefault:true, showShortcuts:false, actionId:"caretools" },
+
+    { text:"Estimated Weight", iconType:"material", icon:"monitor_weight",color:"btn-weight",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"estweight" },
+
+    // Assessment Scores
+    { text:"GCS Score",        iconType:"material", icon:"psychology_alt",color:"btn-gcs",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"gcs" },
+
+    { text:"APGAR Score",      iconType:"material", icon:"child_care",    color:"btn-apgar",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"apgar" },
+
+    { text:"SAT Score",        iconType:"material", icon:"syringe",       color:"btn-sat",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"sat" },
+
+    // Calculators · Reference
+    { text:"Flowcharts",       iconType:"material", icon:"apps",          color:"btn-flowcharts",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"RBS Converter",    iconType:"material", icon:"glucose",       color:"btn-rbs",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"rbs" },
+
+    { text:"CPG Wizard",       iconType:"material", icon:"wand_stars",    color:"btn-cpg",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"MAP Calculator",   iconType:"material", icon:"calculate",     color:"btn-map",
+      href:"#", showDefault:true, showShortcuts:true, actionId:"map" },
+
+    // Ops / Links
+    { text:"AS-Call",          iconType:"material", icon:"call",          color:"btn-ascall",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"HOS",              iconType:"material", icon:"local_airport", color:"btn-hos",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Websites",         iconType:"material", icon:"language",      color:"btn-websites",
+      href: window.__DEV__ ? "#" : "https://example.com", showDefault:true, showShortcuts:true, actionId:"websites" },
+
+{ text:"Community",       iconType:"material", icon:"group", 
+  color:"btn-community", href:"#", showDefault:true, showShortcuts:true, actionId:"community" },
+
+
+    // Shortcuts-mode only
+    { text:"Westley Score",    iconType:"material", icon:"stethoscope",   color:"btn-westley",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Overtime Calculator", iconType:"material", icon:"schedule",   color:"btn-overtime",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"HMC Address Book", iconType:"material", icon:"contacts",      color:"btn-address",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Shifts",           iconType:"material", icon:"calendar_month",color:"btn-shifts",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Meds Calculator",  iconType:"material", icon:"vaccines",      color:"btn-meds",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Ventilator Settings", iconType:"material", icon:"airwave",    color:"btn-vent",
+      href:"#", showDefault:false, showShortcuts:true },
+
+    { text:"Formulary",        iconType:"material", icon:"medication",    color:"btn-formulary",
+      href:"#", showDefault:false, showShortcuts:true },
+  ];
 
 
     // ✅ Sections layout
@@ -439,7 +550,7 @@
   { title: "Calculators · Reference", items: ["CPG Wizard","Flowcharts","Formulary","RBS Converter","MAP Calculator","Overtime Calculator","Meds Calculator"] },
   { title: "Pediatric Care",         items: ["CCP Pediatrics","AP Pediatrics","Care Tools","Estimated Weight"] },
   { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score","Westley Score"] },
-  { title: "Ops / Links",            items: ["HOS","Websites","AS-Call","HMC Address Book","Shifts"] }
+  { title: "Ops / Links",            items: ["HOS","Websites","AS-Call","HMC Address Book","Shifts","Community"] }
 ];
 
 
@@ -486,7 +597,71 @@
       updateHash({});
     }
 
- document.addEventListener("DOMContentLoaded", mount);
+
+// ===== T&C Consent Gate Update to force the TsCs to show up example amb_tac_v2 DON't use decimal =====
+const TAC_KEY = "amb_tac_v2"; // bump version if you update your terms meaningfully
+
+function showTacGate(){
+  const el = document.getElementById("tacGate");
+  if (el) {
+    el.style.display = "block";
+    document.body.style.overflow = "hidden"; // prevent scrolling behind modal
+  }
+}
+function hideTacGate(){
+  const el = document.getElementById("tacGate");
+  if (el) {
+    el.style.display = "none";
+    document.body.style.overflow = "";
+  }
+}
+
+function wireTacGate(){
+  const agreeBtn = document.getElementById("tacAgree");
+  const cancelBtn = document.getElementById("tacCancel");
+
+  agreeBtn?.addEventListener("click", async () => {
+    try {
+      localStorage.setItem(TAC_KEY, "1");
+      // Optional: also ping your Worker to set a cookie for server-side checks
+      fetch("/consent?agree=1", { credentials: "include" }).catch(()=>{});
+    } finally {
+      hideTacGate();
+      // proceed to normal app
+      mount();
+    }
+  });
+
+  cancelBtn?.addEventListener("click", () => {
+    // Friendly block + exit
+    hideTacGate();
+    // Replace UI with a simple note (helps before navigating away)
+    document.body.innerHTML = `
+      <div style="padding:24px; font:16px system-ui; line-height:1.4">
+        <h1 style="margin:0 0 8px 0">Consent required</h1>
+        <p>To use the Ambulance app, you must agree to the Terms &amp; Conditions.</p>
+        <p style="color:#888">You can re-open the app later and agree if you change your mind.</p>
+      </div>`;
+    // In a Web Clip, this leaves a blank page. It’s the closest to “exit”.
+    setTimeout(() => { location.replace("about:blank"); }, 550);
+  });
+}
+
+function initTacOrApp(){
+  const consent = localStorage.getItem(TAC_KEY) === "1";
+  if (consent) {
+    // go straight to app
+    mount();
+  } else {
+    // show gate, mount runs only after Agree
+    wireTacGate();
+    showTacGate();
+  }
+}
+
+
+document.addEventListener("DOMContentLoaded", initTacOrApp);
+
 function mount(){
   initTheme();
   document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
@@ -574,21 +749,54 @@ function mount(){
 }
 
 
-    // ---------- Router / action loader ----------
-    async function runAction(actionId, params = {}) {
-      try {
-        const ver = Date.now();
-        const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
-        const mountEl = document.getElementById("panel-body");
-        mountEl.innerHTML = "";
-        openPanel(params.title || actionId.toUpperCase());
-        await mod.run(mountEl, params);
-        updateHash({ tool: actionId, ...params });
-      } catch (e) {
-        alert(`Could not load tool: ${actionId}\n${e.message || e}`);
-        console.error(e);
-      }
+   // ---------- Router / action loader ----------
+async function runAction(actionId, params = {}) {
+  try {
+    const mountEl = document.getElementById("panel-body");
+    mountEl.innerHTML = "";
+    openPanel(params.title || (actionId === "community" ? "Join the Community" : actionId.toUpperCase()));
+
+    // Special inline panel: Community hub (Discord, WhatsApp, Telegram, Email)
+    if (actionId === "community") {
+      // TODO: replace the hrefs with your real invite links
+      const links = [
+        { name:"Discord",  icon:"stadia_controller", href:"https://discord.gg/yourInvite" },
+        { name:"WhatsApp", icon:"chat",              href:"https://wa.me/1234567890" },
+        { name:"Telegram", icon:"send",              href:"https://t.me/yourChannel" },
+        { name:"Email",    icon:"mail",              href:"mailto:hello@niwashibase.com?subject=Ambulance%20App" },
+      ];
+
+      mountEl.innerHTML = `
+        <div style="padding:12px; display:grid; gap:10px;">
+          <p style="margin:0; color:var(--muted); font-size:14px">
+            Choose a channel to join or contact us:
+          </p>
+          <div style="display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">
+            ${links.map(l => `
+              <a href="${l.href}" class="btn" style="text-decoration:none; background:linear-gradient(180deg,#f1f5fb,#e7ecf3); color:var(--text); border:1px solid var(--border)">
+                <span class="material-symbols-rounded" aria-hidden="true">${l.icon}</span>
+                <span class="label">${l.name}</span>
+              </a>
+            `).join("")}
+          </div>
+        </div>
+      `;
+      updateHash({ tool: actionId, ...params });
+      return;
     }
+
+    // Default (load tool module)
+    const ver = Date.now();
+    const mod = await import(`./tools/${actionId}.js?dev=${ver}`);
+    openPanel(params.title || actionId.toUpperCase());
+    await mod.run(mountEl, params);
+    updateHash({ tool: actionId, ...params });
+  } catch (e) {
+    alert(`Could not load tool: ${actionId}\n${e.message || e}`);
+    console.error(e);
+  }
+}
+
 
     function parseHash(){
       const h = new URLSearchParams((location.hash||"").replace(/^#/, ""));
