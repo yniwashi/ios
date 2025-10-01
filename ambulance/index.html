@@ -118,6 +118,14 @@
 .btn:active{ transform:translateY(0) scale(.98) }
 .label{ opacity:.98; line-height:1.12 }
 
+/* --- Community icons uniform box --- */
+.community-icon {
+  width:64px;       /* force same size */
+  height:64px;
+  display:block;
+  object-fit:contain;  /* scales while keeping aspect ratio */
+}
+
 
     /* 👇 per-button overrides text and bg color */
 #cpr               { --btn-fg:#fff; }   /* CPR white */
@@ -180,7 +188,7 @@
 .btn-shifts{background:linear-gradient(180deg,#9AD9FF,#57B6FF); --btn-fg:#000}            /* Light blue */
 .btn-meds{background:linear-gradient(180deg,#8EA4B8,#5E7A92); --btn-fg:#fff}              /* Grey–blueish */
 .btn-vent{background:linear-gradient(180deg,#7EC8FF,#3FA9FF); --btn-fg:#fff}              /* Sky blue */
-.btn-formulary{background:linear-gradient(180deg,#5EB0EF,#2684FF);--btn-fg:#fff;}         /* Mid–sky blue
+.btn-formulary{background:linear-gradient(180deg,#5EB0EF,#2684FF);--btn-fg:#fff;}         /* Mid–sky blue */
 .btn-community{background:linear-gradient(180deg,#6AA9FF,#2F81F7); --btn-fg:#fff}
 
 
@@ -757,33 +765,66 @@ async function runAction(actionId, params = {}) {
     openPanel(params.title || (actionId === "community" ? "Join the Community" : actionId.toUpperCase()));
 
     // Special inline panel: Community hub (Discord, WhatsApp, Telegram, Email)
-    if (actionId === "community") {
-      // TODO: replace the hrefs with your real invite links
-      const links = [
-        { name:"Discord",  icon:"stadia_controller", href:"https://discord.gg/yourInvite" },
-        { name:"WhatsApp", icon:"chat",              href:"https://wa.me/1234567890" },
-        { name:"Telegram", icon:"send",              href:"https://t.me/yourChannel" },
-        { name:"Email",    icon:"mail",              href:"mailto:hello@niwashibase.com?subject=Ambulance%20App" },
-      ];
-
-      mountEl.innerHTML = `
-        <div style="padding:12px; display:grid; gap:10px;">
-          <p style="margin:0; color:var(--muted); font-size:14px">
-            Choose a channel to join or contact us:
-          </p>
-          <div style="display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">
-            ${links.map(l => `
-              <a href="${l.href}" class="btn" style="text-decoration:none; background:linear-gradient(180deg,#f1f5fb,#e7ecf3); color:var(--text); border:1px solid var(--border)">
-                <span class="material-symbols-rounded" aria-hidden="true">${l.icon}</span>
-                <span class="label">${l.name}</span>
-              </a>
-            `).join("")}
-          </div>
-        </div>
-      `;
-      updateHash({ tool: actionId, ...params });
-      return;
+   if (actionId === "community") {
+  const links = [
+    {
+      name: "Email",
+      href: "mailto:yniwashi@hamad.qa?subject=Ambulance%20App%20Feedback",
+      img: "images/email.png",
+      color: "#f44434"
+    },
+    {
+      name: "Discord",
+      href: "https://discord.gg/qc8fK3yd92",
+      img: "images/discord.png",
+      color: "#5c64f4"
+    },
+    {
+      name: "Telegram",
+      href: "https://t.me/+EAcWKnoaRq05YzY0",
+      img: "images/telegram.png",
+      color: "#24b4e3"
+    },
+    {
+      name: "WhatsApp",
+      href: "https://whatsapp.com/channel/0029VadgCTH0QeamMlpEvX0x",
+      img: "images/whatsapp.png",
+      color: "#24ac04"
     }
+  ];
+
+  mountEl.innerHTML = `
+    <div style="padding:16px; display:grid; gap:16px;">
+      <p style="margin:0; text-align:center; font-size:18px; font-weight:800">
+        👇💡 Stay Connected! 💡👇
+      </p>
+      <div style="
+        display:grid;
+        gap:12px;
+        grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      ">
+        ${links.map(l => `
+          <a href="${l.href}" target="_blank" rel="noopener"
+             style="
+               display:flex; flex-direction:column; align-items:center;
+               text-decoration:none; padding:12px;
+               background:linear-gradient(180deg,${l.color}cc,${l.color});
+               border-radius:14px; color:#fff; font-weight:700;
+               box-shadow:0 4px 14px rgba(0,0,0,.2);
+             ">
+           <img src="${l.img}" alt="${l.name}" class="community-icon">
+
+
+            <span>${l.name}</span>
+          </a>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  updateHash({ tool: actionId, ...params });
+  return;
+}
+
 
     // Default (load tool module)
     const ver = Date.now();
