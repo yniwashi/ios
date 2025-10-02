@@ -6,12 +6,21 @@
 
 <style>
 /* ==========================================================
-   CPR TIMER — compact, centered, responsive (2025-09-24k)
+   CPR TIMER — compact, centered, responsive (2025-10-02a)
+   CHANGELOG (this build):
+   • New session lifecycle: After Stop or ROSC, the next Start (Cycle/Adrenaline)
+     launches a fully fresh session with timers, counters, overlays, and logs reset.
+   • Added resetForNewSession() to stop audio/metronome, release wake lock,
+     clear events/logs, disable Export until new data is recorded, and realign UI.
+   • endSession() now flags postEndResetPending so Start knows to hard-reset.
+   • Start handlers honor sessionEnded() || postEndResetPending before starting.
+
+   Layout/UX notes:
    - Timers always under TOTAL; side-by-side in landscape
    - Actions anchored below timers in landscape
    - Portrait: Export PDF is always the bottom button
-   - Overlays (countdown / "Give Adrenaline") show only at cue and auto-center
-   - Theme "Auto" now truly follows device theme
+   - Overlays (countdown / “Give Adrenaline”) show only at cue and auto-center
+   - Theme “Auto” follows device theme
    ========================================================== */
 
 /* ---------- THEME TOKENS ---------- */
@@ -548,6 +557,7 @@ function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
 function restartBeat(){ stopBeat(); startBeat(); }
 
 /* ===== STATE ===== */
+let postEndResetPending = false;   // after Stop/ROSC, next Start should hard-reset to a new session
 let totalStart=0,totalEnd=0;
 let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
 let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
@@ -674,6 +684,10 @@ requestAnimationFrame(tick);
 
 /* ===== CONTROLS ===== */
 $('cprStart').onclick = () => {
+     if (sessionEnded() || postEndResetPending) {
+    resetForNewSession();
+  }
+
   primeAudio();
   if(!totalStart){
     totalStart=now(); totalEnd=0; showTotalZero=false;
@@ -689,6 +703,10 @@ $('cprPause').onclick = () => {
   $('cprPause').disabled=true; $('cprStart').disabled=false;
 };
 $('adrStart').onclick = () => {
+     if (sessionEnded() || postEndResetPending) {
+    resetForNewSession();
+  }
+
   primeAudio(); if(!totalStart) $('cprStart').click();
   if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
   else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
@@ -699,6 +717,53 @@ $('adrPause').onclick = () => {
   $('adrPause').disabled=true; $('adrStart').disabled=false;
 };
 
+function resetForNewSession(){
+  // stop any sounds/metronome/wakelock
+  stopBeat();
+  releaseWake();
+
+  // clear timers & state
+  totalStart = 0; totalEnd = 0; showTotalZero = true;
+  cprStart = 0; cprPausedAt = 0; cprPausedAccum = 0; cprRunning = false;
+  adrStart = 0; adrPausedAt = 0; adrPausedAccum = 0; adrRunning = false; adrCount = 0;
+
+  // counters
+  window.__shock = 0;
+  window.__amio  = 0;
+  cycleCount = 0;
+
+  // cues & countdown
+  cue20 = false; cue90 = false; cue120 = false;
+  counting = false; if (countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+  const cd = $('countdown'); if (cd) cd.classList.remove('show');
+  $('cycleTimer').classList.remove('cycle-hide');
+  $('adrTimer').classList.remove('adr-show','adr-hide');
+
+  // digits & buttons
+  $('totalDigits').textContent = '00:00';
+  $('cycleDigits').textContent = '00:00';
+  $('adrDigits').textContent   = '00:00';
+  $('cprStart').disabled = false; $('cprPause').disabled = true;
+  $('adrStart').disabled = false; $('adrPause').disabled = true;
+
+  // log/events
+  try{
+    events.length = 0;
+    const log = $('log');
+    while (log.firstChild) log.removeChild(log.firstChild);
+  }catch{}
+
+  // export disabled for a fresh session
+  setExportEnabled(false);
+
+  // consume the pending reset flag
+  postEndResetPending = false;
+
+  // realign overlays after UI reset
+  alignOverlays();
+}
+
+   
 function endSession(label){
   primeAudio();
   if(!totalStart) return;
@@ -716,6 +781,8 @@ function endSession(label){
   showTotalZero = true;
   stopBeat(); releaseWake();
   setExportEnabled(true);
+  postEndResetPending = true;   // next Start should create a brand-new session
+
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
 $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
