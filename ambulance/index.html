@@ -264,29 +264,22 @@
   // News controls — keep false unless you want to show it
   // Show the card (set to true only when you want it visible)
 const SHOW_NEWS = true;
+
 const NEWS_MESSAGE = `
-  <h3>Enable Shortcuts Mode</h3>
-  <p>
-    To use <strong>Shortcuts Mode</strong> you need the “Ambulance” Shortcut and must allow
-    <em>Sharing Large Amounts of Data</em> in your iPhone settings.
-  </p>
+  <h3>Enable Shortcuts Mode Guide</h3>
+  <p>To use <strong>Shortcuts Mode</strong>:</p>
   <ol>
-    <li>Download the shortcut below.</li>
-    <li>Come back here and press <strong>Open Settings</strong>.</li>
-    <li>Go to <strong>Advanced</strong> → turn on <strong>Sharing Large Amounts of Data</strong>.</li>
+    <li>Install the <strong>“Ambulance”</strong> Shortcut.</li>
+    <li>Turn on <strong>Allow Sharing Large Amounts of Data</strong> in
+        <em>iPhone Settings → Apps → Shortcuts → Advanced</em>.</li>
   </ol>
-  <p style="font-size:12px;color:var(--muted)">
-    Or: Settings → Apps → Shortcuts → Advanced → turn it on manually.
+  <p style="margin:6px 0 10px">
+    Tip: Install the shortcut first, then comeback here & tap <em>Open Settings</em> below.
+    You can also do it manually: <em>Settings → Apps → Shortcuts → Advanced</em>, then enable <strong>Allow Sharing Large Amounts of Data</strong>.
   </p>
-  <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">
-    <a class="btn" href="https://ios.niwashibase.com/s/ambulance" 
-       style="padding:6px 10px;font-size:12px;min-height:auto;text-align:center;">
-      Download Shortcut
-    </a>
-    <a class="btn" href="shortcuts://run-shortcut?name=Ambulance&input=text&text=Open%20Settings"
-       style="padding:6px 10px;font-size:12px;min-height:auto;text-align:center;">
-      Open Settings
-    </a>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
+    <a id="btnDownloadShortcut" class="btn" href="#" rel="noopener">Download Shortcut</a>
+    <a id="btnOpenSettings" class="btn" href="#" rel="noopener">Open Settings</a>
   </div>
 `;
 
@@ -462,11 +455,22 @@ const NEWS_MESSAGE = `
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
     const newsEl = document.getElementById("news");
-    const newsEl = document.getElementById("news");
-if (SHOW_NEWS && NEWS_MESSAGE.trim() !== "") {
+    if (SHOW_NEWS && NEWS_MESSAGE.trim() !== "") {
   newsEl.innerHTML = NEWS_MESSAGE.trim();
   newsEl.style.display = "block";
+
+  // 1) Download button → your existing shortcut link
+  const dl = document.getElementById("btnDownloadShortcut");
+  if (dl) dl.href = SHORTCUT_DOWNLOAD_URL || "#";
+
+  // 2) Open Settings button → call your Shortcut with input "Open Settings"
+  const os = document.getElementById("btnOpenSettings");
+  os?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = buildShortcutsUrl("Open Settings");
+  });
 }
+
 
     const toggle      = document.getElementById("mode");
     const sectionsEl  = document.getElementById("sections");
