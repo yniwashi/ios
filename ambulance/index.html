@@ -736,7 +736,7 @@ function mount(){
           if (btn.actionId){
             a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
           } else if (!btn.href || btn.href === "#"){
-            a.addEventListener("click",(e)=>{ e.preventDefault(); alert("This item has no link yet. Enable Shortcuts Mode or set BUTTONS[].href"); });
+            a.addEventListener("click",(e)=>{ e.preventDefault(); alert("Coming Soon..."); });
           }
         }
         grid.appendChild(a);
