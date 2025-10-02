@@ -266,22 +266,27 @@
 const SHOW_NEWS = true;
 
 const NEWS_MESSAGE = `
-  <h3>Enable Shortcuts Mode Guide</h3>
-  <p>To use <strong>Shortcuts Mode</strong>:</p>
+  <h3>Enable Shortcuts Mode</h3>
+  <p>To fully use <strong>Shortcuts Mode</strong>:</p>
   <ol>
-    <li>Install the <strong>“Ambulance”</strong> Shortcut.</li>
-    <li>Turn on <strong>Allow Sharing Large Amounts of Data</strong> in
-        <em>iPhone Settings → Apps → Shortcuts → Advanced</em>.</li>
+    <li>Install the <strong>“Ambulance”</strong> Shortcut, then come back here.</li>
+    <li>Turn on <strong>Allow Sharing Large Amounts of Data</strong> by pressing <strong>Open Settings</strong> or go to <em>iPhone Settings → Apps → Shortcuts → Advanced</em>.</li>
   </ol>
   <p style="margin:6px 0 10px">
-    Tip: Install the shortcut first, then comeback here & tap <em>Open Settings</em> below.
-    You can also do it manually: <em>Settings → Apps → Shortcuts → Advanced</em>, then enable <strong>Allow Sharing Large Amounts of Data</strong>.
+    Tip: Install the shortcut first, then come back & tap <em>Open Settings</em> below.
+    Or do it manually: <em>Settings → Apps → Shortcuts → Advanced</em>, then enable
+    <strong>Allow Sharing Large Amounts of Data</strong>.
+  </p>
+  <p style="color:#c62828; font-weight:bold; margin:8px 0 10px">
+    ⚠️ While using the Ambulance Shortcut you’ll see Privacy Alerts - always choose
+    “Always Allow” (or “Allow” if that’s the only option). This prevents repeated prompts.
   </p>
   <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
     <a id="btnDownloadShortcut" class="btn" href="#" rel="noopener">Download Shortcut</a>
     <a id="btnOpenSettings" class="btn" href="#" rel="noopener">Open Settings</a>
   </div>
 `;
+
 
 
   const SHORTCUT_DOWNLOAD_URL = "https://ios.niwashibase.com/s/ambulance";
