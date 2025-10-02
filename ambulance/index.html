@@ -262,19 +262,27 @@
   const SHOW_SHORTCUTS_BANNER = true;
 
   // News controls — keep false unless you want to show it
-  const SHOW_NEWS = true;
-  const NEWS_MESSAGE = `
-    <h3>Enable Shortcuts Setting</h3>
-    <p>To fully use <strong>Shortcuts Mode</strong>, turn on <em>Allow Sharing Large Amounts of Data</em>:</p>
-    <ol>
-      <li>Open <a href="prefs:root=SHORTCUTS" rel="noopener">Shortcuts Settings</a></li>
-      <li>Tap <strong>Advanced</strong></li>
-      <li>Enable <strong>Allow Sharing Large Amounts of Data</strong></li>
-    </ol>
-    <p style="margin-top:8px;">
-      <a class="btn" href="prefs:root=SHORTCUTS" rel="noopener">Open Shortcuts Settings</a>
-    </p>
-  `;
+  // Show the card (set to true only when you want it visible)
+const SHOW_NEWS = true;
+
+const NEWS_MESSAGE = `
+  <h3>Enable Shortcuts Mode Guide</h3>
+  <p>To use <strong>Shortcuts Mode</strong>:</p>
+  <ol>
+    <li>Install the <strong>“Ambulance”</strong> Shortcut.</li>
+    <li>Turn on <strong>Allow Sharing Large Amounts of Data</strong> in
+        <em>iPhone Settings → Apps → Shortcuts → Advanced</em>.</li>
+  </ol>
+  <p style="margin:6px 0 10px">
+    Tip: Install the shortcut first, then comeback here & tap <em>Open Settings</em> below.
+    You can also do it manually: <em>Settings → Apps → Shortcuts → Advanced</em>, then enable <strong>Allow Sharing Large Amounts of Data</strong>.
+  </p>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
+    <a id="btnDownloadShortcut" class="btn" href="#" rel="noopener">Download Shortcut</a>
+    <a id="btnOpenSettings" class="btn" href="#" rel="noopener">Open Settings</a>
+  </div>
+`;
+
 
   const SHORTCUT_DOWNLOAD_URL = "https://ios.niwashibase.com/s/ambulance";
 
@@ -448,9 +456,21 @@
 
     const newsEl = document.getElementById("news");
     if (SHOW_NEWS && NEWS_MESSAGE.trim() !== "") {
-      newsEl.innerHTML = NEWS_MESSAGE.trim();
-      newsEl.style.display = "block";
-    }
+  newsEl.innerHTML = NEWS_MESSAGE.trim();
+  newsEl.style.display = "block";
+
+  // 1) Download button → your existing shortcut link
+  const dl = document.getElementById("btnDownloadShortcut");
+  if (dl) dl.href = SHORTCUT_DOWNLOAD_URL || "#";
+
+  // 2) Open Settings button → call your Shortcut with input "Open Settings"
+  const os = document.getElementById("btnOpenSettings");
+  os?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = buildShortcutsUrl("Open Settings");
+  });
+}
+
 
     const toggle      = document.getElementById("mode");
     const sectionsEl  = document.getElementById("sections");
