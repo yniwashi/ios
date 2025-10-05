@@ -53,12 +53,82 @@
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
 
-    /* News */
-    .news{display:none; background:linear-gradient(180deg,rgba(47,129,247,.12),rgba(47,129,247,.06));
-      border:1px solid color-mix(in oklab, var(--accent) 40%, transparent);
-      color:color-mix(in oklab, var(--text) 85%, var(--accent));
-      padding:10px 12px; border-radius:12px; line-height:1.35; animation:fadeIn .25s ease-out both}
-    @keyframes fadeIn{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
+/* News container */
+.news{
+  display:none;
+  background:linear-gradient(180deg,rgba(47,129,247,.10),rgba(47,129,247,.05));
+  border:1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  color:color-mix(in oklab, var(--text) 90%, var(--accent));
+  padding:8px 10px;             /* was 10px 12px */
+  border-radius:12px;
+  line-height:1.32;              /* slightly tighter */
+  animation:fadeIn .22s ease-out both;
+  box-shadow:0 4px 12px rgba(0,0,0,.08); /* subtle depth, small */
+}
+
+/* Slightly faster/lighter animation */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(-3px)}
+  to  {opacity:1; transform:none}
+}
+
+/* Compact card content */
+.news-compact{display:block; font-size:13px}
+
+/* Header row with dismiss */
+.news-row{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-bottom:4px;
+}
+.news-x{
+  appearance:none; border:none; background:transparent;
+  color:var(--muted);
+  font:800 16px/1 system-ui; cursor:pointer;
+  padding:4px 6px; border-radius:8px;
+  transition:background .15s ease, opacity .15s ease;
+}
+.news-x:hover{ background:var(--surface-2); opacity:.9 }
+
+/* Steps list */
+.news-steps{ margin:6px 0; padding-left:18px }
+.news-steps li{ margin:2px 0 }
+
+/* Red alert note */
+.news-note{ margin:6px 0 6px }
+.news-note .warn{ color:#c62828; font-weight:800 }
+
+/* Buttons row */
+.news-actions{
+  display:flex; gap:8px; flex-wrap:wrap; margin-top:4px
+}
+
+/* Make the buttons a touch smaller inside the news card only */
+.news .btn{
+  padding:7px 10px;              /* was 8px 12px globally */
+  font-size:12.5px;              /* slightly smaller */
+  box-shadow:0 3px 10px rgba(0,0,0,.10);
+}
+
+/* Optional: compact <details> help block if you use it */
+.news-help{ margin-top:4px }
+.news-help summary{
+  cursor:pointer; font-weight:700; list-style:none; outline:none;
+}
+.news-help summary::-webkit-details-marker{ display:none }
+.news-help summary::after{
+  content:"›"; font-weight:900; margin-left:6px; display:inline-block; transform:rotate(90deg);
+}
+.news-help[open] summary::after{ transform:rotate(270deg) }
+.news-help ul{ margin:6px 0 0 18px }
+.news-help li{ margin:2px 0 }
+
+/* Tiny-screen tweaks */
+@media (max-width:380px){
+  .news{ padding:8px }                    /* tighter padding */
+  .news-compact{ font-size:12.5px }       /* shrink text slightly */
+  .news .btn{ padding:6px 9px; font-size:12px }
+}
+
 
     /* Shortcuts mode row */
     .row{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px}
@@ -261,31 +331,40 @@
   const RETURN_URL    = "https://yourdomain.com/done.html";
   const SHOW_SHORTCUTS_BANNER = true;
 
-  // News controls — keep false unless you want to show it
-  // Show the card (set to true only when you want it visible)
+// News controls — keep false unless you want to show it
+// (Actual visibility is tied to Shortcuts Mode in render())
 const SHOW_NEWS = true;
 
+const NEWS_DISMISSED_KEY = "amb_news_shortcuts_v1";
+
 const NEWS_MESSAGE = `
-  <h3>Enable Shortcuts Mode</h3>
-  <p>To fully use <strong>Shortcuts Mode</strong>:</p>
-  <ol>
-    <li>Install the <strong>“Ambulance”</strong> Shortcut, then come back here.</li>
-    <li>Turn on <strong>Allow Sharing Large Amounts of Data</strong> by pressing <strong>Open Settings</strong> or go to <em>iPhone Settings → Apps → Shortcuts → Advanced</em>.</li>
-  </ol>
-  <p style="margin:6px 0 10px">
-    Tip: Install the shortcut first, then come back & tap <em>Open Settings</em> below.
-    Or do it manually: <em>Settings → Apps → Shortcuts → Advanced</em>, then enable
-    <strong>Allow Sharing Large Amounts of Data</strong>.
-  </p>
-  <p style="color:#c62828; font-weight:bold; margin:8px 0 10px">
-    ⚠️ While using the Ambulance Shortcut you’ll see Privacy Alerts - always choose
-    “Always Allow” (or “Allow” if that’s the only option). This prevents repeated prompts.
-  </p>
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
-    <a id="btnDownloadShortcut" class="btn" href="#" rel="noopener">Download Shortcut</a>
-    <a id="btnOpenSettings" class="btn" href="#" rel="noopener">Open Settings</a>
+  <div class="news-compact">
+    <div class="news-row">
+      <strong>Enable Shortcuts Mode — Quick Guide</strong>
+      <button id="newsClose" class="news-x" aria-label="Dismiss">✕</button>
+    </div>
+
+    <ol class="news-steps">
+      <li>Install the <strong>“Ambulance”</strong> Shortcut, then return here.</li>
+      <li>
+        Turn on <strong>Allow Sharing Large Amounts of Data</strong> —
+        tap <em>Open Settings</em> below or go:
+        <small><em>Settings → Apps → Shortcuts → Advanced</em></small>.
+      </li>
+    </ol>
+
+    <p class="news-note">
+      <span class="warn">⚠️ Privacy Alerts:</span>
+      choose <strong>“Always Allow”</strong> (or <strong>“Allow”</strong> if that’s the only option) to avoid repeated prompts.
+    </p>
+
+    <div class="news-actions">
+      <a id="btnDownloadShortcut" class="btn" href="#" rel="noopener">Download Shortcut</a>
+      <a id="btnOpenSettings"   class="btn" href="#" rel="noopener">Open Settings</a>
+    </div>
   </div>
 `;
+
 
 
 
@@ -483,65 +562,119 @@ const NEWS_MESSAGE = `
     const scDownloadEl= document.getElementById("scDownload");
     if (scDownloadEl) scDownloadEl.href = SHORTCUT_DOWNLOAD_URL || "#";
 
+    // === Hidden tap to reset Shortcuts news card ===
+document.querySelector('.copy .t')?.addEventListener('click', () => {
+  if (confirm('Show Shortcuts setup tip again?')) {
+    localStorage.removeItem('amb_news_shortcuts_v1'); // use your actual NEWS_DISMISSED_KEY
+    render();
+  }
+});
+
+
     const map = new Map(BUTTONS.map(b => [b.text, b]));
 
-    function render(){
-      const useShortcuts = toggle.checked;
-      sectionsEl.innerHTML = "";
+function render(){
+  const useShortcuts = toggle.checked;
 
-      if (scBannerEl){
-        const shouldShow = useShortcuts && (typeof SHOW_SHORTCUTS_BANNER !== "undefined" ? SHOW_SHORTCUTS_BANNER : true);
-        scBannerEl.hidden = !shouldShow;
-        scBannerEl.style.display = shouldShow ? "block" : "none";
+  // --- News card tied to Shortcuts Mode ---
+  const newsEl = document.getElementById("news");
+  const dismissed = localStorage.getItem(NEWS_DISMISSED_KEY) === "1";
+
+  if (SHOW_NEWS && useShortcuts && !dismissed && NEWS_MESSAGE.trim() !== "") {
+    newsEl.innerHTML = NEWS_MESSAGE.trim();
+    newsEl.style.display = "block";
+
+    // Buttons inside the card
+    const dl = document.getElementById("btnDownloadShortcut");
+    if (dl) dl.href = SHORTCUT_DOWNLOAD_URL || "#";
+
+    const os = document.getElementById("btnOpenSettings");
+    os?.addEventListener("click", (e) => {
+      e.preventDefault();
+      location.href = buildShortcutsUrl("Open Settings");
+    });
+
+    // Dismiss (remembered)
+    const closeBtn = document.getElementById("newsClose");
+    closeBtn?.addEventListener("click", () => {
+      localStorage.setItem(NEWS_DISMISSED_KEY, "1");
+      newsEl.style.display = "none";
+      newsEl.innerHTML = "";
+    });
+  } else {
+    // Hide when Shortcuts Mode is off or already dismissed
+    newsEl.style.display = "none";
+    newsEl.innerHTML = "";
+  }
+
+  // --- Shortcuts banner (your existing logic) ---
+  if (scBannerEl){
+    const shouldShow = useShortcuts && (typeof SHOW_SHORTCUTS_BANNER !== "undefined" ? SHOW_SHORTCUTS_BANNER : true);
+    scBannerEl.hidden = !shouldShow;
+    scBannerEl.style.display = shouldShow ? "block" : "none";
+  }
+
+  // --- Sections grid ---
+  sectionsEl.innerHTML = "";
+  const map = new Map(BUTTONS.map(b => [b.text, b]));
+
+  for (const sec of SECTIONS){
+    const items = sec.items
+      .map(name => map.get(name))
+      .filter(Boolean)
+      .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
+    if (!items.length) continue;
+
+    const secEl = document.createElement("section");
+    secEl.className = "section";
+
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.textContent = sec.title;
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    items.forEach((btn, i) => {
+      const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
+      const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
+
+      const a = document.createElement("a");
+      a.className = `btn ${btn.color || "c-blue"}`;
+      a.id = id;
+      a.href = href;
+      a.style.animationDelay = `${i*18}ms`;
+
+      const iconHtml =
+        btn.iconType === "material"
+          ? `<span class="material-symbols-rounded" aria-hidden="true">${btn.icon}</span>`
+          : "";
+
+      a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
+
+      if (!useShortcuts){
+        if (btn.actionId){
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            runAction(btn.actionId, { title: btn.text });
+          });
+        } else if (!btn.href || btn.href === "#"){
+          a.addEventListener("click",(e)=>{
+            e.preventDefault();
+            alert("Coming Soon...");
+          });
+        }
       }
 
-      for (const sec of SECTIONS){
-        const items = sec.items
-          .map(name => map.get(name))
-          .filter(Boolean)
-          .filter(btn => useShortcuts ? (btn.showShortcuts !== false) : (btn.showDefault !== false));
-        if (!items.length) continue;
+      grid.appendChild(a);
+    });
 
-        const secEl = document.createElement("section");
-        secEl.className = "section";
-        const head = document.createElement("div");
-        head.className = "section-head";
-        head.textContent = sec.title;
-        const grid = document.createElement("div");
-        grid.className = "grid";
+    secEl.appendChild(head);
+    secEl.appendChild(grid);
+    sectionsEl.appendChild(secEl);
+  }
+}
 
-        items.forEach((btn, i) => {
-          const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
-          const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
-
-          const a = document.createElement("a");
-          a.className = `btn ${btn.color || "c-blue"}`;
-          a.id = id;
-          a.href = href;
-          a.style.animationDelay = `${i*18}ms`;
-
-          const iconHtml =
-            btn.iconType === "material"
-              ? `<span class="material-symbols-rounded" aria-hidden="true">${btn.icon}</span>`
-              : "";
-
-          a.innerHTML = `${iconHtml}<span class="label">${btn.text}</span>`;
-
-          if (!useShortcuts){
-            if (btn.actionId){
-              a.addEventListener("click", (e) => { e.preventDefault(); runAction(btn.actionId, { title: btn.text }) });
-            } else if (!btn.href || btn.href === "#"){
-              a.addEventListener("click",(e)=>{ e.preventDefault(); alert("Coming Soon..."); });
-            }
-          }
-          grid.appendChild(a);
-        });
-
-        secEl.appendChild(head);
-        secEl.appendChild(grid);
-        sectionsEl.appendChild(secEl);
-      }
-    }
 
     toggle.addEventListener("change", render);
     document.getElementById("panel-back").addEventListener("click", closePanel);
