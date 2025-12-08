@@ -190,11 +190,21 @@ export async function run(mountEl) {
   }
 
   const EPS = 1e-9;
-  function fmtSmart(v){
-    const r = Math.round(v);
-    if (Math.abs(v - r) < EPS) return String(r);
-    return (Math.round(v*10)/10).toFixed(1);
+function fmtSmart(v) {
+  if (!Number.isFinite(v)) return '—';
+
+  // Truncate to 2 decimals (NO rounding)
+  const t = Math.trunc(v * 100) / 100;
+
+  // If integer → no decimals
+  if (Math.abs(t - Math.round(t)) < EPS) {
+    return String(Math.round(t));
   }
+
+  // If has 1 or 2 decimals → show naturally (no forced trailing zero)
+  return String(t);
+}
+
   const clamp = (v,max) => (v > max ? max : v);
   const fmtAgeLabel = (age, grp) => {
     const n = Math.round(age);
