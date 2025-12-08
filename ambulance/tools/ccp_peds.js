@@ -305,28 +305,41 @@ export async function run(mountEl){
   }
 
   /* ====== YEARS-specific (ported from Kotlin) ====== */
+  function estimateAgeFromWeight(w){
+    if (!Number.isFinite(w)) return null;
+    if (w <= 24){
+      const approx = Math.floor((w - 8) / 2);
+      return Math.max(1, Math.min(5, approx));
+    }
+    const approx = Math.floor((w - 7) / 3);
+    return Math.max(6, Math.min(14, approx));
+  }
+
   function resolveYears(ageText, weightText){
     if (ageText){
       const age = parseInt(ageText,10);
       if (isNaN(age)) return null;
       if (age<=5){
         const w = age*2 + 8;
-        return {w, header:`Patient estimated weight is ${w} kg.`};
+        return {w, header:`Patient estimated weight is ${w} kg.`, age};
       } else if (age>=6 && age<=14){
         const w = age*3 + 7;
-        return {w, header:`Patient estimated weight is ${w} kg.`};
+        return {w, header:`Patient estimated weight is ${w} kg.`, age};
       }
       return null;
     } else if (weightText){
-      const w = parseInt(weightText,10);
+      const parsed = Number(String(weightText).replace(',','.'));
+      if (!Number.isFinite(parsed)) return null;
+      const w = parsed;
+      const derivedAge = estimateAgeFromWeight(w);
       const minW = 10, maxW = 49;
       if (w < minW){
-        return {w, header:`The weight entered (${w} kg) is less than the estimated weight for a 1-year-old child, which is ${minW} kg.`};
+        return {w, header:`The weight entered (${w} kg) is less than the estimated weight for a 1-year-old child, which is ${minW} kg.`, age: derivedAge};
       }
       if (w > maxW){
-        return {w, header:`The weight entered (${w} kg) exceeds the estimated weight for a 14-year-old child, which is ${maxW} kg.`};
+        return {w, header:`The weight entered (${w} kg) exceeds the estimated weight for a 14-year-old child, which is ${maxW} kg.`, age: derivedAge};
       }
-      return {w, header:`Patient weight is ${w} kg.`};
+      return {w, header:`Patient weight is ${w} kg.`, age: derivedAge};
     }
     return null;
   }
@@ -337,8 +350,18 @@ export async function run(mountEl){
     if (a && w) return {err:"Please fill only one field: Age or Weight."};
     if (!a && !w) return {err:"Please enter Age or Weight."};
     const r = resolveYears(a, w);
-    if (!r) return {err:"This age exceeds the pediatric range. Please refer to the CPG by pressing View Formulary button for appropriate medication guidance."};
-    return {mode: a? 'age':'weight', a: a? parseInt(a,10):null, w:r.w, header:r.header, rawAge:a, rawW:w};
+    if (!r) return {err:"This age exceeds the pediatric range. Please refer to the CPG formulary section for appropriate medication guidance."};
+    const actualAge = a ? parseInt(a,10) : null;
+    const ageResolved = (typeof r.age === 'number' && Number.isFinite(r.age)) ? r.age : actualAge;
+    return {
+      mode: a? 'age':'weight',
+      a: actualAge,
+      w: r.w,
+      header: r.header,
+      rawAge: a,
+      rawW: w,
+      ageResolved
+    };
   }
 
   /* ====== shared UI helpers ====== */
@@ -441,7 +464,7 @@ export async function run(mountEl){
     return {header:h,sections:[ S('Symptomatic Hypoglycaemia','0.5 mg','IM','If no IV access or dextrose ineffective\nReconstituted: 1 mg/1 ml\n\nRef. Dose: Patient weight ≤ 20 kg (age < 6 years) = 0.5 mg IM = 0.5 ml') ]};}
   function bHydrocortison_M(){ const g=getInputsMonths(); if(g.err) return errOut(g.err); const w=g.w,h=g.header; const d=fmt(w*5); return {header:h,sections:[ S('Asthma/Anaphylaxis/Allergic reaction',`${d} mg`,'IV/IO',`MAX dose is 200mg\nSingle dose\nRef. Dose Calculation: ${fmt(w)}kg x 5mg`) ]};}
   function bIprat_M(){ const g=getInputsMonths(); if(g.err) return errOut(g.err); return {header:g.header,sections:[ S('Bronchoconstriction - Neb','0.25mg','NEB','Neb should be mixed to a volume of 5ml\n\n• Ipratropium Bromide must always be administered together with Salbutamol in the same nebuliser — never on its own.\n• Ipratropium Bromide is a single dose. If additional doses are required, request CCP assistance. CCP is required for a second dose; maximum 2 doses may be given 20 minutes apart.\n\nRef. Dose Calculation: 0.25mg for Age < 6 years') ]};}
-  function bKetamine_M(){ const g=getInputsMonths(); if(g.err) return errOut(g.err); if (ageEl.value){ const m=parseInt(ageEl.value,10); if (m<=3) return {header:'Ketamine Not For Use For Patients Less Than 3 Months Old', sections:[S('—','—','—')]}; }
+  function bKetamine_M(){ const g=getInputsMonths(); if(g.err) return errOut(g.err); if (ageEl.value){ const m=parseInt(ageEl.value,10); if (m<3) return {header:'Ketamine Not For Use For Patients Less Than 3 Months Old', sections:[S('—','—','—')]}; }
     const w=g.w,h=g.header; const d025=fmt(w*0.25), d05=fmt(w*0.5), d1=fmt(w*1.0), d2=fmt(w*2.0);
     return {header:h,sections:[
       S('Analgesia (IV/IO)',`${d025} – ${d05} mg`,'IV/IO',`Ref. IV/IO Dose Calculation:\n${fmt(w)}kg x 0.25mg – ${fmt(w)}kg x 0.5mg`),
@@ -592,11 +615,14 @@ Ref. Dose Calculation: ${fmt(w)}kg x 15mg`) ]};}
     ]}; };
 
   Y.Atropine = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
-    let brady, orga; if (g.mode==='age'){ const age=g.a;
+    const age = g.ageResolved ?? g.a ?? null;
+    let brady, orga;
+    if (age !== null){
       if (age<=5){ brady=fmt(w*0.02); orga=fmt(w*0.05); }
       else if (age>=6 && age<=11){ brady='0.5'; orga=fmt(w*0.05); }
       else if (age>=12 && age<=14){ brady='0.5'; orga='2'; }
-    } else { // weight path
+      else { brady=fmt(w*0.02); orga=fmt(w*0.05); }
+    } else {
       if (w<22){ brady=fmt(w*0.02); orga=fmt(w*0.05); }
       else if (w>=22 && w<=34){ brady='0.5'; orga=fmt(w*0.05); }
       else { brady='0.5'; orga='2'; }
@@ -607,13 +633,26 @@ Ref. Dose Calculation: ${fmt(w)}kg x 15mg`) ]};}
     ]}; };
 
   Y.Dexamethasone = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
-    let dose; if (g.mode==='age'){ const age=g.a; dose = (age<=5)? fmt(w*0.6) : (age>=6 && age<=14? '12':'—'); } else { dose = (w<=28)? fmt(w*0.6) : '12'; }
+    const age = g.ageResolved ?? g.a ?? null;
+    let dose;
+    if (age !== null){
+      if (age<=5) dose = fmt(w*0.6);
+      else if (age>=6 && age<=14) dose = '12';
+      else dose = '—';
+    } else {
+      dose = (w<=28)? fmt(w*0.6) : '12';
+    }
     return {header:h,sections:[ S('Croup',`${dose} mg`,'PO/IM/IV',`Max dose 12 mg\nSingle dose\nRef. Dose Calculation: ${w} kg x 0.6mg`) ]}; };
 
   Y['Dextrose 10%'] = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
     const hyp = `${w*5} ml`;
-    let rosc; if (g.mode==='age'){ const age=g.a; if (age<=5){ rosc = fmt(Math.min(w*2.5,50)); } else if (age>=6 && age<=14){ rosc='50'; } }
-    else { rosc = fmt(w<=21? w*2.5 : 50); }
+    const age = g.ageResolved ?? g.a ?? null;
+    let rosc;
+    if (age !== null){
+      if (age<=5){ rosc = fmt(Math.min(w*2.5,50)); }
+      else if (age>=6 && age<=14){ rosc='50'; }
+      else { rosc = fmt(Math.min(w*2.5,50)); }
+    } else { rosc = fmt(w<=21? w*2.5 : 50); }
     return {header:h,sections:[
       S('Hypoglycemia',hyp,'IV/IO',`Ref. Dose Calculation: ${w}kg x 5ml`),
       S('Hypoglycemia in cardiac arrest or ROSC',`${rosc} ml`,'IV/IO',`Ref. Dose Calculation: ${w}kg x 2.5ml`)
@@ -623,18 +662,19 @@ Ref. Dose Calculation: ${fmt(w)}kg x 15mg`) ]};}
     return {header:h,sections:[ S('Anaphylaxis/Allergic reaction',`${dose} mg`,'IV/IO/IM',`MAX dose is 50mg.\n\nRef. Dose Calculation: ${w}kg x 1mg`) ]}; };
 
   Y.Droperidol = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w; let header=g.header;
-    if (g.mode==='age' && g.a>=1 && g.a<=7) return {header: `${header}\n\nNot for use in patients < 8 years old (< 30 kg)`, sections:[S('—','—','—')]};
-    if (g.mode==='weight' && w>=10 && w<=30) return {header:`Patient weight is ${w} kg.\n\nNot for use in patients < 8 years old (< 30 kg)`, sections:[S('—','—','—')]};
+    const age = g.ageResolved ?? g.a ?? null;
+    if (age !== null && age>=1 && age<=7) return {header: `${header}\n\nNot for use in patients < 8 years old (< 30 kg)`, sections:[S('—','—','—')]};
     const min=w*0.1, max=w*0.2;
     return {header,sections:[ S('Acute Behavioural Disturbance - Sedation',`${fmt(min)} mg – ${fmt(max)} mg`,'IV/IM',`Single MAXIMUM dose of 10 mg\nDose may be repeated once after 15 minutes if required\n\nTotal MAXIMUM dose 20 mg\n\nRef. Dose Calculation: ${w} kg x 0.1mg – ${w} kg x 0.2mg`) ]}; };
 
   Y.Fentanyl = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
     const iv=fmt(w*1.0), ivMax=fmt(w*2.0), inDose=fmt(w*2.0), postRSI=fmt(w*0.5);
+    const age = g.ageResolved ?? g.a ?? null;
     const sections=[
       S('Analgesia (IV/IO)',`${iv} mcg`,'IV/IO',`MAX Total Dose ${ivMax} mcg\nRef. Dose Calculation: ${w} kg x 1mcg`),
       S('Analgesia (IN)',`${inDose} mcg`,'IN',`MAX dose per nostril is 0.3 to 0.5 ml.\nRef. Dose Calculation: ${w} kg x 2mcg`)
     ];
-    const rsiAllowed = (g.mode==='age') ? (g.a>=8 && g.a<=14) : (w>28);
+    const rsiAllowed = age !== null ? (age>=8 && age<=14) : (w>28);
     sections.push( rsiAllowed
       ? S('Rapid Sequence Intubation (RSI)', `${fmt(w*1.0)} mcg`, 'IV/IO', `Ref. Dose Calculation: ${w} kg x 1mcg`)
       : S('Rapid Sequence Intubation (RSI)','—','—','Not indicated in this age group for intubation')
@@ -652,20 +692,21 @@ Ref. Dose Calculation: ${fmt(w)}kg x 15mg`) ]};}
     return {header:h,sections:[ S('Asthma/Anaphylaxis/Allergic reaction',`${fmt(dose)} mg`,'IV/IO',`MAX dose is 200 mg\nSingle dose\nRef. Dose Calculation: ${w} kg x 5mg`) ]}; };
 
   Y['Ipratropium Bromide'] = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w; const header=g.header;
-    if (g.mode==='age'){ const a=g.a;
-      if (a<=6) return {header,sections:[ S('Bronchoconstriction - Neb :','0.25 mg','NEB',`Neb should be mixed to a volume of 5 ml
+    const age = g.ageResolved ?? g.a ?? null;
+    if (age !== null){
+      if (age<=6) return {header,sections:[ S('Bronchoconstriction - Neb :','0.25 mg','NEB',`Neb should be mixed to a volume of 5 ml
 
 • Ipratropium Bromide must always be administered together with Salbutamol in the same nebuliser — never on its own.
 • Ipratropium Bromide is a single dose. If additional doses are required, request CCP assistance. CCP is required for a second dose; maximum 2 doses may be given 20 minutes apart.
 
 Ref. Dose Calculation: 0.25 mg for Age < 6 years`) ]};
-      if (a>=7 && a<=14) return {header,sections:[ S('Bronchoconstriction - Neb :','0.25 mg - 0.5 mg','NEB',`Neb should be mixed to a volume of 5 ml
+      if (age>=7 && age<=14) return {header,sections:[ S('Bronchoconstriction - Neb :','0.25 mg - 0.5 mg','NEB',`Neb should be mixed to a volume of 5 ml
 
 • Ipratropium Bromide must always be administered together with Salbutamol in the same nebuliser — never on its own.
 • Ipratropium Bromide is a single dose. If additional doses are required, request CCP assistance. CCP is required for a second dose; maximum 2 doses may be given 20 minutes apart.
 
 Ref. Dose Calculation: 0.25 mg - 0.5 mg for Age > 6 years`) ]};
-      return errOut('This age exceeds the pediatric range. Please refer to the CPG by pressing View Formulary button for appropriate medication guidance.');
+      return errOut('This age exceeds the pediatric range. Please refer to the CPG formulary section for appropriate medication guidance.');
     }
     const doseStr = w<=21 ? '0.25 mg' : '0.25 mg - 0.5 mg';
     const refStr  = w<=21 ? '0.25 mg for Weight ≤ 21 kg' : '0.25 mg - 0.5 mg for Weight > 21 kg';
@@ -679,9 +720,9 @@ Ref. Dose Calculation: ${refStr}`) ]};
 
   Y.Ketamine = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w, h=g.header;
     const d1=fmt(w*0.25), d2=fmt(w*0.5), d3=fmt(w*1.0), d4=fmt(w*2.0);
-    if (g.mode==='age'){
-      const a=g.a;
-      if (a<=7){
+    const age = g.ageResolved ?? g.a ?? null;
+    if (age !== null){
+      if (age<=7){
         return {header:h,sections:[
           S('Analgesia (IV/IO)',`${d1} – ${d2} mg`,'IV/IO',`Ref. IV/IO Dose Calculation:\n${w} kg x 0.25mg – ${w} kg x 0.5mg`),
           S('Analgesia (IM/IN)',`${d2} – ${d3} mg`,'IM/IN',`Ref. IM/IN Dose Calculation:\n${w} kg x 0.5mg – ${w} kg x 1mg`),
@@ -694,7 +735,7 @@ Ref. Dose Calculation: ${refStr}`) ]};
           S('Ketamine IV/IO Infusion','0.01 – 0.05 mg/kg/min','IV/IO infusion','Titrated to maintain sedation post RSI\nDilute 200 mg (4 ml) Ketamine with 16 ml NS to a total of 20 ml to give a concentration of 10 mg/ml.\nStart infusion at desired range and titrate to effect.')
         ]};
       }
-      if (a>=8 && a<=14){
+      if (age>=8 && age<=14){
         return {header:h,sections:[
           S('Analgesia (IV/IO)',`${d1} – ${d2} mg`,'IV/IO',`Ref. IV/IO Dose Calculation:\n${w} kg x 0.25 – ${w} kg x 0.5mg`),
           S('Analgesia (IM/IN)',`${d2} – ${d3} mg`,'IM/IN',`Ref. IM/IN Dose Calculation:\n${w} kg x 0.5 – ${w} kg x 1mg`),
@@ -708,7 +749,7 @@ Ref. Dose Calculation: ${refStr}`) ]};
           S('Ketamine IV/IO Infusion','0.01 – 0.05 mg/kg/min','IV/IO infusion','Titrated to maintain sedation post RSI\nDilute 200 mg (4 ml) Ketamine with 16 ml NS to a total of 20 ml to give a concentration of 10 mg/ml.\nStart infusion at desired range and titrate to effect.')
         ]};
       }
-      return errOut('This age exceeds the pediatric range. Please refer to the CPG by pressing View Formulary button for appropriate medication guidance.');
+      return errOut('This age exceeds the pediatric range. Please refer to the CPG formulary section for appropriate medication guidance.');
     }
     // weight path
     const rsiUnstable = (w<=28)? S('Rapid Sequence Intubation – Unstable Patient','—','—','Not indicated in this age group for intubation')
@@ -729,8 +770,8 @@ Ref. Dose Calculation: ${refStr}`) ]};
   };
 
   Y['Magnesium Sulphate'] = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
-    const min=w*25, maxRaw=w*50; const capAge = (g.mode==='age' && g.a>=10 && g.a<=14); const capW=(g.mode==='weight' && w>34);
-       const max = (capAge || capW)? 2000 : maxRaw;
+    const min=w*25;
+    const max = Math.min(w*50, 2000); // enforce 2 g ceiling even when weight is entered directly
     const doseText = `${fmt(min)} mg - ${fmt(max)} mg`;
     return {header:h,sections:[
       S('Bronchoconstriction', doseText, 'IV/IO', `MAX dose is 2g\nInfused over 20 minutes\nRef. Dose Calculation: ${w} kg x 25mg - ${w} kg x 50mg`),
@@ -748,35 +789,78 @@ Ref. Dose Calculation: ${refStr}`) ]};
   };
 
   Y.Naloxone = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
-    let dose; if (g.mode==='age'){ const a=g.a; dose = (a>=10 && a<=14) ? 0.4 : (w*0.01); } else { dose = (w<=34) ? w*0.01 : 0.4; }
-    const ref = (g.mode==='age')
-      ? `Ref. Dose Calculation: ${w} kg x 0.01mg`
-      : (w<=40 ? `Ref. Dose Calculation: ${w} kg x 0.01mg` : `Ref. Dose Calculation: ${w} kg x 0.01mg but MAX dose is 0.4 mg`);
+    const age = g.ageResolved ?? g.a ?? null;
+    let dose, ref;
+    if (age !== null){
+      if (age>=10 && age<=14){
+        dose = 0.4;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.01mg but MAX dose is 0.4 mg`;
+      } else {
+        dose = w*0.01;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.01mg`;
+      }
+    } else {
+      if (w<=34){
+        dose = w*0.01;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.01mg`;
+      } else {
+        dose = 0.4;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.01mg but MAX dose is 0.4 mg`;
+      }
+    }
     return {header:h,sections:[
       S('Opioid Overdose', `${fmt(dose)} mg`, 'IV/IO/IM', `MAX single dose is 0.4mg\nMAX total dose 2mg\nRepeat PRN every 2-3 minutes\n\n${ref}`)
     ]};
   };
 
   Y.Ondansetron = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w,h=g.header;
-    let dose; if (g.mode==='age'){ const a=g.a; dose = (a>=12 && a<=14) ? 4.0 : w*0.1; } else { dose = (w<=40) ? w*0.1 : 4.0; }
-    const ref = (g.mode==='age' ? (g.a>=12 && g.a<=14)
-      ? `Ref. Dose Calculation: ${w} kg x 0.1mg but MAX dose is 4 mg`
-      : `Ref. Dose Calculation: ${w} kg x 0.1mg`
-    : (w<=40)
-      ? `Ref. Dose Calculation: ${w} kg x 0.1mg`
-      : `Ref. Dose Calculation: ${w} kg x 0.1mg but MAX dose is 4 mg`);
+    const age = g.ageResolved ?? g.a ?? null;
+    let dose, ref;
+    if (age !== null){
+      if (age>=12 && age<=14){
+        dose = 4.0;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.1mg but MAX dose is 4 mg`;
+      } else {
+        dose = w*0.1;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.1mg`;
+      }
+    } else {
+      if (w<=40){
+        dose = w*0.1;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.1mg`;
+      } else {
+        dose = 4.0;
+        ref = `Ref. Dose Calculation: ${w} kg x 0.1mg but MAX dose is 4 mg`;
+      }
+    }
     return {header:h,sections:[
       S('Nausea & Vomiting', `${fmt(dose)} mg`, 'IV/IM', `MAX dose is 4 mg. Given Slowly.\nDilution: 4 mg (2 ml) + 8 ml NaCl = 4 mg/10 ml = 0.4 mg/1 ml\n\n${ref}`)
     ]};
   };
 
   Y.Paracetamol = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err);
-    // weight-age resolved already
-    const w=g.w, h=g.header, isAge=(g.mode==='age'), age=g.a ?? null;
+    const w=g.w, h=g.header;
+    const age = g.ageResolved ?? g.a ?? null;
     const oral = w*15.0;
-    const iv = (isAge && age===1) ? (w*7.5) : (!isAge && w<=11 ? (w*7.5) : (w*15.0));
+    let iv, ivRef;
+    if (age !== null){
+      if (age===1){
+        iv = w*7.5;
+        ivRef = `Ref. Dose Calculation: ${w} kg x 7.5mg`;
+      } else {
+        iv = w*15.0;
+        ivRef = `Ref. Dose Calculation: ${w} kg x 15mg`;
+      }
+    } else {
+      if (w<=11){
+        iv = w*7.5;
+        ivRef = `Ref. Dose Calculation: ${w} kg x 7.5mg`;
+      } else {
+        iv = w*15.0;
+        ivRef = `Ref. Dose Calculation: ${w} kg x 15mg`;
+      }
+    }
     const oralRef = `Ref. Dose Calculation: ${w} kg x 15mg`;
-    const ivRef = ( (isAge && age===1) || (!isAge && w<=11) ) ? `Ref. Dose Calculation: ${w} kg x 7.5mg` : `Ref. Dose Calculation: ${w} kg x 15mg`;
     return {header:h,sections:[
       S('Pain and/or fever (Oral)', `${fmt(oral)} mg`, 'PO', `Paracetamol syrup: 120 mg/5 ml\n\n${oralRef}`),
       S('Moderate Pain (IV)', `${fmt(iv)} mg`, 'IV', `MAX dose is 20 mg/kg.\nUndiluted: 1000 mg/100 ml = 10 mg/1 ml\n\n${ivRef}`)
@@ -785,21 +869,21 @@ Ref. Dose Calculation: ${refStr}`) ]};
 
   Y.Rocuronium = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err); const w=g.w, h=g.header;
     const dosePost = w*0.25, dosePre = w*1.5;
+    const age = g.ageResolved ?? g.a ?? null;
     let sections;
-    if (g.mode==='age'){
-      const a=g.a;
-      if (a<=7){
+    if (age !== null){
+      if (age<=7){
         sections = [
           S('PRE Intubation Paralytic','—','—','Rocuronium not indicated in this age group for PRE intubation.'),
           S('POST Intubation Paralytic', `${fmt(dosePost)} mg`, 'IV', `Repeat PRN every 30–45 minutes.\n\nRef. Dose Calculation: ${w} kg x 0.25mg`)
         ];
-      } else if (a>=8 && a<=14){
+      } else if (age>=8 && age<=14){
         sections = [
           S('PRE Intubation Paralytic', `${fmt(dosePre)} mg`, 'IV', `NOTE: RSI PRIMARY PARALYTIC AGENT ONLY FOR: MEDICAL and TRAUMA PATIENTS ≥ 8 YEARS.\nUndiluted: 10 mg/1 ml.\nRef. Dose Calculation: ${w} kg x 1.5mg`),
           S('POST Intubation Paralytic', `10 mg`, 'IV', `Repeat PRN every 30–45 minutes.\n\nRef. Dose Calculation: ${w} kg x 0.25`)
         ];
       } else {
-        return errOut('This age exceeds the pediatric range. Please refer to the CPG by pressing View Formulary button for appropriate medication guidance.');
+        return errOut('This age exceeds the pediatric range. Please refer to the CPG formulary section for appropriate medication guidance.');
       }
     } else {
       if (w<=28){
@@ -818,15 +902,16 @@ Ref. Dose Calculation: ${refStr}`) ]};
   };
 
   Y.Salbutamol = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err);
-    const w=g.w, h=g.header, age=g.a ?? null;
+    const w=g.w, h=g.header;
+    const age = g.ageResolved ?? g.a ?? null;
     let sections;
-    if (g.mode==='age' && age<=5){
+    if (age !== null && age<=5){
       const neb='2.5', inf=fmt(w*10.0);
       sections = [
         S('Bronchoconstriction (Neb)', `${neb} mg`, 'NEB', '2.5mg/3ml nebule - Neb should be mixed to a volume of 5ml\nCan be given with Ipratropium Bromide'),
         S('Bronchoconstriction (IV/IO)', `${inf} mcg`, 'IV/IO infusion', `MAX dose is 250mcg\nInfused over 10 minutes\n\nRef. Dose Calculation: ${w} kg x 10mcg`)
       ];
-    } else if (g.mode==='age' && age>=6 && age<=14){
+    } else if (age !== null && age>=6 && age<=14){
       sections = [
         S('Bronchoconstriction (Neb)', `2.5 – 5 mg`, 'NEB', '2.5mg/3ml nebule - Neb should be mixed to a volume of 5ml\nCan be given with Ipratropium Bromide'),
         S('Bronchoconstriction (IV/IO)', `250 mcg`, 'IV/IO infusion', `MAX dose is 250mcg\nInfused over 10 minutes\n\nRef. Dose Calculation: ${w} kg x 10mcg`)
@@ -856,30 +941,32 @@ Ref. Dose Calculation: ${refStr}`) ]};
   };
 
   Y.WAAFELSS = ()=>{ const g=getInputsYears(); if(g.err) return errOut(g.err);
-    const w=g.w, a=g.a ?? null;
+    const w=g.w;
+    const age = g.ageResolved ?? g.a ?? null;
+    const actualAge = g.a ?? null;
     const header = 'The WAAFELSS for your patient:\n';
     const adrMg=fmt(w*0.01), adrMl=fmt(w/10.0);
     const amiMg=fmt(w*5.0),  amiMl=adrMl;
     const flMin=fmt(w*10.0), flMax=fmt(w*20.0);
     let j1=w*4, j2=w*6, j3=w*8, j4=w*10;
-    if (g.mode==='age' && a!==null){
-      if (a<=5){ j1=Math.min(j1,360); j2=Math.min(j2,360); j3=Math.min(j3,360); j4=Math.min(j4,360); }
-      else if (a>=6 && a<=14){ j3=Math.min(j3,360); j4=Math.min(j4,360); }
+    if (age !== null){
+      if (age<=5){ j1=Math.min(j1,360); j2=Math.min(j2,360); j3=Math.min(j3,360); j4=Math.min(j4,360); }
+      else if (age>=6 && age<=14){ j3=Math.min(j3,360); j4=Math.min(j4,360); }
     } else { j3=Math.min(j3,360); j4=Math.min(j4,360); }
     const rosc = fmt(Math.min(w*2.5,50.0));
-    const sga = (g.mode==='age' && a!==null)
-      ? (a<=5 ? (w>=10 && w<=24 ? 'Size 2' : (w>=25 && w<=35 ? 'Size 2.5' : '—'))
-              : (a>=6 && a<=14 ? (w>=25 && w<=35 ? 'Size 2.5' : 'Consider adult SGA sizes') : '—'))
+    const sga = (age !== null)
+      ? (age<=5 ? (w>=10 && w<=24 ? 'Size 2' : (w>=25 && w<=35 ? 'Size 2.5' : '—'))
+                : (age>=6 && age<=14 ? (w>=25 && w<=35 ? 'Size 2.5' : 'Consider adult SGA sizes') : '—'))
       : (w>=10 && w<=24 ? 'Size 2' : (w>=25 && w<=35 ? 'Size 2.5' : 'Consider adult SGA sizes'));
     // Chest wall decompression
     let cwdDose, cwdNotes;
-    if (g.mode==='age' && a!==null){
-      if (a<=5){
-        if (a<2){ cwdDose='IV Catheter 22 g'; cwdNotes='(Color: Blue | Length: 2.5 cm)'; }
+    if (age !== null){
+      if (age<=5){
+        if (age<2){ cwdDose='IV Catheter 22 g'; cwdNotes='(Color: Blue | Length: 2.5 cm)'; }
         else   { cwdDose='IV Catheter 18 g'; cwdNotes='(Color: Green | Length: 3.2 cm)'; }
-      } else if (a===6){
+      } else if (age===6){
         cwdDose='IV Catheter 18 g'; cwdNotes='(Color: Green | Length: 3.2 cm)';
-      } else if (a>=7 && a<=13){
+      } else if (age>=7 && age<=13){
         cwdDose='IV Catheter 16 g'; cwdNotes='(Color: Grey | Length: 4.5 cm)';
       } else {
         cwdDose='IV Catheter 16 g'; cwdNotes='(Color: Grey | Length: 4.5 cm)\nConsider patient size\nLonger needle maybe required\nARS Needle 10 g or 14 g)';
@@ -890,8 +977,6 @@ Ref. Dose Calculation: ${refStr}`) ]};
       else if (w>=28 && w<=48){ cwdDose='IV Catheter 16 g'; cwdNotes='(Color: Grey | Length: 4.5 cm)'; }
       else { cwdDose='IV Catheter 16 g'; cwdNotes='(Color: Grey | Length: 4.5 cm)\nConsider patient size\nLonger needle maybe required\nARS Needle 10 g or 14 g'; }
     }
-    const sbp = (g.mode==='age' && a!==null) ? `${a*2 + 70} mmHg` : null;
-
     const sections = [
       S('Weight', `${w} kg`, '—'),
       S('Adrenaline', `${adrMg} mg (${adrMl} ml)`, 'IV/IO'),
@@ -899,7 +984,7 @@ Ref. Dose Calculation: ${refStr}`) ]};
       S('Fluids', `${flMin}–${flMax} ml`, 'IV'),
       S('SGA', sga || '—', 'Airway'),
       S('Energy Escalation', `${fmt(j1)} J → ${fmt(j2)} J → ${fmt(j3)} J → ${fmt(j4)} J`, 'Defibrillation'),
-      ...(sbp ? [S('Systolic BP', sbp, '—')] : []),
+      ...((g.mode==='age' && actualAge!==null) ? [S('Systolic BP', `${actualAge*2 + 70} mmHg`, '—')] : []),
       S('Dextrose 10%', `${rosc} ml`, 'IV/IO'),
       S('Chest Wall Decompression', cwdDose, '—', cwdNotes)
     ];
@@ -993,4 +1078,3 @@ Ref. Dose Calculation: ${refStr}`) ]};
   renderGrid();
   setMode('months'); // default landing mode
 }
-
