@@ -92,6 +92,24 @@ export async function run(mountEl){
 
       .result{margin-top:12px;padding:14px;border-radius:12px;background:var(--result);border:1px solid var(--border)}
       .title{font-weight:900;margin-bottom:8px;font-size:20px;line-height:1.1;color:var(--text)}
+      .title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+      .view-btn{
+        appearance:none;
+        border:1px solid transparent;
+        background:linear-gradient(180deg,#2563eb,#1d4ed8);
+        color:#fff;
+        border-radius:10px;
+        padding:8px 14px;
+        font-weight:900;
+        font-size:12px;
+        min-height:34px;
+        cursor:pointer;
+        box-shadow:0 6px 16px rgba(37,99,235,.35);
+        transition:transform .1s ease, box-shadow .1s ease, opacity .1s ease;
+      }
+      .view-btn:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+      .view-btn:active{transform:translateY(1px) scale(.99);box-shadow:0 4px 10px rgba(37,99,235,.4)}
+      .view-btn[disabled]{opacity:.35;cursor:not-allowed;box-shadow:none}
       .header{font-size:14px;font-style:italic;font-weight:700;color:var(--text);opacity:.85;margin-bottom:8px;white-space:pre-wrap}
       .sec-h{font-size:12px;font-weight:900;color:#64748b;margin:8px 0 4px;letter-spacing:.08em;text-transform:uppercase}
       .sec-k{font-size:20px;font-weight:1000;color:var(--text)}
@@ -136,7 +154,10 @@ export async function run(mountEl){
         <div class="grid" id="grid"></div>
 
         <div class="result" aria-live="polite">
-          <div id="rTitle" class="title">—</div>
+          <div class="title-row">
+            <div id="rTitle" class="title">—</div>
+            <button id="viewFormularyBtn" class="view-btn" type="button" disabled>View Formulary</button>
+          </div>
           <div id="rContext" class="context"></div>
           <div id="rHeader" class="header"></div>
           <div id="rBody"></div>
@@ -144,6 +165,130 @@ export async function run(mountEl){
       </div>
     </div>
   `;
+
+  const FALLBACK = {
+    urlPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpg-81w9d1f.pdf#page="
+  };
+
+  function getCfg() {
+    const cfg =
+      (window.APP_CONFIG && window.APP_CONFIG.pdfViewer && window.APP_CONFIG.pdfViewer.helpers) ||
+      (window.CONFIG && window.CONFIG.pdfViewer && window.CONFIG.pdfViewer.helpers) ||
+      (window.__CONFIG && window.__CONFIG.pdfViewer && window.__CONFIG.pdfViewer.helpers) ||
+      null;
+
+    const urlPage = (cfg && cfg.urlPage) ? String(cfg.urlPage) : FALLBACK.urlPageBase;
+    const urlPageBase = urlPage.includes("#page=") ? urlPage : (urlPage.replace(/#.*$/, "") + "#page=");
+    return { urlPageBase };
+  }
+
+  const CFG = getCfg();
+
+  function ensureViewerModal() {
+    let modal = document.getElementById("pvModal");
+    if (modal) return modal;
+
+    if (!document.getElementById("pvModalStyle")) {
+      const st = document.createElement("style");
+      st.id = "pvModalStyle";
+      st.textContent = `
+        .pv-modal{
+          position:fixed; inset:0; z-index:999999;
+          background: rgba(0,0,0,.55);
+          display:none;
+          padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                   env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        .pv-modal.show{ display:block; }
+
+        .pv-sheet{
+          position:absolute; inset:0;
+          background: var(--surface);
+          display:flex; flex-direction:column;
+        }
+
+        .pv-bar{
+          position: relative;
+          flex:none;
+          height: 48px;
+          border-bottom: 1px solid var(--border);
+          background: var(--surface);
+          display:flex;
+          align-items:center;
+          padding: 0 12px;
+        }
+
+        .pv-back{
+          z-index:2;
+          border:1px solid var(--border);
+          background: var(--surface-2);
+          color: var(--text);
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-weight:950;
+          cursor:pointer;
+        }
+
+        .pv-title{
+          position:absolute;
+          left:50%;
+          transform:translateX(-50%);
+          font-weight:950;
+          font-size:14px;
+          color:var(--text);
+          max-width:60%;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+          pointer-events:none;
+        }
+
+        .pv-iframe{
+          flex:1;
+          width:100%;
+          border:none;
+          background:#fff;
+        }
+      `;
+      document.head.appendChild(st);
+    }
+
+    modal = document.createElement("div");
+    modal.id = "pvModal";
+    modal.className = "pv-modal";
+    modal.innerHTML = `
+      <div class="pv-sheet" role="dialog" aria-modal="true">
+        <div class="pv-bar">
+          <button class="pv-back" id="pvBack" type="button">Back</button>
+          <div class="pv-title" id="pvTitle">Formulary</div>
+        </div>
+        <iframe class="pv-iframe" id="pvFrame" src="about:blank"></iframe>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const frame = modal.querySelector("#pvFrame");
+    const backBtn = modal.querySelector("#pvBack");
+    const titleEl = modal.querySelector("#pvTitle");
+
+    backBtn.addEventListener("click", () => {
+      modal.classList.remove("show");
+      frame.src = "about:blank";
+    });
+
+    modal.__open = (url, title) => {
+      titleEl.textContent = title || "Formulary";
+      frame.src = url;
+      requestAnimationFrame(() => modal.classList.add("show"));
+    };
+
+    return modal;
+  }
+
+  function openAtPage(page, title) {
+    const modal = ensureViewerModal();
+    modal.__open(CFG.urlPageBase + String(page), title || "Formulary");
+  }
 
   const $  = s => mountEl.querySelector(s);
   const $$ = s => [...mountEl.querySelectorAll(s)];
@@ -157,6 +302,7 @@ export async function run(mountEl){
   const rContext = $('#rContext');
   const rHeader = $('#rHeader');
   const rBody   = $('#rBody');
+  const viewBtn = $('#viewFormularyBtn');
   const grid    = $('#grid');
   const btnMonths = $('#modeMonths');
   const btnYears  = $('#modeYears');
@@ -277,6 +423,30 @@ export async function run(mountEl){
     'Rocuronium','Salbutamol','TXA','WAAFELSS'
   ];
 
+  const FORMULARY_PAGES = {
+    Adenosine: 269,
+    Adrenaline: 272,
+    Amiodarone: 276,
+    Atropine: 281,
+    Dexamethasone: 290,
+    'Dextrose 10%': 293,
+    Diphenhydramine: 298,
+    Droperidol: 301,
+    Fentanyl: 304,
+    Glucagon: 310,
+    Hydrocortison: 315,
+    'Ipratropium Bromide': 321,
+    Ketamine: 324,
+    'Magnesium Sulphate': 332,
+    Midazolam: 339,
+    Naloxone: 342,
+    Ondansetron: 347,
+    Paracetamol: 350,
+    Rocuronium: 357,
+    Salbutamol: 360,
+    TXA: 365
+  };
+
   /* ====== MODE ====== */
   // 'months' or 'years'
   let mode = 'months';
@@ -368,6 +538,18 @@ export async function run(mountEl){
   function showAlert(msg){ alertEl.textContent = msg; alertEl.style.display = 'block'; }
   function hideAlert(){ alertEl.style.display = 'none'; alertEl.textContent=''; }
 
+  function updateFormularyButton(name){
+    const page = name ? FORMULARY_PAGES[name] : null;
+    viewBtn.dataset.title = name || '';
+    if (page){
+      viewBtn.disabled = false;
+      viewBtn.dataset.page = String(page);
+    } else {
+      viewBtn.disabled = true;
+      viewBtn.removeAttribute('data-page');
+    }
+  }
+
   function setTitle(name){
     rTitle.textContent = name;
     $$('.btn').forEach(b=>{
@@ -375,6 +557,7 @@ export async function run(mountEl){
       b.dataset.active = isActive ? 'true' : 'false';
     });
     rTitle.style.color = COLORS[name] || 'var(--text)';
+    updateFormularyButton(name);
   }
 
   function renderSections(sections, kvMode=false){
@@ -1042,6 +1225,13 @@ Ref. Dose Calculation: ${refStr}`) ]};
     if (out.header) rHeader.textContent = out.header; else rHeader.textContent = '';
     renderSections(out.sections, !!out.kv);
   }
+
+  viewBtn.addEventListener('click', ()=>{
+    const page = Number(viewBtn.dataset.page);
+    if (!Number.isFinite(page)) return;
+    const title = viewBtn.dataset.title || rTitle.textContent || 'Formulary';
+    openAtPage(page, `${title} – Formulary`);
+  });
 
   /* ====== mode switching ====== */
   function setMode(m){
