@@ -49,8 +49,19 @@ export async function run(root) {
   style.textContent = `
   ${CSS_TOKENS}
 
-  .fc-wrap{padding:var(--pad);max-width:900px;margin:0 auto;-webkit-text-size-adjust:100%}
-  .fc-title{margin:0 0 10px;font-size:var(--title-size);text-align:center;font-weight:var(--title-weight);letter-spacing:.2px}
+.fc-wrap{
+  padding:var(--pad);
+  max-width:900px;
+  margin:0 auto;
+  -webkit-text-size-adjust:100%;
+
+  /* NEW: vertical centering */
+  min-height: calc(100dvh - 24px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
 
   .fc-top{
     display:flex; flex-direction:column; gap:10px;
@@ -103,7 +114,7 @@ export async function run(root) {
     background: var(--surface-2);
     border-radius: var(--card-radius);
     padding: var(--card-pad-y) var(--card-pad-x);
-    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
     cursor:pointer;
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
   }
@@ -124,6 +135,20 @@ export async function run(root) {
     color: var(--muted);
     font-weight: 800;
   }
+
+/* NEW: stronger card contrast in light mode */
+@media (prefers-color-scheme: light){
+  .fc-card{
+    background: #ffffff;
+    border-color: rgba(0,0,0,.12);
+    box-shadow: 0 10px 22px rgba(0,0,0,.08);
+  }
+  .fc-badge{
+    background: rgba(0,0,0,.04);
+    border-color: rgba(0,0,0,.10);
+  }
+}
+
 
   .fc-badge{
     flex:none;
@@ -202,21 +227,131 @@ export async function run(root) {
 
         <div class="fc-actions">
           <button class="fc-btn" id="fcClear" type="button">Clear</button>
-          <button class="fc-btn" id="fcOpenViewer" type="button">Open PDF Viewer</button>
         </div>
       </div>
 
       <div id="fcList" class="fc-grid" aria-live="polite"></div>
 
-      <div class="fc-note">Tip: Tap any item to jump directly to that page in the PDF viewer.</div>
     </div>
   `);
+
+function ensureViewerModal() {
+  let modal = document.getElementById("pvModal");
+  if (modal) return modal;
+
+  // Inject styles once into <head>
+  if (!document.getElementById("pvModalStyle")) {
+    const style = document.createElement("style");
+    style.id = "pvModalStyle";
+    style.textContent = `
+      .pv-modal{
+        position:fixed; inset:0; z-index:999999;
+        background: rgba(0,0,0,.55);
+        display:none;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+      .pv-modal.show{ display:block; }
+
+      .pv-sheet{
+        position:absolute; inset:0;
+        background: var(--surface);
+        display:flex; flex-direction:column;
+      }
+
+      .pv-bar{
+        position: relative;
+        flex:none;
+        height: 48px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        display:flex;
+        align-items:center;
+        padding: 0 12px;
+      }
+
+      .pv-back{
+        z-index:2;
+        border:1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight:950;
+        cursor:pointer;
+      }
+
+      .pv-title{
+        position:absolute;
+        left:50%;
+        transform:translateX(-50%);
+        font-weight:950;
+        font-size:14px;
+        color:var(--text);
+        max-width:60%;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        pointer-events:none;
+      }
+
+      .pv-iframe{
+        flex:1;
+        width:100%;
+        border:none;
+        background:#fff;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Build modal once and attach to BODY (critical)
+  modal = document.createElement("div");
+  modal.id = "pvModal";
+  modal.className = "pv-modal";
+  modal.innerHTML = `
+    <div class="pv-sheet" role="dialog" aria-modal="true">
+      <div class="pv-bar">
+        <button class="pv-back" id="pvBack" type="button">Back</button>
+        <div class="pv-title" id="pvTitle">Flowchart</div>
+      </div>
+      <iframe class="pv-iframe" id="pvFrame" src="about:blank"></iframe>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const frame = modal.querySelector("#pvFrame");
+  const backBtn = modal.querySelector("#pvBack");
+  const titleEl = modal.querySelector("#pvTitle");
+
+  function close() {
+    modal.classList.remove("show");
+    frame.src = "about:blank";
+  }
+
+  backBtn.addEventListener("click", close);
+
+  modal.__open = (url, title) => {
+    titleEl.textContent = title || "Flowchart";
+    frame.src = url;
+
+    // Make sure it shows immediately even during scroll inertia
+    requestAnimationFrame(() => {
+      modal.classList.add("show");
+    });
+  };
+
+  return modal;
+}
+
+
+
 
   const $q = root.querySelector("#fcQ");
   const $count = root.querySelector("#fcCount");
   const $list = root.querySelector("#fcList");
   const $clear = root.querySelector("#fcClear");
-  const $openViewer = root.querySelector("#fcOpenViewer");
+
 
   // =========================
   // HELPERS
@@ -344,18 +479,20 @@ export async function run(root) {
       card.innerHTML = `
         <div class="left">
           <div class="name">${escapeHtml(x.title)}</div>
-          <div class="sub">Tap to open in PDF viewer</div>
         </div>
         <div class="fc-badge">Page ${x.page}</div>
       `;
 
-      function open() {
-        safeVibrate(6);
-        // Persist query in hash before leaving.
-        setHashState($q.value || "");
-        const url = CFG.urlPageBase + String(x.page);
-        location.href = url;
-      }
+function open() {
+  safeVibrate(6);
+  setHashState($q.value || "");
+  const url = CFG.urlPageBase + String(x.page);
+  const modal = ensureViewerModal();
+modal.__open(url, x.title);
+
+
+}
+
 
       card.addEventListener("click", open);
       card.addEventListener("keydown", (e) => {
@@ -404,13 +541,7 @@ export async function run(root) {
     $q.focus();
   });
 
-  $openViewer.addEventListener("click", () => {
-    safeVibrate(6);
-    setHashState($q.value || "");
-    // Open the PDF viewer at page 1 (or whatever the base does if no page number)
-    const url = CFG.urlPageBase + "1";
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
+
 
   // Search
   let t = null;
