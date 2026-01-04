@@ -104,14 +104,18 @@ export async function run(root) {
   .cw-input input{
     width:100%;
     border:none; outline:none; background:transparent;
-    color:var(--text); font-weight:800; font-size:14px;
+    color:var(--text); font-weight:800; font-size:16px;
+  }
+  .cw-input input::placeholder{
+    font-size:13px;
+    color:var(--muted);
   }
   .cw-input .meta{
     flex:none; font-size:12px; color:var(--muted); font-weight:900; white-space:nowrap;
   }
 
   .cw-hint{
-    font-size: 12px;
+    font-size: 9px;
     color: var(--muted);
     font-weight: 800;
     margin-top: 2px;
@@ -352,14 +356,36 @@ export async function run(root) {
     const backBtn = modal.querySelector("#pvBack");
     const titleEl = modal.querySelector("#pvTitle");
 
-    backBtn.addEventListener("click", () => {
+    function closeModal() {
       modal.classList.remove("show");
       frame.src = "about:blank";
+      modal.__historyActive = false;
+      if (modal.__popHandler) {
+        window.removeEventListener("popstate", modal.__popHandler);
+        modal.__popHandler = null;
+      }
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (modal.__historyActive) {
+        history.back();
+      } else {
+        closeModal();
+      }
     });
 
     modal.__open = (url, title) => {
       titleEl.textContent = title || "CPG";
       frame.src = url;
+      if (!modal.__popHandler) {
+        modal.__popHandler = () => {
+          if (!modal.__historyActive) return;
+          closeModal();
+        };
+        window.addEventListener("popstate", modal.__popHandler);
+      }
+      modal.__historyActive = true;
+      history.pushState({ pvModal: true }, "");
       requestAnimationFrame(() => modal.classList.add("show"));
     };
 
