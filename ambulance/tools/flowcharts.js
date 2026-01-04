@@ -78,7 +78,7 @@ export async function run(root) {
   }
   .fc-search input{
     width:100%; border:none; outline:none; background:transparent;
-    color:var(--text); font-weight:800; font-size:14px;
+    color:var(--text); font-weight:800; font-size:16px;
   }
   .fc-search .meta{
     flex:none; font-size:12px; color:var(--muted); font-weight:800;
