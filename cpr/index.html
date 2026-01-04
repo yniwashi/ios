@@ -478,22 +478,8 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
           </svg>
           Log DSED
         </button>
-        <button id="retrieveLog" class="btn" style="background:linear-gradient(180deg,#334155,#1f2937);border-color:#475569">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round"
-      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-  </svg>
-  Retrieve Log
-</button>
-
-       <button id="viewLogs" class="btn" style="background:linear-gradient(180deg,#475569,#334155);border-color:#64748b">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-  </svg>
-  View Logs
-</button>
-
+        <button id="retrieveLog" class="btn" style="background:linear-gradient(180deg,#334155,#1f2937);border-color:#475569">Retrieve Log</button>
+        <button id="viewLogs" class="btn" style="background:linear-gradient(180deg,#475569,#334155);border-color:#64748b">View Logs</button>
       </div>
     </div>
 
@@ -616,7 +602,7 @@ function navigateBack(){
     showBackWarning(EXIT_MSG);
     return;
   }
-  if (document.referrer && document.referrer !== location.href){
+  if (window.history.length > 1){
     history.back();
     return;
   }
@@ -632,15 +618,7 @@ window.addEventListener('beforeunload', (e)=>{
     e.returnValue = "";
   }
 });
-(function installHistoryGuard(){
-  try{ history.pushState({guard:1}, ""); }catch{}
-  window.addEventListener('popstate', ()=>{
-    if (sessionOngoing()){
-      showBackWarning(EXIT_MSG);
-      try{ history.pushState({guard:1}, ""); }catch{}
-    }
-  });
-})();
+
 
 /* ===== HELPERS ===== */
 const $ = id => document.getElementById(id);
