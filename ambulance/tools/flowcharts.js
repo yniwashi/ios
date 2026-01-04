@@ -54,12 +54,6 @@ export async function run(root) {
   max-width:900px;
   margin:0 auto;
   -webkit-text-size-adjust:100%;
-
-  /* NEW: vertical centering */
-  min-height: calc(100dvh - 24px);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
 }
 
 
@@ -565,4 +559,3 @@ modal.__open(url, x.title);
     $list.innerHTML = `<div class="fc-empty">${escapeHtml(err && err.message ? err.message : "Failed to load.")}</div>`;
   }
 }
-
