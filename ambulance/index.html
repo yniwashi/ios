@@ -1,3 +1,41 @@
+<!--
+  Messaging overview / mini-readme:
+  1. Terms & Conditions Gate
+     - HTML block near the top (#tacGate) that remains hidden until JS shows it.
+       JS wires Agree/Cancel; consent lives in localStorage key TAC_KEY ("amb_tac_v2").
+       Bump TAC_KEY and update the gate copy whenever Terms change. Cancel replaces the
+       entire body with a reminder and closes the app a moment later.
+
+  2. Shortcuts Mode block
+     - Static header + description + toggle. The JS `toggle` element determines whether
+       Shortcuts Mode is active; this drives button behavior, the News card visibility,
+       the Shortcuts banner, and can be read elsewhere (render()) to branch per mode.
+
+  3. Shortcuts download banner
+     - `#scBanner` remains hidden until render() decides to show it (current logic:
+       only when Shortcuts Mode is enabled and SHOW_SHORTCUTS_BANNER isn’t false).
+       Update the CTA by changing SHORTCUT_DOWNLOAD_URL (links the Download button)
+       and the copy inside the HTML block as needed.
+
+  4. News card (`NEWS_MESSAGE`)
+     - Inline card that lives under Shortcuts Mode. Controlled by:
+         SHOW_NEWS: master toggle.
+         NEWS_DISMISSED_KEY: bump string to re-show after users dismiss.
+         NEWS_MESSAGE: template HTML—keep IDs for download/settings/close if you want
+           the existing event handlers. Card only appears when Shortcuts Mode is on,
+           SHOW_NEWS is true, message isn’t empty, and the dismissal key hasn’t been set.
+
+  5. What’s New modal
+     - Centered overlay defined near the bottom of the HTML. Controlled by:
+         WHATS_NEW_ENABLED: disable in emergencies without removing markup.
+         WHATS_NEW_KEY: bump whenever you change release notes to force a re-show.
+         WHATS_NEW_TARGET: "default", "shortcuts", or "both" to limit which mode sees it.
+         WHATS_NEW_MESSAGE: HTML body inserted into the modal.
+       The overlay locks scroll and tracks dismissals in localStorage; clicking outside,
+       pressing ESC, or tapping Close stores the key so it stays hidden until you bump it.
+
+  Keep the comment blocks near each config in sync when adding or revising announcements.
+-->
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
 <head>
@@ -223,6 +261,21 @@
     .news figcaption{margin-top:4px;font-size:12px;color:var(--muted);text-align:center}
     .news .btn{display:inline-block;padding:8px 12px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#0D5BB5);color:#fff!important;border:1px solid color-mix(in oklab,var(--accent) 60%,transparent);font-weight:800;font-size:13px;text-decoration:none;box-shadow:var(--shadow);margin-top:6px}
 
+    /* What's New modal */
+    .wn-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:color-mix(in oklab,var(--bg) 55%,#02050bed);backdrop-filter:blur(10px);z-index:99998}
+    .wn-card{width:min(540px,calc(100vw - 32px));background:var(--surface);color:var(--text);border-radius:20px;padding:24px 24px 20px;border:1px solid var(--border);box-shadow:0 28px 70px rgba(0,0,0,.45);position:relative;animation:wnpop .3s cubic-bezier(.16,.84,.44,1);max-height:92vh;overflow-y:auto}
+    .wn-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+    .wn-pill{margin:0;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in oklab,var(--accent) 16%,var(--surface));border:1px solid color-mix(in oklab,var(--accent) 38%,transparent);padding:6px 12px;border-radius:999px}
+    .wn-close{appearance:none;border:none;border-radius:999px;background:color-mix(in oklab,var(--surface-2, var(--surface)) 60%,var(--surface));color:var(--muted);font-size:13px;font-weight:700;padding:6px 12px;cursor:pointer}
+    .wn-close:hover{background:var(--surface-2);color:var(--text)}
+    .wn-title{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+    .wn-body{font-size:14px;line-height:1.6;color:color-mix(in oklab,var(--text) 80%,var(--muted))}
+    .wn-body ul{padding-left:20px;margin:14px 0}
+    .wn-body li{margin:6px 0}
+    .wn-footer{margin:18px 0 0;font-size:13px;color:var(--muted)}
+    body.wn-open{overflow:hidden}
+    @keyframes wnpop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+
     /* T&C Gate */
     #tacGate{ position:fixed; inset:0; z-index:99999; display:none; background: color-mix(in oklab, var(--bg) 90%, #000); backdrop-filter: blur(6px) }
     #tacCard{ position:absolute; left:50%; top:12vh; transform:translateX(-50%); width:min(640px, calc(100vw - 28px)); background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:14px; box-shadow:0 18px 48px rgba(0,0,0,.35); padding:14px }
@@ -320,24 +373,50 @@
   </div>
 </section>
 
+<!-- What's New Modal -->
+<section id="whatsNewOverlay" class="wn-overlay" hidden aria-modal="true" role="dialog">
+  <article class="wn-card" role="document">
+    <div class="wn-header">
+      <p class="wn-pill">🚑 v0.2 released</p>
+      <button id="wnClose" class="wn-close" aria-label="Dismiss What's New">Close</button>
+    </div>
+    <h2 class="wn-title">What’s New</h2>
+    <div id="whatsNewBody" class="wn-body"></div>
+  </article>
+</section>
+
 <script type="module">
   /* =========================
        CONFIG (production)
+       - HOST/theme + feature toggles
+       - NEWS controls (inline banner under Shortcuts Mode)
+       - WHAT'S NEW modal (center overlay for release notes)
+       Update the versioned keys whenever you introduce new copy so
+       previous dismissals do not hide the latest announcement.
      ========================= */
   const HOST = ''; // root-relative on current origin (works with your Worker/CNAME)
   const SHORTCUT_NAME = "Ambulance";
   const SEPARATOR     = "::";
   const USE_RETURN_URL = false;
   const RETURN_URL    = "https://yourdomain.com/done.html";
-  const SHOW_SHORTCUTS_BANNER = true;
 
-// News controls - keep false unless you want to show it
-// (Actual visibility is tied to Shortcuts Mode in render())
-const SHOW_NEWS = true;
+  /* =========================
+       Messaging config hub
+       Edit all message copy, toggles, and keys here. The destructured
+       constants keep the rest of the file referencing this block only.
+     ========================= */
+  const MESSAGING_CONFIG = {
+    // -- Terms gate --
+    TAC_KEY: "amb_tac_v2", // bump when Terms copy changes
 
-const NEWS_DISMISSED_KEY = "amb_news_shortcuts_v1";
+    // -- Shortcuts download banner --
+    SHOW_SHORTCUTS_BANNER: true,
+    SHORTCUT_DOWNLOAD_URL: "https://ios.niwashibase.com/s/ambulance",
 
-const NEWS_MESSAGE = `
+    // -- News card (Shortcuts Mode only) --
+    SHOW_NEWS: true,
+    NEWS_DISMISSED_KEY: "amb_news_shortcuts_v1",
+    NEWS_MESSAGE: `
   <div class="news-compact">
     <div class="news-row">
       <strong>Enable Shortcuts Mode - Quick Guide</strong>
@@ -363,12 +442,36 @@ const NEWS_MESSAGE = `
       <a id="btnOpenSettings"   class="btn" href="#" rel="noopener">Open Settings</a>
     </div>
   </div>
-`;
+`,
 
+    // -- What's New modal --
+    WHATS_NEW_ENABLED: true,
+    WHATS_NEW_KEY: "amb_whats_new_v02",
+    WHATS_NEW_TARGET: "both", // "default", "shortcuts", "both"
+    WHATS_NEW_MESSAGE: `
+  <p class="wn-intro">Updates install remotely—just reopen the app (or relaunch if needed) to see the latest build.</p>
+  <ul>
+    <li><strong>CPR Timer.</strong> Logs save automatically, can be recovered if the app closes, export as PDF, manage history, and accidental back presses are blocked.</li>
+    <li><strong>CCP Pediatrics.</strong> New “View Formulary” button jumps straight to the medication without leaving the CPG.</li>
+    <li><strong>Formulary & Flowcharts.</strong> Browse medications and clinical flowcharts directly inside the CPG.</li>
+    <li><strong>CPG Wizard.</strong> Smart search surfaces the right protocol from any symptom, abbreviation, or keyword.</li>
+  </ul>
+  <p class="wn-footer">Thanks for the ongoing feedback—more upgrades are on the way.</p>
+`
+  };
 
-
-
-  const SHORTCUT_DOWNLOAD_URL = "https://ios.niwashibase.com/s/ambulance";
+  const {
+    TAC_KEY,
+    SHOW_SHORTCUTS_BANNER,
+    SHORTCUT_DOWNLOAD_URL,
+    SHOW_NEWS,
+    NEWS_DISMISSED_KEY,
+    NEWS_MESSAGE,
+    WHATS_NEW_ENABLED,
+    WHATS_NEW_KEY,
+    WHATS_NEW_TARGET,
+    WHATS_NEW_MESSAGE
+  } = MESSAGING_CONFIG;
 
   const BUTTONS = [
     // Resuscitation & Timers
@@ -494,10 +597,10 @@ const NEWS_MESSAGE = `
     document.getElementById("panel-body").innerHTML = "";
     document.body.classList.remove("panel-open");
     updateHash({});
+    try { sessionStorage.setItem("ambulance_home_url", location.href); } catch (_) {}
   }
 
-  // ===== T&C Gate =====
-  const TAC_KEY = "amb_tac_v2"; // bump when terms change
+  // ===== T&C Gate ===== (uses TAC_KEY from config block)
 
   function showTacGate(){ const el = document.getElementById("tacGate"); if (el){ el.style.display = "block"; document.body.style.overflow = "hidden"; } }
   function hideTacGate(){ const el = document.getElementById("tacGate"); if (el){ el.style.display = "none"; document.body.style.overflow = ""; } }
@@ -531,6 +634,7 @@ const NEWS_MESSAGE = `
   function initTacOrApp(){
     const consent = localStorage.getItem(TAC_KEY) === "1";
     if (consent) mount(); else { wireTacGate(); showTacGate(); }
+    try { sessionStorage.setItem("ambulance_home_url", location.href); } catch (_) {}
   }
   document.addEventListener("DOMContentLoaded", initTacOrApp);
 
@@ -561,6 +665,7 @@ const NEWS_MESSAGE = `
     const scBannerEl  = document.getElementById("scBanner");
     const scDownloadEl= document.getElementById("scDownload");
     if (scDownloadEl) scDownloadEl.href = SHORTCUT_DOWNLOAD_URL || "#";
+    wireWhatsNewControls();
 
     // === Hidden tap to reset Shortcuts news card ===
 document.querySelector('.copy .t')?.addEventListener('click', () => {
@@ -613,6 +718,8 @@ function render(){
     scBannerEl.hidden = !shouldShow;
     scBannerEl.style.display = shouldShow ? "block" : "none";
   }
+
+  handleWhatsNew(useShortcuts);
 
   // --- Sections grid ---
   sectionsEl.innerHTML = "";
@@ -673,6 +780,60 @@ function render(){
     secEl.appendChild(grid);
     sectionsEl.appendChild(secEl);
   }
+}
+
+// Evaluate the What's New modal on each render so it can follow
+// the chosen mode (default-only, Shortcuts-only, or both).
+function handleWhatsNew(useShortcuts){
+  const overlay = document.getElementById("whatsNewOverlay");
+  const body = document.getElementById("whatsNewBody");
+  if (!overlay || !body) return;
+  const dismissed = localStorage.getItem(WHATS_NEW_KEY) === "1";
+  const message = WHATS_NEW_MESSAGE.trim();
+  const matchesMode =
+    WHATS_NEW_TARGET === "both" ||
+    (WHATS_NEW_TARGET === "shortcuts" && useShortcuts) ||
+    (WHATS_NEW_TARGET === "default" && !useShortcuts);
+
+  const shouldShow = WHATS_NEW_ENABLED && !dismissed && message && matchesMode;
+
+  if (shouldShow){
+    body.innerHTML = message;
+    overlay.hidden = false;
+    overlay.style.display = "flex";
+    document.body.classList.add("wn-open");
+  } else if (!overlay.hidden){
+    overlay.hidden = true;
+    overlay.style.display = "none";
+    document.body.classList.remove("wn-open");
+  }
+}
+
+// Wire close / tap-away / ESC handlers once after mount. Dismissing
+// the dialog stores the versioned key so this announcement never
+// reappears until you bump WHATS_NEW_KEY.
+function wireWhatsNewControls(){
+  const overlay = document.getElementById("whatsNewOverlay");
+  const closeBtn = document.getElementById("wnClose");
+  if (!overlay || !closeBtn) return;
+
+  function dismiss(){
+    overlay.hidden = true;
+    overlay.style.display = "none";
+    document.body.classList.remove("wn-open");
+    localStorage.setItem(WHATS_NEW_KEY, "1");
+  }
+
+  closeBtn.addEventListener("click", dismiss);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) dismiss();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden){
+      dismiss();
+    }
+  });
 }
 
 
