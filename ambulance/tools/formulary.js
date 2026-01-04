@@ -61,7 +61,7 @@ export async function run(root) {
   }
   .fm-search input{
     width:100%; border:none; outline:none; background:transparent;
-    color:var(--text); font-weight:800; font-size:16px;
+    color:var(--text); font-weight:800; font-size:14px;
   }
   .fm-search .meta{
     flex:none; font-size:12px; color:var(--muted); font-weight:800;
@@ -265,14 +265,36 @@ export async function run(root) {
     const backBtn = modal.querySelector("#pvBack");
     const titleEl = modal.querySelector("#pvTitle");
 
-    backBtn.addEventListener("click", () => {
+    function closeModal() {
       modal.classList.remove("show");
       frame.src = "about:blank";
+      modal.__historyActive = false;
+      if (modal.__popHandler) {
+        window.removeEventListener("popstate", modal.__popHandler);
+        modal.__popHandler = null;
+      }
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (modal.__historyActive) {
+        history.back();
+      } else {
+        closeModal();
+      }
     });
 
     modal.__open = (url, title) => {
       titleEl.textContent = title || "Formulary";
       frame.src = url;
+      if (!modal.__popHandler) {
+        modal.__popHandler = () => {
+          if (!modal.__historyActive) return;
+          closeModal();
+        };
+        window.addEventListener("popstate", modal.__popHandler);
+      }
+      modal.__historyActive = true;
+      history.pushState({ pvModal: true }, "");
       requestAnimationFrame(() => modal.classList.add("show"));
     };
 
