@@ -271,14 +271,36 @@ export async function run(mountEl){
     const backBtn = modal.querySelector("#pvBack");
     const titleEl = modal.querySelector("#pvTitle");
 
-    backBtn.addEventListener("click", () => {
+    function closeModal() {
       modal.classList.remove("show");
       frame.src = "about:blank";
+      modal.__historyActive = false;
+      if (modal.__popHandler) {
+        window.removeEventListener("popstate", modal.__popHandler);
+        modal.__popHandler = null;
+      }
+    }
+
+    backBtn.addEventListener("click", () => {
+      if (modal.__historyActive) {
+        history.back();
+      } else {
+        closeModal();
+      }
     });
 
     modal.__open = (url, title) => {
       titleEl.textContent = title || "Formulary";
       frame.src = url;
+      if (!modal.__popHandler) {
+        modal.__popHandler = () => {
+          if (!modal.__historyActive) return;
+          closeModal();
+        };
+        window.addEventListener("popstate", modal.__popHandler);
+      }
+      modal.__historyActive = true;
+      history.pushState({ pvModal: true }, "");
       requestAnimationFrame(() => modal.classList.add("show"));
     };
 
@@ -1230,7 +1252,7 @@ Ref. Dose Calculation: ${refStr}`) ]};
     const page = Number(viewBtn.dataset.page);
     if (!Number.isFinite(page)) return;
     const title = viewBtn.dataset.title || rTitle.textContent || 'Formulary';
-    openAtPage(page, `${title} – Formulary`);
+    openAtPage(page, `${title} - Formulary`);
   });
 
   /* ====== mode switching ====== */
