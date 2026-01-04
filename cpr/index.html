@@ -6,19 +6,24 @@
 
 <style>
 /* ==========================================================
-   CPR TIMER — compact, centered, responsive (2025-10-02a)
+   CPR TIMER — compact, centered, responsive (2026-01-04)
    CHANGELOG (this build):
-   • New session lifecycle: After Stop or ROSC, the next Start (Cycle/Adrenaline)
-     launches a fully fresh session with timers, counters, overlays, and logs reset.
-   • Added resetForNewSession() to stop audio/metronome, release wake lock,
-     clear events/logs, disable Export until new data is recorded, and realign UI.
-   • endSession() now flags postEndResetPending so Start knows to hard-reset.
-   • Start handlers honor sessionEnded() || postEndResetPending before starting.
+   • Added Retrieve Log button that loads the autosaved draft into the in-app
+     modal so a backgrounded webclip session can be recovered and exported.
+   • Logs modal gained Draft detail view plus Delete Log / Delete All controls
+     with confirmations, along with a refreshed footer layout and padding.
+   • Unified PDF export + sharing helper for live sessions and saved logs,
+     ensuring iOS share sheet support and sanitized filenames everywhere.
+   • Restructured the actions grid: portrait keeps two-button rows while
+     landscape anchors paired controls beneath the Cycle/Adrenaline timers; all
+     buttons reset timers after Stop/ROSC/Save.
+   • Save Log button repurposed to Retrieve Log; messaging now instructs crews
+     to finalize with Stop/ROSC to capture data before using the fallback.
 
    Layout/UX notes:
    - Timers always under TOTAL; side-by-side in landscape
-   - Actions anchored below timers in landscape
-   - Portrait: Export PDF is always the bottom button
+   - Actions anchor under their respective timers in landscape
+   - Portrait: Export PDF is always in the bottom pair
    - Overlays (countdown / “Give Adrenaline”) show only at cue and auto-center
    - Theme “Auto” follows device theme
    ========================================================== */
@@ -63,6 +68,11 @@
   --cycle-accent-light:#ff4d4d;
   --countdown-red:#ff3333;
   --adr-color:#2ea0ff;
+
+  /* Modal */
+  --modal-bg: rgba(0,0,0,.6);
+  --modal-card: var(--card);
+  --modal-border: var(--border);
 }
 :root[data-theme="light"]{
   color-scheme: light;
@@ -72,6 +82,7 @@
   --total-color:#111111;
   --shock-1:#FFCA28; --shock-2:#F5B700; --shock-bd:#E0A800;
   --dsed-1:#FFE082; --dsed-2:#F5C54A; --dsed-bd:#E6B53A;
+  --modal-bg: rgba(0,0,0,.42);
 }
 
 /* ---------- BASE ---------- */
@@ -181,7 +192,7 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 /* Hide overlays by default; show only when toggled */
 #countdown{ display:none }
 #countdown.show{ display:flex }
-#adrPrompt{ display:none }                 /* NEW: default hidden */
+#adrPrompt{ display:none }
 #adrTimer.adr-show #adrPrompt{ display:flex }
 
 .cycle-hide .label, .cycle-hide #cycleDigits, .cycle-hide .icon-row{ visibility:hidden }
@@ -212,36 +223,39 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .btn-dsed{ background:linear-gradient(180deg,var(--dsed-1),var(--dsed-2)); border-color:var(--dsed-bd); color:#1a1a1a }
 .btn-export{ background:linear-gradient(180deg,var(--export-1),var(--export-2)); border-color:var(--export-bd) }
 
-/* Portrait actions: 2 columns × 3 rows */
+/* Actions layout */
 .actions-wrap{
   grid-area:actions;
-  display:grid; gap:var(--gap-sm);
+  display:grid;
+  gap:var(--gap-sm);
   grid-template-columns:repeat(2, minmax(140px, 1fr));
-  justify-items:stretch;
 }
-.actions-left, .actions-right{display:contents} /* flatten in portrait */
-
-/* Ensure Export PDF appears last in portrait; Amiodarone above it */
-#amiob{ order: 5; }      /* sits above Export PDF */
-#printPdf{ order: 6; }   /* always the bottom-most button */
-
-/* Landscape: two 2×2 stacks, single bottom button centered; and anchor below timers */
+#actionsLeft, #actionsRight{
+  display:contents;
+}
+#stopb      { order:1; }
+#roscb      { order:2; }
+#shockb     { order:3; }
+#dsedb      { order:4; }
+#amiob      { order:5; }
+#printPdf   { order:6; }
+#retrieveLog{ order:7; }
+#viewLogs   { order:8; }
 @media (orientation:landscape){
-  .actions-wrap{display:contents}
-  .actions-left, .actions-right{
-    display:grid; gap:var(--gap-sm);
+  .actions-wrap{ display:contents; }
+  #actionsLeft, #actionsRight{
+    display:grid;
+    gap:var(--gap-sm);
     grid-template-columns:repeat(2, minmax(140px,1fr));
     justify-items:center;
   }
-  .actions-left{  grid-area: actionsL; }   /* NEW: anchor area */
-  .actions-right{ grid-area: actionsR; }   /* NEW: anchor area */
-  /* span utility for the third button on each side */
-  .span-2{ grid-column:1 / -1; justify-self:center; max-width:280px }
-     /* --- RIGHT stack explicit placement --- */
-  #shockb { grid-column: 1; grid-row: 1; }      /* left cell, row 1  */
-  #amiob  { grid-column: 2; grid-row: 1; }      /* right cell, row 1 */
-  #dsedb  { grid-column: 1 / -1; grid-row: 2; } /* full-width row 2  */
-
+  #actionsLeft{ grid-area:actionsL; }
+  #actionsRight{ grid-area:actionsR; }
+}
+@media (orientation:landscape){
+  .actions-wrap{
+    grid-template-columns:repeat(4, minmax(140px, 1fr));
+  }
 }
 
 /* ---------- WAAFELSS & LOG ---------- */
@@ -257,30 +271,76 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 .wa-content{padding:var(--card-pad); padding-top:6px; border-top:1px solid var(--border)}
 .wa-row{display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:var(--gap-sm); justify-items:stretch; margin-bottom:6px}
 .wa-row input{grid-column:1 / -1;font-size: 15px; width:100%; padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-.wa-row input::placeholder {
-  font-size: 15px;              /* increase placeholder (hint) text */
-  color: var(--muted);          /* optional: make hint softer */
-}
- /* Adjust WAAFELSS label/value text size */
-.wrow .wtag,
-.wrow .wval {
-  font-size: clamp(13px, 1.8vw, 16px);  /* modest reduction */
-  font-weight: 700;                     /* keep them bold enough */
-}
-.wrow .wtag {
-  color: var(--muted);
-}
-.wrow .wval {
-  color: var(--fg);
-}
+.wa-row input::placeholder { font-size: 15px; color: var(--muted); }
+.wrow .wtag, .wrow .wval { font-size: clamp(13px, 1.8vw, 16px); font-weight: 700; }
+.wrow .wtag { color: var(--muted); }
+.wrow .wval { color: var(--fg); }
 
-
-   .btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
+.btn-wa-m{ background:linear-gradient(180deg,var(--wa-m-1),var(--wa-m-2)); border-color:var(--wa-m-bd) }
 .btn-wa-y{ background:linear-gradient(180deg,var(--wa-y-1),var(--wa-y-2)); border-color:var(--wa-y-bd) }
 
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:var(--card-pad); width:min(560px, 100%); box-shadow:var(--shadow); margin-inline:auto}
 .log{max-height:240px;overflow:auto;margin:0;padding-left:20px;font-size:clamp(12px, 1.2vw, 13px)}
 .log li{margin:6px 0}
+
+/* ---------- MODAL (Logs Viewer) ---------- */
+.modal{
+  position:fixed; inset:0; display:none; align-items:flex-end; justify-content:center;
+  background:var(--modal-bg); z-index:9999;
+}
+.modal.open{ display:flex; }
+.modal-card{
+  width:min(820px, 96vw); max-height:90vh; background:var(--modal-card);
+  border:1px solid var(--modal-border); border-radius:16px 16px 0 0; box-shadow:var(--shadow);
+  display:grid; grid-template-rows:auto 1fr auto;
+  padding-top:12px;
+  margin-top:4vh;
+}
+@media (min-width:700px){
+  .modal-card{ border-radius:16px; margin-top:6vh; align-self:flex-start; }
+}
+.modal-hdr{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; font-weight:900; border-bottom:1px solid var(--modal-border);
+}
+.modal-body{ padding:0; overflow:auto; }
+.modal-ftr{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  padding:14px 12px;
+  border-top:1px solid var(--modal-border);
+}
+
+.list-item{ padding:12px 16px; border-bottom:1px solid var(--modal-border); cursor:pointer; }
+.list-item small{ display:block; color:var(--muted); margin-top:4px }
+
+.detail{
+  padding:12px 16px;
+}
+.detail table{ width:100%; border-collapse:collapse; }
+.detail th, .detail td{ padding:8px 10px; border-bottom:1px solid var(--modal-border); text-align:left; }
+.detail .kv{ margin-bottom:8px; color:var(--muted); }
+.detail .kv b{ color:var(--fg); }
+
+.modal-btn{
+  appearance:none; cursor:pointer;
+  padding:8px 12px; border-radius:10px; border:1px solid var(--btn-bd);
+  background:var(--btn-bg); color:var(--btn-fg); font-weight:800;
+}
+.modal-btn.primary{ background:linear-gradient(180deg,#1fa367,#1cd958); border-color:#10b168; color:#fff; }
+.modal-btn.warn{ background:linear-gradient(180deg,#f87171,#dc2626); border-color:#b91c1c; color:#fff; }
+#logDelete,
+#logsDeleteAll{
+  min-width:200px;
+}
+#logsExport{
+  min-width:min(320px, 92%);
+  padding:14px 22px;
+  font-size:clamp(16px, 3vw, 19px);
+  border-radius:14px;
+}
 
 /* ---------- PRINT ---------- */
 @media print{
@@ -367,46 +427,41 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
 
     <!-- Actions -->
     <div class="actions-wrap">
-      <!-- Left stack (under Cycle in landscape) -->
-      <div class="actions-left">
+      <div id="actionsLeft">
         <button id="stopb" class="btn btn-stop"> 
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"></path>
           </svg> Stop
         </button>
-
-        <button id="roscb" class="btn btn-rosc">
-          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
-          ROSC
-        </button>
-
-        <button id="printPdf" class="btn btn-export is-disabled span-2" title="Export PDF (enabled after Stop/ROSC)">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
-          </svg> Export PDF
-        </button>
-      </div>
-
-      <!-- Right stack (under Adrenaline in landscape) -->
-      <div class="actions-right">
         <button id="shockb" class="btn btn-shock">
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M13 2 L3 14h7l-1 8 10-12h-7z" stroke="currentColor" stroke-width="2.5"/></svg>
           Shock
         </button>
-
         <button id="amiob" class="btn btn-amio">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
           </svg>
           Amiodarone
         </button>
-
-        <button id="dsedb" class="btn btn-dsed span-2" title="Log DSED">
+        <button id="printPdf" class="btn btn-export is-disabled" title="Export PDF (enabled after Stop/ROSC)">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"></path>
+          </svg> Export PDF
+        </button>
+      </div>
+      <div id="actionsRight">
+        <button id="roscb" class="btn btn-rosc">
+          <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 14 4 9a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 5-8 12-8 12Z" stroke="currentColor" stroke-width="3"/></svg>
+          ROSC
+        </button>
+        <button id="dsedb" class="btn btn-dsed" title="Log DSED">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
           </svg>
           Log DSED
         </button>
+        <button id="retrieveLog" class="btn" style="background:linear-gradient(180deg,#334155,#1f2937);border-color:#475569">Retrieve Log</button>
+        <button id="viewLogs" class="btn" style="background:linear-gradient(180deg,#475569,#334155);border-color:#64748b">View Logs</button>
       </div>
     </div>
 
@@ -445,29 +500,57 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
   </main>
 </div>
 
+<!-- ===== In-App Logs Viewer Modal (no popups) ===== -->
+<div id="logsModal" class="modal" aria-hidden="true" aria-modal="true" role="dialog">
+  <div class="modal-card" role="document">
+    <div class="modal-hdr">
+      <div id="logsModalTitle">Saved CPR Logs</div>
+      <button id="logsClose" class="modal-btn" aria-label="Close">Close</button>
+    </div>
+    <div class="modal-body">
+      <!-- List View -->
+      <div id="logsList" hidden>
+        <div id="logsEmpty" class="list-item" style="cursor:default;display:none;color:var(--muted)">No saved CPR logs.</div>
+        <div id="logsListWrap"></div>
+      </div>
+      <!-- Detail View -->
+      <div id="logsDetail" class="detail" hidden>
+        <div class="kv"><b>Started:</b> <span id="dStarted">—</span></div>
+        <div class="kv"><b>Ended:</b> <span id="dEnded">—</span></div>
+        <div class="kv"><b>Total:</b> <span id="dTotal">—</span></div>
+        <div class="kv"><b>Counts:</b> <span id="dCounts">—</span></div>
+        <table>
+          <thead><tr><th style="width:120px">Time</th><th>Event</th></tr></thead>
+          <tbody id="dRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button id="logDelete" class="modal-btn warn" hidden>Delete Log</button>
+      <button id="logsDeleteAll" class="modal-btn warn" hidden>Delete All Logs</button>
+      <button id="logsExport" class="modal-btn primary" hidden>Export PDF</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
 /* ===== THEME ===== */
 const root = document.documentElement;
 const themeBtn = document.getElementById('themeBtn');
-let themeMode = 'auto'; // auto | light | dark
+let themeMode = 'auto';
 const mql = window.matchMedia('(prefers-color-scheme: dark)');
-
 function applyTheme(){
-  // In AUTO, actually set a theme to match device (and update on changes)
   if (themeMode === 'auto'){
     const isDark = mql.matches;
-    if (isDark) root.removeAttribute('data-theme');  // base is dark
+    if (isDark) root.removeAttribute('data-theme');
     else root.setAttribute('data-theme','light');
   } else {
     if (themeMode==='light') root.setAttribute('data-theme','light');
-    if (themeMode==='dark')  root.removeAttribute('data-theme'), root.setAttribute('data-theme','dark'); // attribute present but base tokens are dark anyway
-    if (themeMode==='dark') root.removeAttribute('data-theme'); // keep base dark cleanly
+    if (themeMode==='dark')  root.removeAttribute('data-theme');
   }
   themeBtn.textContent = themeMode[0].toUpperCase()+themeMode.slice(1);
   themeBtn.title = `Theme: ${themeBtn.textContent}`;
-
-  // Update meta theme-color to current bg
   const meta = document.querySelector('meta[name="theme-color"]')
     || (()=>{const m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);return m;})();
   requestAnimationFrame(()=>{
@@ -489,6 +572,38 @@ document.getElementById('backBtn')?.addEventListener('click',()=>{
   else location.href = HOME;
 });
 
+/* ===== EXIT GUARD (back button & iOS swipe) ===== */
+function sessionOngoing(){ return !!(totalStart && !totalEnd); }
+const backBtnEl = document.getElementById('backBtn');
+if (backBtnEl){
+  const cloned = backBtnEl.cloneNode(true);
+  backBtnEl.parentNode.replaceChild(cloned, backBtnEl);
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    if (!sessionOngoing() || confirm("Exit CPR timer?\nYour current session is still running.")) {
+      if (document.referrer && document.referrer !== location.href) history.back();
+      else location.href = HOME;
+    }
+  });
+}
+window.addEventListener('beforeunload', (e)=>{
+  if (sessionOngoing()){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+(function installHistoryGuard(){
+  try{ history.pushState({guard:1}, ""); }catch{}
+  window.addEventListener('popstate', ()=>{
+    if (sessionOngoing()){
+      const ok = confirm("Exit CPR timer?\nYour current session is still running.");
+      if (!ok){
+        try{ history.pushState({guard:1}, ""); }catch{}
+        return;
+      }
+    }
+  });
+})();
+
 /* ===== HELPERS ===== */
 const $ = id => document.getElementById(id);
 const fmt = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
@@ -501,6 +616,7 @@ function stamp(label){
   li.textContent=`${hhmmss(ts)} | ${label}`;
   logEl.prepend(li);
   events.push({ts,label});
+  autosave_bump(ts, label);   // autosave on every line
 }
 
 /* ===== WAKE LOCK ===== */
@@ -550,14 +666,12 @@ $('muteBtn')?.addEventListener('click',()=>{
   if(beatMuted) stopBeat(); else if(cprRunning) startBeat();
 });
 $('bpm')?.addEventListener('change',e=>{ bpm=+e.target.value||110; if(cprRunning) restartBeat(); });
-
 function flashCycle(){ const card=$('cycleTimer'); if(!card) return; card.classList.remove('cycle-flash'); void card.offsetWidth; card.classList.add('cycle-flash'); }
 function startBeat(){ clearInterval(beatTimer); const iv=Math.max(200,60000/Math.max(1,bpm)); beatTimer=setInterval(()=>{ if(!beatMuted) play('beat',0.95); flashCycle(); }, iv); }
 function stopBeat(){ clearInterval(beatTimer); beatTimer=null; }
 function restartBeat(){ stopBeat(); startBeat(); }
 
 /* ===== STATE ===== */
-let postEndResetPending = false;   // after Stop/ROSC, next Start should hard-reset to a new session
 let totalStart=0,totalEnd=0;
 let cprStart=0,cprPausedAt=0,cprPausedAccum=0,cprRunning=false;
 let adrStart=0,adrPausedAt=0,adrPausedAccum=0,adrRunning=false,adrCount=0;
@@ -566,11 +680,91 @@ let cycleCount = 0;
 let counting=false, countdownTimer=null, countdownN=10;
 let showTotalZero = true;
 
+/* ====== AUTOSAVE (localStorage) ====== */
+const LOGS_KEY = 'cprLogs.v1';          // finalized logs array
+const DRAFT_KEY = 'cprActiveLog.v1';    // single active log (draft)
+
+function fmtTitle(ts){
+  const d = new Date(ts);
+  const date = d.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
+  const time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
+  return `CPR on ${date} ${time}`;
+}
+function loadDraft(){ try{ return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); }catch{ return null; } }
+function saveDraft(d){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); }catch{} }
+function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch{} }
+function loadAllLogs(){ try{ return JSON.parse(localStorage.getItem(LOGS_KEY)||'[]'); }catch{ return []; } }
+function saveAllLogs(arr){ try{ localStorage.setItem(LOGS_KEY, JSON.stringify(arr)); }catch{} }
+
+function currentCounts(){ return { adr: adrCount, shocks: (window.__shock||0), amio: (window.__amio||0) }; }
+function currentSummary(){
+  const fmt2 = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
+  const started = totalStart ? new Date(totalStart).toISOString() : null;
+  const ended   = totalEnd   ? new Date(totalEnd).toISOString()   : null;
+  const total   = (totalStart && totalEnd) ? fmt2((totalEnd-totalStart)/1000) : null;
+  return { started, ended, total, counts: currentCounts() };
+}
+function eventsToSerializable(){ return events.map(e => ({ t: (e.ts instanceof Date ? e.ts.toISOString() : e.ts), label: e.label })); }
+function hasFinalMarker(evts){ return evts.some(e => /CPR Timer Stopped|ROSC Achieved|CPR Stopped/i.test(e.label)); }
+let activeId = null;
+let sessionClosed = false;
+
+function startNewDraftIfNeeded(){
+  if (!totalStart) return;
+  activeId = String(totalStart);
+  const firstTitle = fmtTitle(totalStart);
+  const draft = {
+    id: activeId,
+    title: firstTitle,
+    meta: currentSummary(),
+    events: eventsToSerializable()
+  };
+  saveDraft(draft);
+}
+function autosave_bump(ts, label){
+  if (sessionClosed) return;
+  if (!activeId && totalStart){ startNewDraftIfNeeded(); }
+  const d = loadDraft() || {
+    id: String(totalStart || ts.getTime()),
+    title: fmtTitle(ts),
+    meta: currentSummary(),
+    events: []
+  };
+  const iso = ts instanceof Date ? ts.toISOString() : String(ts);
+  const newRow = { t: iso, label };
+  const last = d.events[0];
+  if (!(last && last.t===newRow.t && last.label===newRow.label)){
+    d.events.unshift(newRow);
+  }
+  d.title = fmtTitle(ts);
+  d.meta = currentSummary();
+  saveDraft(d);
+}
+
+/* Finalize helpers */
+function finalizeIntoSaved(finalLabel){
+  if (sessionClosed) return;
+  const nowIso = new Date();
+  const d = loadDraft() || { id: String(totalStart || nowIso.getTime()), title: fmtTitle(nowIso), meta: currentSummary(), events: [] };
+  if (!hasFinalMarker(d.events)){
+    d.events.unshift({ t: nowIso.toISOString(), label: finalLabel });
+    d.title = fmtTitle(nowIso);
+  }
+  if (!totalEnd){ totalEnd = Date.now(); }
+  d.meta = currentSummary();
+  const logs = loadAllLogs();
+  const idx = logs.findIndex(x => x.id === d.id);
+  if (idx>=0) logs[idx] = d; else logs.unshift(d);
+  saveAllLogs(logs);
+  saveDraft(d); // keep draft too
+  sessionClosed = true;
+}
+
 /* ===== OVERLAY CENTERING ===== */
 function centerOverlayOverDigits(overlayEl, digitsEl){
   if(!overlayEl || !digitsEl) return;
   const style = getComputedStyle(overlayEl);
-  if (style.display === 'none') return; // only center when visible
+  if (style.display === 'none') return;
   overlayEl.classList.add('overlay-center');
   const timer = digitsEl.closest('.timer'); if(!timer) return;
   const tr = timer.getBoundingClientRect();
@@ -615,8 +809,6 @@ function showCountdown(){
 function now(){ return Date.now(); }
 function tick(){
   const t=now();
-
-  // total
   if(showTotalZero){
     $('totalDigits').textContent='00:00';
   }else if(totalStart && !totalEnd){
@@ -627,8 +819,6 @@ function tick(){
   }else{
     $('totalDigits').textContent='00:00';
   }
-
-  // cycle
   let c=0;
   if(cprStart){
     if(cprRunning) c=(t-cprStart-cprPausedAccum)/1000;
@@ -636,7 +826,6 @@ function tick(){
     else if(totalEnd) c=(totalEnd-cprStart-cprPausedAccum)/1000;
     c = c|0;
     if(!counting){ $('cycleDigits').textContent=fmt(c); }
-
     if(!cue90 && c>=90){ cue90=true; play('cpr90'); }
     if(!cue120 && c>=120){
       cue120=true; play('cpr120');
@@ -647,25 +836,18 @@ function tick(){
   }else if(!counting){
     $('cycleDigits').textContent='00:00';
   }
-
-  // adrenaline loop
   if(adrStart){
     let a=0;
     if(adrRunning) a=(t-adrStart-adrPausedAccum)/1000;
     else if(adrPausedAt) a=(adrPausedAt-adrStart-adrPausedAccum)/1000;
     else if(totalEnd) a=(totalEnd-adrStart-adrPausedAccum)/1000;
     a = a|0;
-
     if(a>=240){
       $('adrDigits').textContent='04:00'; play('adr4');
-      // Show prompt overlay briefly
       const adrCard=$('adrTimer'); adrCard.classList.add('adr-hide','adr-show');
       alignOverlays();
-
-      // Increment dose and log administration (instead of "reached 4:00")
       adrCount += 1;
       stamp(`Adrenaline no. ${adrCount} Administered`);
-
       adrRunning = false;
       setTimeout(()=>{
         adrCard.classList.remove('adr-show','adr-hide');
@@ -684,14 +866,14 @@ requestAnimationFrame(tick);
 
 /* ===== CONTROLS ===== */
 $('cprStart').onclick = () => {
-     if (sessionEnded() || postEndResetPending) {
-    resetForNewSession();
-  }
-
   primeAudio();
   if(!totalStart){
     totalStart=now(); totalEnd=0; showTotalZero=false;
+    sessionClosed = false; events.length = 0; activeId=null; clearDraft();
+    startNewDraftIfNeeded();
     stamp('CPR Timer Started'); requestWake();
+  } else if(!cprStart){
+    stamp('CPR Timer Started');
   }
   if(!cprStart){ cprStart=totalStart; cprPausedAccum=0; cue90=false; cue120=false; play('start'); }
   else if(cprPausedAt){ cprPausedAccum += (now()-cprPausedAt); cprPausedAt=0; play('start'); stamp('CPR Timer Resumed'); }
@@ -703,11 +885,8 @@ $('cprPause').onclick = () => {
   $('cprPause').disabled=true; $('cprStart').disabled=false;
 };
 $('adrStart').onclick = () => {
-     if (sessionEnded() || postEndResetPending) {
-    resetForNewSession();
-  }
-
-  primeAudio(); if(!totalStart) $('cprStart').click();
+  primeAudio();
+  if(!totalStart){ $('cprStart').click(); }
   if(!adrStart){ adrStart=now(); adrPausedAccum=0; adrPausedAt=0; adrRunning=true; adrCount++; stamp(`Adrenaline no. ${adrCount} Administered`); stamp('Adrenaline Timer Started'); }
   else if(adrPausedAt){ adrPausedAccum += (now()-adrPausedAt); adrPausedAt=0; adrRunning=true; stamp('Adrenaline Timer Resumed'); }
   $('adrPause').disabled=false; $('adrStart').disabled=true;
@@ -717,72 +896,28 @@ $('adrPause').onclick = () => {
   $('adrPause').disabled=true; $('adrStart').disabled=false;
 };
 
-function resetForNewSession(){
-  // stop any sounds/metronome/wakelock
-  stopBeat();
-  releaseWake();
-
-  // clear timers & state
-  totalStart = 0; totalEnd = 0; showTotalZero = true;
-  cprStart = 0; cprPausedAt = 0; cprPausedAccum = 0; cprRunning = false;
-  adrStart = 0; adrPausedAt = 0; adrPausedAccum = 0; adrRunning = false; adrCount = 0;
-
-  // counters
-  window.__shock = 0;
-  window.__amio  = 0;
-  cycleCount = 0;
-
-  // cues & countdown
-  cue20 = false; cue90 = false; cue120 = false;
-  counting = false; if (countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
-  const cd = $('countdown'); if (cd) cd.classList.remove('show');
-  $('cycleTimer').classList.remove('cycle-hide');
-  $('adrTimer').classList.remove('adr-show','adr-hide');
-
-  // digits & buttons
-  $('totalDigits').textContent = '00:00';
-  $('cycleDigits').textContent = '00:00';
-  $('adrDigits').textContent   = '00:00';
-  $('cprStart').disabled = false; $('cprPause').disabled = true;
-  $('adrStart').disabled = false; $('adrPause').disabled = true;
-
-  // log/events
-  try{
-    events.length = 0;
-    const log = $('log');
-    while (log.firstChild) log.removeChild(log.firstChild);
-  }catch{}
-
-  // export disabled for a fresh session
-  setExportEnabled(false);
-
-  // consume the pending reset flag
-  postEndResetPending = false;
-
-  // realign overlays after UI reset
-  alignOverlays();
-}
-
-   
-function endSession(label){
-  primeAudio();
-  if(!totalStart) return;
-  if(!totalEnd) totalEnd = now();
-  stamp(label);
+function resetSessionState(){
   if(cprRunning){ cprRunning=false; cprPausedAt=0; }
   cprStart=0; cprPausedAccum=0; cue90=false; cue120=false; counting=false;
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
   const cd=$('countdown'); if(cd) cd.classList.remove('show'); $('cycleTimer').classList.remove('cycle-hide');
   $('cprStart').disabled=false; $('cprPause').disabled=true;
-
   if(adrRunning){ adrRunning=false; adrPausedAt=0; }
   adrStart=0; adrPausedAccum=0;
   $('adrStart').disabled=false; $('adrPause').disabled=true;
-
   showTotalZero = true;
   stopBeat(); releaseWake();
+}
+function endSession(label){
+  primeAudio();
+  if(!totalStart) return;
+  if (!hasFinalMarker(events.map(e => ({t:e.ts,label:e.label})))) {
+    stamp(label);
+  }
+  if(!totalEnd) totalEnd = now();
+  finalizeIntoSaved(label);
+  resetSessionState();
   setExportEnabled(true);
-  postEndResetPending = true;   // next Start should create a brand-new session
-
 }
 $('stopb').onclick = () => { play('stop'); endSession('CPR Timer Stopped'); };
 $('roscb').onclick = () => { play('rosc'); stamp('ROSC Achieved'); endSession('CPR Timer Stopped'); };
@@ -790,11 +925,10 @@ $('shockb').onclick = () => { window.__shock=(window.__shock||0)+1; stamp(`Shock
 $('amiob').onclick  = () => { window.__amio =(window.__amio||0)+1; stamp(`Amiodarone no. ${window.__amio} Administered`); };
 $('dsedb').onclick  = () => { stamp('DSED Delivered'); };
 
-/* ===== EXPORT PDF ===== */
+/* ===== EXPORT PDF (current session) ===== */
 function setExportEnabled(enabled){ $('printPdf').classList.toggle('is-disabled', !enabled); }
 setExportEnabled(false);
 function sessionEnded(){ return !!(totalStart && totalEnd); }
-
 async function loadScript(src){
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
@@ -802,43 +936,90 @@ async function loadScript(src){
     document.head.appendChild(s);
   });
 }
-async function buildPdfBlob(){
+async function ensureJsPdf(){
   if(!window.jspdf){
     await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
   }
-  const { jsPDF } = window.jspdf || {};
-  if(!jsPDF) throw new Error('jsPDF failed');
-
-  let autoTableLoaded = true;
-  if(!jsPDF.API.autoTable){
-    try{
-      await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js');
-    }catch{ autoTableLoaded=false; }
+  if(!window.jspdf?.jsPDF) throw new Error('jsPDF failed');
+  if(!window.jspdf.jsPDF.API.autoTable){
+    try{ await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'); }catch{}
   }
-
+}
+function pdfFileName(){
+  const d=new Date();
+  const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'), HH=String(d.getHours()).padStart(2,'0'), MM=String(d.getMinutes()).padStart(2,'0');
+  return `CPR Report ${yyyy}-${mm}-${dd} ${HH}-${MM}.pdf`;
+}
+function safeBaseName(base){
+  const cleaned = (base || 'CPR Report').replace(/[^A-Za-z0-9._ -]+/g,' ').replace(/\s+/g,' ').trim();
+  return cleaned || 'CPR Report';
+}
+function logFileLabel(meta, fallback){
+  if(meta?.started){
+    const d = new Date(meta.started);
+    if(!Number.isNaN(d.getTime())){
+      const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'), HH=String(d.getHours()).padStart(2,'0'), MM=String(d.getMinutes()).padStart(2,'0');
+      return `CPR Log ${yyyy}-${mm}-${dd} ${HH}-${MM}`;
+    }
+  }
+  return fallback || 'CPR Log';
+}
+function toPdfName(base){
+  const safe = safeBaseName(base);
+  const collapsed = safe.replace(/\s+/g,'_') || 'CPR_Report';
+  return collapsed.toLowerCase().endsWith('.pdf') ? collapsed : `${collapsed}.pdf`;
+}
+async function shareOrDownloadPdf(blob, { fileName, shareTitle, shareText } = {}){
+  const pdfName = toPdfName(fileName || 'CPR Report');
+  const file = new File([blob], pdfName, { type: 'application/pdf' });
+  const payload = {
+    files: [file],
+    title: shareTitle || pdfName.replace(/\.pdf$/i,''),
+    text: shareText || ''
+  };
+  if (navigator.share){
+    try{
+      if(!navigator.canShare || navigator.canShare({ files: [file] })){
+        await navigator.share(payload);
+        return;
+      }
+    }catch(err){
+      console.warn('Share failed or was dismissed:', err);
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=pdfName;
+  a.rel='noopener';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+async function buildPdfFromEvents(title, meta, evts){
+  await ensureJsPdf();
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt' });
-  const fmt2 = s => { s=Math.max(0,Math.floor(s)); const m=String((s/60|0)).padStart(2,'0'); return `${m}:${String(s%60).padStart(2,'0')}`; };
-  const started = totalStart ? new Date(totalStart).toLocaleString([], {hour12:false}) : 'N/A';
-  const ended   = totalEnd ? new Date(totalEnd).toLocaleString([], {hour12:false})   : 'N/A';
-  const total   = (totalStart && totalEnd) ? fmt2((totalEnd-totalStart)/1000) : '—';
-  const counts  = `Adrenaline: ${adrCount}; Shocks: ${window.__shock||0}; Amiodarone: ${window.__amio||0}`;
-
   doc.setFont('helvetica','bold'); doc.setFontSize(18);
-  doc.text('CPR Session Report', 40, 48);
-
+  doc.text(title || 'CPR Session Report', 40, 48);
   doc.setFont('helvetica','normal'); doc.setFontSize(12);
-  const kv = [['Started',started],['Ended',ended],['Total',total],['Counts',counts]];
+  const kv = [
+    ['Started', meta?.started ? new Date(meta.started).toLocaleString([], {hour12:false}) : 'N/A'],
+    ['Ended',   meta?.ended   ? new Date(meta.ended).toLocaleString([], {hour12:false})   : 'N/A'],
+    ['Total',   meta?.total ?? '—'],
+    ['Counts',  `Adrenaline: ${meta?.counts?.adr??0}; Shocks: ${meta?.counts?.shocks??0}; Amiodarone: ${meta?.counts?.amio??0}`]
+  ];
   let y = 74;
   kv.forEach(([k,v])=>{ doc.setFont('helvetica','bold'); doc.text(`${k}:`, 40, y); doc.setFont('helvetica','normal'); doc.text(String(v), 120, y); y += 18; });
-
-  const rows = events.map(e=>[e.ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}), e.label]);
-  if(autoTableLoaded && doc.autoTable){
+  const rows = (evts||[]).map(e=>[
+    new Date(e.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}),
+    e.label
+  ]);
+  if (doc.autoTable){
     doc.autoTable({ head: [['Time','Event']], body: rows, startY: y+10, styles: { fontSize: 11, cellPadding: 6 }, headStyles: { fillColor: [25,118,210], textColor: 255 }, alternateRowStyles: { fillColor: [232,244,253] }, margin: { left: 40, right: 40 } });
-  }else{
+  } else {
     y += 28; doc.setFont('helvetica','bold'); doc.text('Events:', 40, y); y += 16; doc.setFont('helvetica','normal');
     rows.forEach(r=>{ if (y > 760){ doc.addPage(); y=48; } doc.text(`${r[0]}  |  ${r[1]}`, 40, y); y += 16; });
   }
-
   const pageCount = doc.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
     doc.setPage(i); doc.setFontSize(10); doc.setTextColor(120);
@@ -846,24 +1027,168 @@ async function buildPdfBlob(){
   }
   return doc.output('blob');
 }
-function pdfFileName(){
-  const d=new Date();
-  const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0'), HH=String(d.getHours()).padStart(2,'0'), MM=String(d.getMinutes()).padStart(2,'0');
-  return `CPR Report ${yyyy}-${mm}-${dd} ${HH}-${MM}.pdf`;
-}
 $('printPdf').onclick = async () => {
   if ($('printPdf').classList.contains('is-disabled') || !sessionEnded()){
     alert('Please finish the session first. Tap ROSC or Stop to finalize the report, then export the PDF.');
     return;
   }
-  let file;
-  try { const blob = await buildPdfBlob(); file = new File([blob], pdfFileName(), { type: 'application/pdf' }); }
-  catch (err) { console.error(err); alert('Could not generate the PDF. Please try again.'); return; }
-  if (navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'CPR Session Report', text: 'Generated by Ambulance App' }); }
-    catch (err) { console.debug('Share rejected/aborted (ignored):', err); }
-  } else { alert('Sharing is not available in this environment.'); }
+  try {
+    const blob = await buildPdfFromEvents('CPR Session Report', currentSummary(), eventsToSerializable().slice().reverse());
+    await shareOrDownloadPdf(blob, {
+      fileName: pdfFileName(),
+      shareTitle: 'CPR Session Report',
+      shareText: 'Generated by Ambulance App'
+    });
+  } catch (err) { console.error(err); alert('Could not generate the PDF.'); }
 };
+
+/* ===== LOGS: Save & View (in-app modal) ===== */
+function hasFinalInRuntime(){ return hasFinalMarker(events.map(e => ({t:e.ts,label:e.label}))); }
+function saveCurrentLog(){
+  if (!totalStart){
+    alert('No active CPR session to save. Start the timers and finish with Stop or ROSC first.');
+    return;
+  }
+  if (!hasFinalInRuntime()){
+    alert('Please tap Stop or ROSC to finish the session. Those buttons save automatically — use Save Log only afterward if the events are still on screen.');
+    return;
+  }
+  if (!totalEnd) totalEnd = Date.now();
+  finalizeIntoSaved('CPR Stopped');
+  resetSessionState();
+  setExportEnabled(true);
+  alert('Saved current CPR log.');
+}
+const retrieveBtn = document.getElementById('retrieveLog');
+retrieveBtn?.addEventListener('click', () => {
+  const draft = loadDraft();
+  if (!draft || !Array.isArray(draft.events) || !draft.events.length){
+    alert('No draft CPR log to retrieve.');
+    return;
+  }
+  openModal(()=>showDraftDetail(draft));
+});
+
+/* Modal state */
+const modal = $('logsModal');
+const logsList = $('logsList');
+const logsDetail = $('logsDetail');
+const logsListWrap = $('logsListWrap');
+const logsEmpty = $('logsEmpty');
+const logDelete = $('logDelete');
+const logsDeleteAll = $('logsDeleteAll');
+const logsExport = $('logsExport');
+const logsClose = $('logsClose');
+const logsTitle = $('logsModalTitle');
+let selectedLog = null;
+
+function openModal(afterList){
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden','false');
+  // default to list
+  showList();
+  if (typeof afterList === 'function'){ afterList(); }
+  // focus trap basic: focus Close
+  logsClose.focus();
+}
+function closeModal(){
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+  selectedLog = null;
+}
+modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+logsClose.addEventListener('click', closeModal);
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeModal(); });
+
+function showList(){
+  const logs = loadAllLogs();
+  logsTitle.textContent = 'Saved CPR Logs';
+  selectedLog = null;
+  logsDetail.hidden = true;
+  logDelete.hidden = true;
+  logsExport.hidden = true;
+  logsDeleteAll.hidden = logs.length === 0;
+  logsList.hidden = false;
+
+  logsListWrap.innerHTML = '';
+  if (!logs.length){
+    logsEmpty.style.display = '';
+  } else {
+    logsEmpty.style.display = 'none';
+    logs.forEach((L, i)=>{
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.setAttribute('data-i', i);
+      const counts = `Adr ${L.meta?.counts?.adr??0} · Shocks ${L.meta?.counts?.shocks??0} · Amio ${L.meta?.counts?.amio??0}`;
+      div.innerHTML = `${L.title}<small>Total: ${L.meta?.total||'—'} · ${counts}</small>`;
+      div.addEventListener('click', ()=>showDetail(L));
+      logsListWrap.appendChild(div);
+    });
+  }
+}
+function populateDetailView(L){
+  $('dStarted').textContent = L.meta?.started ? new Date(L.meta.started).toLocaleString([], {hour12:false}) : '—';
+  $('dEnded').textContent   = L.meta?.ended   ? new Date(L.meta.ended).toLocaleString([], {hour12:false})   : '—';
+  $('dTotal').textContent   = L.meta?.total ?? '—';
+  $('dCounts').textContent  = `Adr ${L.meta?.counts?.adr??0} · Shocks ${L.meta?.counts?.shocks??0} · Amio ${L.meta?.counts?.amio??0}`;
+
+  const rows = (L.events||[]).slice().reverse().map(e=>{
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td'); td1.textContent = new Date(e.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    const td2 = document.createElement('td'); td2.textContent = e.label;
+    tr.appendChild(td1); tr.appendChild(td2);
+    return tr;
+  });
+  const dRows = $('dRows'); dRows.innerHTML = ''; rows.forEach(r=>dRows.appendChild(r));
+}
+function showDetail(L){
+  selectedLog = L;
+  logsTitle.textContent = L.title || 'CPR Log';
+  logsList.hidden = true;
+  logsDetail.hidden = false;
+  logDelete.hidden = false;
+  logsExport.hidden = false;
+  logsDeleteAll.hidden = true;
+  populateDetailView(L);
+}
+function showDraftDetail(draft){
+  selectedLog = draft;
+  logsTitle.textContent = (draft.title || 'CPR Draft') + ' (retrieved)';
+  logsList.hidden = true;
+  logsDetail.hidden = false;
+  logDelete.hidden = true;
+  logsExport.hidden = false;
+  logsDeleteAll.hidden = true;
+  populateDetailView(draft);
+}
+logsExport.addEventListener('click', async ()=>{
+  if(!selectedLog) return;
+  try{
+    const blob = await buildPdfFromEvents(selectedLog.title || 'CPR Log', selectedLog.meta, selectedLog.events.slice().reverse());
+    await shareOrDownloadPdf(blob, {
+      fileName: logFileLabel(selectedLog.meta, selectedLog.title),
+      shareTitle: selectedLog.title || 'CPR Log',
+      shareText: 'Saved CPR log from Ambulance App'
+    });
+  }catch(err){ console.error(err); alert('Could not export this log.'); }
+});
+logDelete.addEventListener('click', ()=>{
+  if(!selectedLog) return;
+  if(!confirm('Delete this CPR log? This cannot be undone.')) return;
+  const logs = loadAllLogs().filter(log => log.id !== selectedLog.id);
+  saveAllLogs(logs);
+  selectedLog = null;
+  showList();
+});
+logsDeleteAll.addEventListener('click', ()=>{
+  const logs = loadAllLogs();
+  if(!logs.length) return;
+  if(!confirm('Delete ALL saved CPR logs? This cannot be undone.')) return;
+  saveAllLogs([]);
+  selectedLog = null;
+  showList();
+});
+$('viewLogs')?.addEventListener('click', openModal);
 
 /* ===== WAAFELSS ===== */
 const age=$('age'), mBtn=$('mBtn'), yBtn=$('yBtn');
@@ -905,14 +1230,7 @@ age?.addEventListener('input', updateButtonsEnabled); updateButtonsEnabled();
 mBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=13){ alert("This age is more than 12 months.\nPlease use the Years button - the Months calculator is for 0–12 months."); return; } renderW(months(n)); });
 yBtn?.addEventListener('click', ()=>{ const n=validateAgeBasic(true); if(!isPositiveWholeAge(n)) return; if(n>=15){ alert("Our guideline defines pediatric patients up to 14 years."); return; } renderW(years(n)); });
 
-/* ===== Tiny utility: tag span-2 on landscape-only buttons ===== */
-function tagSpanButtons(){
-  document.getElementById('printPdf')?.classList.add('span-2');
-  document.getElementById('dsedb')?.classList.add('span-2');
-}
-tagSpanButtons();
-
-/* self-check */
+/* ===== self-check ===== */
 (function(){ try{ console.assert(!document.getElementById('countdown').classList.contains('show'), 'countdown hidden initially'); }catch{} })();
 })();
 </script>
