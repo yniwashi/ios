@@ -115,7 +115,7 @@ export async function run(root){
       <h2 class="apg-title">APGAR Score</h2>
 
       <div id="scoreCard" class="apg-score">
-        <div class="val" id="scoreVal">APGAR Score is —</div>
+        <div class="val" id="scoreVal">APGAR Score is -</div>
         <div class="sum" id="scoreSum">Baby's Status</div>
         <div class="sum" id="statusLine"></div>
       </div>
@@ -244,7 +244,7 @@ export async function run(root){
           : "Normal";
       classify(total);
     } else {
-      scoreVal.textContent = `APGAR Score is —`;
+      scoreVal.textContent = `APGAR Score is -`;
       scoreSum.textContent = `Baby's Status`;
       statusLine.textContent = ``;
       // keep pink-neutral bg
