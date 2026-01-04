@@ -159,13 +159,15 @@ export async function run(root) {
     display:flex; gap:10px; flex-wrap:wrap;
   }
   .cw-pill{
-    border:1px solid var(--border);
-    background: var(--surface);
+    border:1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08);
     border-radius: var(--badge-radius);
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 950;
-    color: var(--text);
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing:.03em;
+    text-transform:uppercase;
     white-space:nowrap;
   }
 
@@ -1239,9 +1241,35 @@ export async function run(root) {
         card.setAttribute("tabindex", "0");
 
         const range = formatRange(x.page_start, x.page_end);
-        const type = x.type ? String(x.type) : "";
-        const domains = Array.isArray(x.domains) && x.domains.length ? x.domains.slice(0, 3) : [];
-        const ages = Array.isArray(x.age_groups) && x.age_groups.length ? x.age_groups.slice(0, 2) : [];
+        const metaChunks = [];
+        function addTag(label) {
+          if (!label || metaChunks.length >= 4) return;
+          metaChunks.push(`<span class="cw-pill">${escapeHtml(label)}</span>`);
+        }
+        const firstWord = (str) => {
+          if (!str) return "";
+          const word = String(str).trim().split(/\s+/)[0];
+          return word || "";
+        };
+        const typeTag = firstWord(x.type);
+        if (typeTag) addTag(typeTag);
+        if (Array.isArray(x.domains) && x.domains.length) {
+          for (let i = 0; i < x.domains.length && metaChunks.length < 4; i++) {
+            let domainTag = firstWord(x.domains[i]);
+            if (domainTag.toUpperCase().startsWith("CPG")) {
+              domainTag = domainTag.replace(/[^\w.]/g, "");
+            } else {
+              domainTag = domainTag.replace(/[^\w]/g, "");
+            }
+            if (domainTag) addTag(domainTag);
+          }
+        }
+        if (Array.isArray(x.age_groups)) {
+          for (let i = 0; i < x.age_groups.length && metaChunks.length < 4; i++) {
+            const ageTag = firstWord(x.age_groups[i]);
+            if (ageTag) addTag(ageTag);
+          }
+        }
 
         const pctRaw = Number.isFinite(Number(x.score_pct)) ? Number(x.score_pct) : scoreToPercent(Number(x.score));
         const pct = pctRaw != null ? Math.round(pctRaw) : null;
@@ -1250,11 +1278,7 @@ export async function run(root) {
         card.innerHTML = `
           <div class="left">
             <div class="name">${escapeHtml(x.title || "")}</div>
-            <div class="sub">
-              ${type ? `<span class="cw-pill">${escapeHtml(type)}</span>` : ``}
-              ${domains.map(d => `<span class="cw-pill">${escapeHtml(d)}</span>`).join("")}
-              ${ages.map(a => `<span class="cw-pill">${escapeHtml(a)}</span>`).join("")}
-            </div>
+            ${metaChunks.length ? `<div class="sub">${metaChunks.join("")}</div>` : ``}
           </div>
 
           <div class="cw-right">
