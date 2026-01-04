@@ -11,7 +11,7 @@ export async function run(mountEl){
         box-shadow:0 8px 18px rgba(0,0,0,.12);
       }
 
-      /* LANDMARK 1 — Title / theme */
+      /* LANDMARK 1 - Title / theme */
       .ct-head{ display:flex; align-items:center; justify-content:space-between; gap:10px }
       .ct-title{ margin:0; font-weight:900; font-size:16px; color:var(--text,#0c1230) }
       .ct-strip{ height:6px; border-radius:6px; margin:10px 0 14px 0;
@@ -23,7 +23,7 @@ export async function run(mountEl){
       .ct-col{ flex:1 1 260px; min-width:240px }
       .ct-label{ font-size:12px; font-weight:800; color:#6e7b91; margin:0 0 6px 2px }
 
-      /* LANDMARK 3 — Aligned input */
+      /* LANDMARK 3 - Aligned input */
       .ct-input{
         width:100%;
         box-sizing:border-box;
@@ -33,7 +33,7 @@ export async function run(mountEl){
         margin-left: 0; /* keep aligned with label */
       }
 
-      /* LANDMARK 2 — group chips */
+      /* LANDMARK 2 - group chips */
       .ct-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
       .ct-chip{
         border-radius:999px; border:1px solid var(--border,#dbe0ea);
@@ -53,7 +53,7 @@ export async function run(mountEl){
         font-weight:700; font-size:13px;
       }
 
-      /* LANDMARK 5 — Table */
+      /* LANDMARK 5 - Table */
       .ct-table{ display:flex; flex-direction:column; gap:8px; margin-top:12px }
       .ct-rowitem{
         display:grid; grid-template-columns: 1fr 1fr; gap:8px;
@@ -98,10 +98,10 @@ export async function run(mountEl){
 
         <p class="ct-note">Tip: Press Preterm to get info without entering age.</p>
 
-        <!-- LANDMARK 4 — validation messages -->
+        <!-- LANDMARK 4 - validation messages -->
         <div id="ctAlert" class="ct-alert"></div>
 
-        <!-- LANDMARK 5 — results table -->
+        <!-- LANDMARK 5 - results table -->
         <div id="ctTable" class="ct-table" aria-live="polite"></div>
       </div>
     </div>
@@ -133,7 +133,7 @@ export async function run(mountEl){
     alertBox.textContent = '';
   };
 
-  /* ===== LANDMARK 5 — render a KV table ===== */
+  /* ===== LANDMARK 5 - render a KV table ===== */
   function renderTable(map){
     table.innerHTML = '';
     for (const [k,v] of map){
@@ -148,7 +148,7 @@ export async function run(mountEl){
   const fmt1 = v => (Math.round(v*10)/10).toFixed(1);
   const fmtInt = v => String(Math.round(v));
 
-  /* ===== LANDMARK 6 — data engines ===== */
+  /* ===== LANDMARK 6 - data engines ===== */
   function getPretermData(){
     // From your Kotlin getPretermData()
     return [
@@ -513,7 +513,7 @@ export async function run(mountEl){
     return [['Info','Unknown age range']];
   }
 
-  /* ===== LANDMARK 7 — wiring & live updates ===== */
+  /* ===== LANDMARK 7 - wiring & live updates ===== */
   function compute(){
     hideAlert();
     const grp = activeGroup();
