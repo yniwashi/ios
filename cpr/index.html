@@ -478,22 +478,8 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);c
           </svg>
           Log DSED
         </button>
-        <button id="retrieveLog" class="btn" style="background:linear-gradient(180deg,#334155,#1f2937);border-color:#475569">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round"
-      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-  </svg>
-  Retrieve Log
-</button>
-
-        <button id="viewLogs" class="btn" style="background:linear-gradient(180deg,#475569,#334155);border-color:#64748b">
-  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round"
-      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-  </svg>
-  View Logs
-</button>
-
+        <button id="retrieveLog" class="btn" style="background:linear-gradient(180deg,#334155,#1f2937);border-color:#475569">Retrieve Log</button>
+        <button id="viewLogs" class="btn" style="background:linear-gradient(180deg,#475569,#334155);border-color:#64748b">View Logs</button>
       </div>
     </div>
 
@@ -600,7 +586,6 @@ mql.addEventListener?.('change', ()=>{ if(themeMode==='auto') applyTheme(); });
 applyTheme();
 
 /* Back */
-const HOME = "https://ios.niwashibase.com/ambulance";
 const EXIT_MSG = "CPR is still running. Please tap Stop or ROSC to finish before leaving.";
 const backWarn = document.getElementById('backWarn');
 let backWarnTimer = null;
@@ -616,11 +601,20 @@ function navigateBack(){
     showBackWarning(EXIT_MSG);
     return;
   }
+  const storedHome = sessionStorage.getItem('ambulance_home_url');
+  if (storedHome) {
+    location.href = storedHome;
+    return;
+  }
+  if (typeof window.closePanel === 'function'){
+    window.closePanel();
+    return;
+  }
   if (window.history.length > 1){
     history.back();
     return;
   }
-  location.href = HOME;
+  location.hash = "";
 }
 document.getElementById('backBtn')?.addEventListener('click', navigateBack);
 
@@ -1111,6 +1105,14 @@ const logsExport = $('logsExport');
 const logsClose = $('logsClose');
 const logsTitle = $('logsModalTitle');
 let selectedLog = null;
+let modalHistoryActive = false;
+let modalPopHandler = null;
+
+function hideModal(){
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+  selectedLog = null;
+}
 
 function openModal(afterList){
   modal.classList.add('open');
@@ -1120,11 +1122,27 @@ function openModal(afterList){
   if (typeof afterList === 'function'){ afterList(); }
   // focus trap basic: focus Close
   logsClose.focus();
+  if (!modalHistoryActive){
+    modalHistoryActive = true;
+    if (!modalPopHandler){
+      modalPopHandler = () => {
+        if (!modalHistoryActive) return;
+        modalHistoryActive = false;
+        hideModal();
+        window.removeEventListener('popstate', modalPopHandler);
+        modalPopHandler = null;
+      };
+      window.addEventListener('popstate', modalPopHandler);
+    }
+    history.pushState({ logsModal: true }, "");
+  }
 }
 function closeModal(){
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden','true');
-  selectedLog = null;
+  if (modalHistoryActive){
+    history.back();
+  } else {
+    hideModal();
+  }
 }
 modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
 logsClose.addEventListener('click', closeModal);
