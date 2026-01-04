@@ -155,7 +155,7 @@ export async function run(mountEl){
         </div>
 
         <div id="apResult" class="ap-result" aria-live="polite">
-          <div id="apSelected" class="ap-selected" style="color:var(--text,#0c1230)">—</div>
+          <div id="apSelected" class="ap-selected" style="color:var(--text,#0c1230)">-</div>
           <div id="apAgeLine" class="ap-age-line"></div>
           <div id="apDose" class="ap-dose">Pick a medication.</div>
         </div>
@@ -433,7 +433,7 @@ Wheeze or dry cough, Talks/ vocalise normally, Alert.
 
 ${H('SPECIAL NOTES')}
 • Neb should be mixed to a volume of 5ml
-• Ipratropium Bromide must always be administered together with Salbutamol in the same nebuliser — never on its own.
+• Ipratropium Bromide must always be administered together with Salbutamol in the same nebuliser - never on its own.
 • Ipratropium Bromide is a single dose. If additional doses are required, request CCP assistance. CCP is required for a second dose; maximum 2 doses may be given 20 minutes apart.`;
   }
 
@@ -450,7 +450,7 @@ ${H('SPECIAL NOTES')}
       const w = weightForMonths(n);
       const byMonth = {2:'3ml',3:'3ml',4:'3.5ml',5:'4ml',6:'4ml',7:'5ml',8:'5ml',9:'5.5ml',10:'5.5ml',11:'5.5ml',12:'5.5ml'};
       const key = Math.max(2, Math.min(12, Math.round(n)));
-      const dose = byMonth[key] || '—';
+      const dose = byMonth[key] || '-';
       doseEl.innerHTML =
 `Patient estimated weight is ${clean(w)}kg.
 
@@ -675,7 +675,7 @@ RR < 30`;
 
   // init
   setGroupActive('Months');
-  selectedEl.textContent = '—';
+  selectedEl.textContent = '-';
   ageLineEl.textContent = '';
   doseEl.textContent = 'Pick a medication.';
 }
