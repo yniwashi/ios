@@ -318,16 +318,36 @@ function ensureViewerModal() {
   const backBtn = modal.querySelector("#pvBack");
   const titleEl = modal.querySelector("#pvTitle");
 
-  function close() {
+  function closeModal() {
     modal.classList.remove("show");
     frame.src = "about:blank";
+    modal.__historyActive = false;
+    if (modal.__popHandler) {
+      window.removeEventListener("popstate", modal.__popHandler);
+      modal.__popHandler = null;
+    }
   }
 
-  backBtn.addEventListener("click", close);
+  backBtn.addEventListener("click", () => {
+    if (modal.__historyActive) {
+      history.back();
+    } else {
+      closeModal();
+    }
+  });
 
   modal.__open = (url, title) => {
     titleEl.textContent = title || "Flowchart";
     frame.src = url;
+    if (!modal.__popHandler) {
+      modal.__popHandler = () => {
+        if (!modal.__historyActive) return;
+        closeModal();
+      };
+      window.addEventListener("popstate", modal.__popHandler);
+    }
+    modal.__historyActive = true;
+    history.pushState({ pvModal: true }, "");
 
     // Make sure it shows immediately even during scroll inertia
     requestAnimationFrame(() => {
