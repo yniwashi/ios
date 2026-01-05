@@ -695,10 +695,21 @@
     const scDownloadEl= document.getElementById("scDownload");
     if (scDownloadEl) scDownloadEl.href = SHORTCUT_DOWNLOAD_URL || "#";
     wireWhatsNewControls();
+    function applyUpdatesButtonVisibility(useShortcuts){
+      const trigger = document.querySelector(".updates-cta");
+      if (!trigger) return;
+      const matches =
+        WHATS_NEW_TARGET === "both" ||
+        (WHATS_NEW_TARGET === "shortcuts" && useShortcuts) ||
+        (WHATS_NEW_TARGET === "default" && !useShortcuts);
+      trigger.style.display = matches ? "flex" : "none";
+    }
+
     const whatsNewTrigger = document.getElementById("wnShowAgain");
     whatsNewTrigger?.addEventListener("click", () => {
       localStorage.removeItem(WHATS_NEW_KEY);
       handleWhatsNew(toggle.checked);
+      applyUpdatesButtonVisibility(toggle.checked);
     });
 
     // === Hidden tap to reset Shortcuts news card ===
@@ -754,6 +765,7 @@ function render(){
   }
 
   handleWhatsNew(useShortcuts);
+  applyUpdatesButtonVisibility(useShortcuts);
 
   // --- Sections grid ---
   sectionsEl.innerHTML = "";
