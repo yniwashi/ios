@@ -280,6 +280,9 @@
     .wn-body ul{padding-left:20px;margin:14px 0}
     .wn-body li{margin:6px 0}
     .wn-footer{margin:18px 0 0;font-size:13px;color:var(--muted)}
+    .wn-links{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+    .wn-link{flex:1 1 120px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font:700 12px/1 system-ui;padding:10px;border-radius:12px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.16)}
+    .wn-link img{width:36px;height:36px;object-fit:contain;margin-bottom:4px}
     body.wn-open{overflow:hidden}
     @keyframes wnpop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 
@@ -467,6 +470,21 @@
     <li><strong>Formulary & Flowcharts.</strong> Browse medications and clinical flowcharts directly inside the CPG.</li>
     <li><strong>CPG Wizard.</strong> Smart search surfaces the right protocol from any symptom, abbreviation, or keyword.</li>
   </ul>
+  <p><strong>Stay in the loop:</strong> hop into Ambulance app channels for real-time alerts, feature drops, and pro tips.</p>
+  <div class="wn-links">
+    <a class="wn-link" style="background:linear-gradient(180deg,#5c64f4,#3b42c9)" href="https://discord.gg/qc8fK3yd92" target="_blank" rel="noopener">
+      <img src="images/discord.png" alt="Discord">
+      <span>Discord</span>
+    </a>
+    <a class="wn-link" style="background:linear-gradient(180deg,#24b4e3,#1186b3)" href="https://t.me/+EAcWKnoaRq05YzY0" target="_blank" rel="noopener">
+      <img src="images/telegram.png" alt="Telegram">
+      <span>Telegram</span>
+    </a>
+    <a class="wn-link" style="background:linear-gradient(180deg,#24ac04,#1a7a03)" href="https://whatsapp.com/channel/0029VadgCTH0QeamMlpEvX0x" target="_blank" rel="noopener">
+      <img src="images/whatsapp.png" alt="WhatsApp">
+      <span>WhatsApp</span>
+    </a>
+  </div>
   <p class="wn-footer">Thanks for the ongoing feedback - more upgrades are on the way.</p>
 `
   };
