@@ -33,6 +33,8 @@
          WHATS_NEW_MESSAGE: HTML body inserted into the modal.
        The overlay locks scroll and tracks dismissals in localStorage; clicking outside,
        pressing ESC, or tapping Close stores the key so it stays hidden until you bump it.
+       The “Updates” pill under Shortcuts Mode simply clears that key so you can preview
+       the latest message on demand.
 
   Keep the comment blocks near each config in sync when adding or revising announcements.
 -->
@@ -261,6 +263,11 @@
     .news figcaption{margin-top:4px;font-size:12px;color:var(--muted);text-align:center}
     .news .btn{display:inline-block;padding:8px 12px;border-radius:10px;background:linear-gradient(180deg,var(--accent),#0D5BB5);color:#fff!important;border:1px solid color-mix(in oklab,var(--accent) 60%,transparent);font-weight:800;font-size:13px;text-decoration:none;box-shadow:var(--shadow);margin-top:6px}
 
+    /* What's New trigger */
+    .updates-cta{display:flex;justify-content:flex-start;margin:4px 0 2px}
+    .updates-btn{appearance:none;border:1px solid color-mix(in oklab,var(--accent) 40%,transparent);background:color-mix(in oklab,var(--accent) 12%,var(--surface));color:var(--accent);font:700 12px/1 system-ui;padding:6px 12px;border-radius:999px;cursor:pointer}
+    .updates-btn:hover{background:color-mix(in oklab,var(--accent) 18%,var(--surface));}
+
     /* What's New modal */
     .wn-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:color-mix(in oklab,var(--bg) 55%,#02050bed);backdrop-filter:blur(10px);z-index:99998}
     .wn-card{width:min(540px,calc(100vw - 32px));background:var(--surface);color:var(--text);border-radius:20px;padding:24px 24px 20px;border:1px solid var(--border);box-shadow:0 28px 70px rgba(0,0,0,.45);position:relative;animation:wnpop .3s cubic-bezier(.16,.84,.44,1);max-height:92vh;overflow-y:auto}
@@ -336,6 +343,10 @@
       <input id="mode" type="checkbox" />
       <div class="rail"><div class="knob"></div></div>
     </label>
+  </div>
+
+  <div class="updates-cta">
+    <button id="wnShowAgain" class="updates-btn" type="button">Updates</button>
   </div>
 
   <!-- Shortcuts banner -->
@@ -447,12 +458,12 @@
     // -- What's New modal --
     WHATS_NEW_ENABLED: true,
     WHATS_NEW_KEY: "amb_whats_new_v02",
-    WHATS_NEW_TARGET: "both", // "default", "shortcuts", "both"
+    WHATS_NEW_TARGET: "default", // "default", "shortcuts", "both"
     WHATS_NEW_MESSAGE: `
   <p class="wn-intro">Updates install remotely - just reopen the app (or relaunch if needed) to see the latest build.</p>
   <ul>
     <li><strong>CPR Timer.</strong> Logs save automatically, can be recovered if the app closes, export as PDF, manage history, and accidental back presses are blocked.</li>
-    <li><strong>CCP Pediatrics.</strong> New “View Formulary” button jumps straight to the medication in the CPG.</li>
+    <li><strong>CCP Pediatrics.</strong> New “View Formulary” button jumps straight to the medication inside the CPG.</li>
     <li><strong>Formulary & Flowcharts.</strong> Browse medications and clinical flowcharts directly inside the CPG.</li>
     <li><strong>CPG Wizard.</strong> Smart search surfaces the right protocol from any symptom, abbreviation, or keyword.</li>
   </ul>
@@ -666,6 +677,11 @@
     const scDownloadEl= document.getElementById("scDownload");
     if (scDownloadEl) scDownloadEl.href = SHORTCUT_DOWNLOAD_URL || "#";
     wireWhatsNewControls();
+    const whatsNewTrigger = document.getElementById("wnShowAgain");
+    whatsNewTrigger?.addEventListener("click", () => {
+      localStorage.removeItem(WHATS_NEW_KEY);
+      handleWhatsNew(toggle.checked);
+    });
 
     // === Hidden tap to reset Shortcuts news card ===
 document.querySelector('.copy .t')?.addEventListener('click', () => {
