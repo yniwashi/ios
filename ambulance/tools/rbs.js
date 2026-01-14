@@ -1,4 +1,4 @@
-// tools/rbsconverter.js
+// tools/rbs.js
 export async function run(mountEl) {
   mountEl.innerHTML = `
     <style>
