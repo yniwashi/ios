@@ -1,4 +1,6 @@
 // /tools/gcs.js
+// CHANGELOG (2026-01-15):
+// - Preserve full URL when syncing hash state.
 // GCS with horizontal "chips" per category — bigger targets, clear selected color,
 // and adjustable spacing. Tweak the CSS variables below to fine-tune the look.
 
@@ -221,7 +223,9 @@ export async function run(root){
       if (e!=null) p.set("e", String(e)); else p.delete("e");
       if (v!=null) p.set("v", String(v)); else p.delete("v");
       if (m!=null) p.set("m", String(m)); else p.delete("m");
-      history.replaceState(null,"","#"+p.toString());
+      const hash = p.toString();
+      const url = `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+      history.replaceState(history.state, "", url);
     }
   }
 
