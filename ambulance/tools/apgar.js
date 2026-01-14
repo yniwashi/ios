@@ -1,4 +1,6 @@
 // /tools/apgar.js
+// CHANGELOG (2026-01-15):
+// - Preserve full URL when syncing hash state.
 // APGAR with chip UI (pink), Kotlin-equivalent scoring & output.
 // Shows only the total and status (no A/P/G/Ac/R breakdown).
 
@@ -258,7 +260,9 @@ export async function run(root){
       if (g!=null)  q.set("g",  String(g));  else q.delete("g");
       if (ac!=null) q.set("ac", String(ac)); else q.delete("ac");
       if (r!=null)  q.set("r",  String(r));  else q.delete("r");
-      history.replaceState(null,"","#"+q.toString());
+      const hash = q.toString();
+      const url = `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+      history.replaceState(history.state, "", url);
     }
   }
 
