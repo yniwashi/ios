@@ -1,4 +1,9 @@
 <!--
+  CHANGELOG (2026-01-15):
+  - Fix tool history to ensure home -> tool uses a real history entry.
+  - Remove stray modal flag text accidentally rendered after </html>.
+
+  CHANGELOG (2026-01-05):
   Messaging overview / mini-readme:
   1. Terms & Conditions Gate
      - HTML block near the top (#tacGate) that remains hidden until JS shows it.
@@ -621,12 +626,20 @@
     document.getElementById("panel").hidden = false;
     document.body.classList.add("panel-open");
   }
-  function closePanel(){
-    document.getElementById("panel").hidden = true;
+  function closePanel(fromHistory=false){
+    const panel = document.getElementById("panel");
+    if (!fromHistory){
+      if (!panel.hidden){
+        history.back();
+      }
+      return;
+    }
+    if (panel.hidden) return;
+    panel.hidden = true;
     document.getElementById("panel-body").innerHTML = "";
     document.body.classList.remove("panel-open");
-    updateHash({});
-    try { sessionStorage.setItem("ambulance_home_url", location.href); } catch (_) {}
+    currentTool = null;
+    try { sessionStorage.setItem("ambulance_home_url", location.pathname + location.search); } catch (_) {}
   }
 
   // ===== T&C Gate ===== (uses TAC_KEY from config block)
@@ -663,7 +676,7 @@
   function initTacOrApp(){
     const consent = localStorage.getItem(TAC_KEY) === "1";
     if (consent) mount(); else { wireTacGate(); showTacGate(); }
-    try { sessionStorage.setItem("ambulance_home_url", location.href); } catch (_) {}
+    try { sessionStorage.setItem("ambulance_home_url", location.pathname + location.search); } catch (_) {}
   }
   document.addEventListener("DOMContentLoaded", initTacOrApp);
 
@@ -809,7 +822,7 @@ function render(){
         if (btn.actionId){
           a.addEventListener("click", (e) => {
             e.preventDefault();
-            runAction(btn.actionId, { title: btn.text });
+            runAction(btn.actionId, { title: btn.text }, { pushState: true });
           });
         } else if (!btn.href || btn.href === "#"){
           a.addEventListener("click",(e)=>{
@@ -888,7 +901,7 @@ function wireWhatsNewControls(){
     render();
 
     const { tool, ...params } = parseHash();
-    if (tool) runAction(tool, params);
+    if (tool) runAction(tool, params, { pushState: true, initialLoad: true });
   }
 
   // Sections layout
@@ -900,8 +913,29 @@ function wireWhatsNewControls(){
     { title: "Ops / Links",            items: ["HOS","Websites","AS-Call","HMC Address Book","Shifts","Stay Connected"] }
   ];
 
+  let currentTool = null;
+  let baseStateInitialized = false;
+
+  function ensureBaseState(){
+    if (!baseStateInitialized){
+      history.replaceState(null, "", location.pathname + location.search);
+      baseStateInitialized = true;
+    }
+  }
+
+  function setToolState(actionId, params = {}, replace = false){
+    ensureBaseState();
+    const hashParams = { tool: actionId, ...params };
+    const hash = new URLSearchParams(hashParams).toString();
+    const url = `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+    const state = { tool: actionId, params };
+    if (replace) history.replaceState(state, "", url);
+    else history.pushState(state, "", url);
+    currentTool = actionId;
+  }
+
   // Router / action loader
-  async function runAction(actionId, params = {}) {
+  async function runAction(actionId, params = {}, options = {}) {
     try {
       const mountEl = document.getElementById("panel-body");
       mountEl.innerHTML = "";
@@ -934,7 +968,16 @@ function wireWhatsNewControls(){
             </div>
           </div>
         `;
-        updateHash({ tool: actionId, ...params });
+        if (options.fromHistory) {
+          currentTool = actionId;
+        } else if (options.pushState !== false) {
+          if (options.initialLoad) {
+            setToolState(actionId, params, false);
+          } else {
+            const replace = currentTool != null;
+            setToolState(actionId, params, replace);
+          }
+        }
         return;
       }
 
@@ -942,7 +985,16 @@ function wireWhatsNewControls(){
       const ver = Date.now();
       const mod = await import(`./tools/${actionId}.js?ver=${ver}`);
       await mod.run(mountEl, params);
-      updateHash({ tool: actionId, ...params });
+      if (options.fromHistory) {
+        currentTool = actionId;
+      } else if (options.pushState !== false) {
+        if (options.initialLoad) {
+          setToolState(actionId, params, false);
+        } else {
+          const replace = currentTool != null;
+          setToolState(actionId, params, replace);
+        }
+      }
     } catch (e) {
       alert(`Could not load tool: ${actionId}\n${e.message || e}`);
       console.error(e);
@@ -950,8 +1002,15 @@ function wireWhatsNewControls(){
   }
 
   function parseHash(){ const h = new URLSearchParams((location.hash||"").replace(/^#/, "")); const obj = {}; for (const [k,v] of h.entries()) obj[k]=v; return obj; }
-  function updateHash(obj){ const h = new URLSearchParams(obj); const s = h.toString(); history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search); }
-  window.addEventListener("hashchange", () => { const { tool, ...params } = parseHash(); if (tool) runAction(tool, params); });
+  window.addEventListener("popstate", (event) => {
+    if (window.__modalPopHandled){ window.__modalPopHandled = false; return; }
+    const state = event.state;
+    if (state && state.tool){
+      runAction(state.tool, state.params || {}, { fromHistory: true, pushState: false });
+    } else {
+      closePanel(true);
+    }
+  });
 
   // Swipe back
   let touchStartX = 0; let touchStartY = 0; const SWIPE_THRESHOLD = 60; const VERTICAL_TOLERANCE = 40;
