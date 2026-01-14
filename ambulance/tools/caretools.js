@@ -565,4 +565,3 @@ export async function run(mountEl){
   setGroupActive('Months');
   compute();
 }
-
