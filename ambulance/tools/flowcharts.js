@@ -1,4 +1,7 @@
 // /tools/flowcharts.js
+// CHANGELOG (2026-01-15):
+// - Fix PDF modal back to avoid blank viewer layer; preserve hash/state.
+// - Isolate hash query per tool to stop cross-tool search carryover.
 // Flowcharts picker for the PDF viewer:
 // - Loads flowcharts.json
 // - Search + fast jump
@@ -215,7 +218,7 @@ export async function run(root) {
 
       <div class="fc-top">
         <div class="fc-search">
-          <input id="fcQ" type="search" inputmode="search" placeholder="Search flowcharts..." autocomplete="off" />
+          <input id="fcQ" type="search" inputmode="search" placeholder="Search flowcharts..." autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="fc-search" />
           <div class="meta" id="fcCount">—</div>
         </div>
 
@@ -320,39 +323,70 @@ function ensureViewerModal() {
   const backBtn = modal.querySelector("#pvBack");
   const titleEl = modal.querySelector("#pvTitle");
 
-  function closeModal() {
+  function buildOverlayUrl(overlayToken) {
+    const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    p.set("tool", "flowcharts");
+    p.set("overlay", "pv");
+    if (overlayToken) p.set("pv", overlayToken);
+    else p.delete("pv");
+    const hash = p.toString();
+    return `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+  }
+  function buildOverlayState(overlayToken) {
+    const baseState = (history.state && history.state.tool) ? history.state : { tool: "flowcharts", params: {} };
+    const next = { ...baseState, overlay: "pv" };
+    if (overlayToken) next.overlayToken = overlayToken;
+    return next;
+  }
+
+  function closeModal(fromPop = false) {
+    modal.__openToken = (modal.__openToken || 0) + 1;
     modal.classList.remove("show");
+    modal.style.display = "none";
     frame.src = "about:blank";
-    modal.__historyActive = false;
     if (modal.__popHandler) {
       window.removeEventListener("popstate", modal.__popHandler);
       modal.__popHandler = null;
+    }
+    if (modal.__historyActive) {
+      modal.__historyActive = false;
+      if (fromPop) window.__modalPopHandled = true;
     }
   }
 
   backBtn.addEventListener("click", () => {
     if (modal.__historyActive) {
-      history.back();
+      closeModal();
+      if (modal.__baseUrl) {
+        history.replaceState(modal.__baseState || history.state, "", modal.__baseUrl);
+      }
+      modal.__historyActive = false;
     } else {
       closeModal();
     }
   });
 
-  modal.__open = (url, title) => {
+  modal.__open = (url, title, overlayToken) => {
     titleEl.textContent = title || "Flowchart";
     frame.src = url;
+    modal.style.display = "block";
     if (!modal.__popHandler) {
       modal.__popHandler = () => {
         if (!modal.__historyActive) return;
-        closeModal();
+        closeModal(true);
       };
       window.addEventListener("popstate", modal.__popHandler);
     }
+    modal.__baseUrl = `${location.pathname}${location.search}${location.hash || ""}`;
+    modal.__baseState = history.state;
     modal.__historyActive = true;
-    history.pushState({ pvModal: true }, "");
+    history.pushState(buildOverlayState(overlayToken), "", buildOverlayUrl(overlayToken));
 
     // Make sure it shows immediately even during scroll inertia
+    modal.__openToken = (modal.__openToken || 0) + 1;
+    const token = modal.__openToken;
     requestAnimationFrame(() => {
+      if (modal.__openToken !== token) return;
       modal.classList.add("show");
     });
   };
@@ -382,13 +416,15 @@ function ensureViewerModal() {
     p.set("tool", "flowcharts");
     if (q && String(q).trim()) p.set("q", String(q).trim());
     else p.delete("q");
-    history.replaceState(null, "", "#" + p.toString());
+    const hash = p.toString();
+    const url = `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+    history.replaceState(history.state, "", url);
   }
 
   function getHashState() {
     const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
     return {
-      q: p.get("q") || ""
+      q: (p.get("tool") === "flowcharts") ? (p.get("q") || "") : ""
     };
   }
 
@@ -504,7 +540,7 @@ function open() {
   setHashState($q.value || "");
   const url = CFG.urlPageBase + String(x.page);
   const modal = ensureViewerModal();
-modal.__open(url, x.title);
+  modal.__open(url, x.title, `page:${x.page}`);
 
 
 }
@@ -547,6 +583,7 @@ modal.__open(url, x.title);
   // Restore hash state
   const hs = getHashState();
   if (hs.q) $q.value = hs.q;
+  else { $q.value = ""; $q.setAttribute("value", ""); }
 
   // Buttons
   $clear.addEventListener("click", () => {
