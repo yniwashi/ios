@@ -6,8 +6,13 @@
 
 <style>
 /* ==========================================================
-   CPR TIMER — compact, centered, responsive (2026-01-04)
-   CHANGELOG (this build):
+   CPR TIMER — compact, centered, responsive 
+
+   CHANGELOG (2026-01-15):
+   - Ensure CPR logs modal uses a single back layer with stable URL/state.
+   - Close logs modal before navigating away from the tool.
+
+   CHANGELOG (2026-01-04):
    • Added Retrieve Log button that loads the autosaved draft into the in-app
      modal so a backgrounded webclip session can be recovered and exported.
    • Logs modal gained Draft detail view plus Delete Log / Delete All controls
@@ -603,6 +608,7 @@ applyTheme();
 const EXIT_MSG = "CPR is still running. Please tap Stop or ROSC to finish before leaving.";
 const backWarn = document.getElementById('backWarn');
 let backWarnTimer = null;
+let logsModalOpen = false;
 function showBackWarning(msg){
   if(!backWarn) return;
   backWarn.textContent = msg;
@@ -611,6 +617,10 @@ function showBackWarning(msg){
   backWarnTimer = setTimeout(()=>backWarn.classList.remove('show'), 3500);
 }
 function navigateBack(){
+  if (logsModalOpen) {
+    history.back();
+    return;
+  }
   if (sessionOngoing()){
     showBackWarning(EXIT_MSG);
     return;
@@ -1122,15 +1132,28 @@ let selectedLog = null;
 let modalHistoryActive = false;
 let modalPopHandler = null;
 
+function buildOverlayUrl() {
+  const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+  p.set("overlay", "logs");
+  const hash = p.toString();
+  return `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+}
+function buildOverlayState() {
+  const baseState = history.state || {};
+  return { ...baseState, overlay: "logs" };
+}
+
 function hideModal(){
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden','true');
   selectedLog = null;
+  logsModalOpen = false;
 }
 
 function openModal(afterList){
   modal.classList.add('open');
   modal.setAttribute('aria-hidden','false');
+  logsModalOpen = true;
   // default to list
   showList();
   if (typeof afterList === 'function'){ afterList(); }
@@ -1148,7 +1171,7 @@ function openModal(afterList){
       };
       window.addEventListener('popstate', modalPopHandler);
     }
-    history.pushState({ logsModal: true }, "");
+    history.pushState(buildOverlayState(), "", buildOverlayUrl());
   }
 }
 function closeModal(){
