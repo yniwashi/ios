@@ -1,5 +1,5 @@
 // tools/ccp_peds.js
-// CHANGELOG (2026-01-15):
+// Changelog (2026-01-15):
 // - Fix PDF modal back to avoid blank viewer layer; preserve hash/state.
 // - Align age/weight logic, cap Dexamethasone at 12 mg, and clear invalid weight outputs.
 export async function run(mountEl){
@@ -415,8 +415,6 @@ export async function run(mountEl){
       return (mode==='months')
         ? `Age ${a} months`
         : `Age is ${a} years`;
-    } else if (w){
-      return `Weight ${w} kg`;
     }
     return '';
   }
