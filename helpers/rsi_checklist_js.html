@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!--
+  CHANELOG (2026-01-15):
+  - Force RSI back to return home first to avoid iOS WebClip history quirks.
+-->
 <html>
 <head>
   <title>SOAPPPME</title>
@@ -240,14 +244,22 @@
 
 
 <script>
-  // Smart back: history if available, else go home
-  const HOME = "https://ios.niwashibase.com/ambulance";
+  // Smart back: prefer stored home to avoid WebClip history quirks
+  const HOME = sessionStorage.getItem('ambulance_home_url') || "https://ios.niwashibase.com/ambulance";
   document.getElementById('backBtn').addEventListener('click', () => {
-    if (document.referrer && document.referrer !== location.href && history.length > 1){
-      history.back();
-    } else {
+    if (HOME) {
       location.href = HOME;
+      return;
     }
+    if (window.closePanel) {
+      window.closePanel();
+      return;
+    }
+    if (history.length > 1) {
+      history.back();
+      return;
+    }
+    location.href = "https://ios.niwashibase.com/ambulance";
   });
 </script>
 
