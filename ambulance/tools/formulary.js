@@ -1,4 +1,7 @@
 // /tools/formulary.js
+// CHANGELOG (2026-01-15):
+// - Fix PDF modal back to avoid blank viewer layer; preserve hash/state.
+// - Prevent iOS zoom on search and isolate hash query per tool.
 // Formulary picker for the PDF viewer:
 // - Loads formulary.json
 // - Search + fast jump
@@ -61,8 +64,10 @@ export async function run(root) {
   }
   .fm-search input{
     width:100%; border:none; outline:none; background:transparent;
-    color:var(--text); font-weight:800; font-size:14px;
+    color:var(--text); font-weight:800; font-size:16px; line-height:1.2;
+    -webkit-appearance:none; appearance:none;
   }
+  .fm-search input::placeholder{ font-size:16px; }
   .fm-search .meta{
     flex:none; font-size:12px; color:var(--muted); font-weight:800;
   }
@@ -267,37 +272,70 @@ export async function run(root) {
     const backBtn = modal.querySelector("#pvBack");
     const titleEl = modal.querySelector("#pvTitle");
 
-    function closeModal() {
+    function buildOverlayUrl(overlayToken) {
+      const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+      p.set("tool", "formulary");
+      p.set("overlay", "pv");
+      if (overlayToken) p.set("pv", overlayToken);
+      else p.delete("pv");
+      const hash = p.toString();
+      return `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+    }
+    function buildOverlayState(overlayToken) {
+      const baseState = (history.state && history.state.tool) ? history.state : { tool: "formulary", params: {} };
+      const next = { ...baseState, overlay: "pv" };
+      if (overlayToken) next.overlayToken = overlayToken;
+      return next;
+    }
+
+    function closeModal(fromPop = false) {
+      modal.__openToken = (modal.__openToken || 0) + 1;
       modal.classList.remove("show");
+      modal.style.display = "none";
       frame.src = "about:blank";
-      modal.__historyActive = false;
       if (modal.__popHandler) {
         window.removeEventListener("popstate", modal.__popHandler);
         modal.__popHandler = null;
+      }
+      if (modal.__historyActive) {
+        modal.__historyActive = false;
+        if (fromPop) window.__modalPopHandled = true;
       }
     }
 
     backBtn.addEventListener("click", () => {
       if (modal.__historyActive) {
-        history.back();
+        closeModal();
+        if (modal.__baseUrl) {
+          history.replaceState(modal.__baseState || history.state, "", modal.__baseUrl);
+        }
+        modal.__historyActive = false;
       } else {
         closeModal();
       }
     });
 
-    modal.__open = (url, title) => {
+    modal.__open = (url, title, overlayToken) => {
       titleEl.textContent = title || "Formulary";
       frame.src = url;
+      modal.style.display = "block";
       if (!modal.__popHandler) {
         modal.__popHandler = () => {
           if (!modal.__historyActive) return;
-          closeModal();
+          closeModal(true);
         };
         window.addEventListener("popstate", modal.__popHandler);
       }
+      modal.__baseUrl = `${location.pathname}${location.search}${location.hash || ""}`;
+      modal.__baseState = history.state;
       modal.__historyActive = true;
-      history.pushState({ pvModal: true }, "");
-      requestAnimationFrame(() => modal.classList.add("show"));
+      history.pushState(buildOverlayState(overlayToken), "", buildOverlayUrl(overlayToken));
+      modal.__openToken = (modal.__openToken || 0) + 1;
+      const token = modal.__openToken;
+      requestAnimationFrame(() => {
+        if (modal.__openToken !== token) return;
+        modal.classList.add("show");
+      });
     };
 
     return modal;
@@ -312,7 +350,7 @@ export async function run(root) {
 
       <div class="fm-top">
         <div class="fm-search">
-          <input id="fmQ" type="search" inputmode="search" placeholder="Search medication..." autocomplete="off" />
+          <input id="fmQ" type="search" inputmode="search" placeholder="Search medication..." autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" name="fm-search" />
           <div class="meta" id="fmCount">—</div>
         </div>
 
@@ -352,11 +390,14 @@ export async function run(root) {
     p.set("tool", "formulary");
     if (q && String(q).trim()) p.set("q", String(q).trim());
     else p.delete("q");
-    history.replaceState(null, "", "#" + p.toString());
+    const hash = p.toString();
+    const url = `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`;
+    history.replaceState(history.state, "", url);
   }
 
   function getHashState() {
     const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    if (p.get("tool") !== "formulary") return { q: "" };
     return { q: p.get("q") || "" };
   }
 
@@ -468,7 +509,7 @@ export async function run(root) {
         setHashState($q.value || "");
         const url = CFG.urlPageBase + String(x.page);
         const modal = ensureViewerModal();
-        modal.__open(url, x.title);
+        modal.__open(url, x.title, `page:${x.page}`);
       }
 
       card.addEventListener("click", open);
@@ -499,6 +540,7 @@ export async function run(root) {
   // Restore from hash
   const hs = getHashState();
   if (hs.q) $q.value = hs.q;
+  else { $q.value = ""; $q.setAttribute("value", ""); }
 
   // Clear
   $clear.addEventListener("click", () => {
