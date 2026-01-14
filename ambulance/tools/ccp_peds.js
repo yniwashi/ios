@@ -205,6 +205,8 @@ export async function run(mountEl){
           position:absolute; inset:0;
           background: var(--surface);
           display:flex; flex-direction:column;
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
         }
 
         .pv-bar{
