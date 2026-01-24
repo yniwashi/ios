@@ -290,10 +290,12 @@ function fmtSmart(v) {
         energySeq = null;
       } else {
         const s1 = clamp(weight * 4, 360);
-        const s2 = clamp(weight * 6, 360);
-        const s3 = clamp(weight * 8, 360);
-        const s4 = clamp(weight * 10, 360);
-        energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J`;
+        const s2 = clamp(weight * 4, 360);
+        const s3 = clamp(weight * 4, 360);
+        const s4 = clamp(weight * 6, 360);
+        const s5 = clamp(weight * 8, 360);
+        const s6 = clamp(weight * 10, 360);
+        energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J → ${fmtSmart(s5)} J → ${fmtSmart(s6)} J`;
       }
 
     } else { // Years
@@ -318,10 +320,12 @@ function fmtSmart(v) {
           energySeq = null;
         } else {
           const s1 = clamp(weight * 4, 360);
-          const s2 = clamp(weight * 6, 360);
-          const s3 = clamp(weight * 8, 360);
-          const s4 = clamp(weight * 10, 360);
-          energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J`;
+          const s2 = clamp(weight * 4, 360);
+          const s3 = clamp(weight * 4, 360);
+          const s4 = clamp(weight * 6, 360);
+          const s5 = clamp(weight * 8, 360);
+          const s6 = clamp(weight * 10, 360);
+          energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J → ${fmtSmart(s5)} J → ${fmtSmart(s6)} J`;
         }
 
       } else {
@@ -349,10 +353,12 @@ function fmtSmart(v) {
           energySeq = null;
         } else {
           const s1 = clamp(weight * 4, 360);
-          const s2 = clamp(weight * 6, 360);
-          const s3 = clamp(weight * 8, 360);
-          const s4 = clamp(weight * 10, 360);
-          energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J`;
+          const s2 = clamp(weight * 4, 360);
+          const s3 = clamp(weight * 4, 360);
+          const s4 = clamp(weight * 6, 360);
+          const s5 = clamp(weight * 8, 360);
+          const s6 = clamp(weight * 10, 360);
+          energySeq = `${fmtSmart(s1)} J → ${fmtSmart(s2)} J → ${fmtSmart(s3)} J → ${fmtSmart(s4)} J → ${fmtSmart(s5)} J → ${fmtSmart(s6)} J`;
         }
       }
     }
