@@ -1,7 +1,10 @@
 // /tools/cpg_wizard.js
+// CHANGELOG (2026-05-01):
+// - Accept both urlIndex and urlindexJson config keys for CPG index helper URL.
 // CHANGELOG (2026-01-15):
 // - Make PDF modal back close without extra blank layer; keep hash/state stable.
 // - Preserve hash updates with full URL while editing search state.
+
 // CPG Wizard:
 // - Smart search over cpg_index.json (ported from your Shortcuts JS)
 // - Shows per-result "accuracy" as a % with color
@@ -256,7 +259,7 @@ export async function run(root) {
       (window.__CONFIG && window.__CONFIG.pdfViewer && window.__CONFIG.pdfViewer.helpers) ||
       null;
 
-    const urlIndex = (cfg && cfg.urlindexJson) ? String(cfg.urlindexJson) : FALLBACK.urlIndex;
+    const urlIndex = (cfg && (cfg.urlIndex || cfg.urlindexJson)) ? String(cfg.urlIndex || cfg.urlindexJson) : FALLBACK.urlIndex;
     const urlPage = (cfg && cfg.urlPage) ? String(cfg.urlPage) : FALLBACK.urlPageBase;
     const urlKeyword = (cfg && cfg.urlKeyword) ? String(cfg.urlKeyword) : FALLBACK.urlSearchBase;
 
