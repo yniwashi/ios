@@ -1,4 +1,6 @@
 // tools/ccp_peds.js
+// Changelog (2026-05-01):
+// - Update hardcoded formulary page links for the new CPG v2.5 page numbering.
 // Changelog (2026-01-15):
 // - Fix PDF modal back to avoid blank viewer layer; preserve hash/state.
 // - Align age/weight logic, cap Dexamethasone at 12 mg, and clear invalid weight outputs.
@@ -482,27 +484,27 @@ export async function run(mountEl){
   ];
 
   const FORMULARY_PAGES = {
-    Adenosine: 269,
-    Adrenaline: 272,
-    Amiodarone: 276,
-    Atropine: 281,
-    Dexamethasone: 290,
-    'Dextrose 10%': 293,
-    Diphenhydramine: 298,
-    Droperidol: 301,
-    Fentanyl: 304,
-    Glucagon: 310,
-    Hydrocortison: 315,
-    'Ipratropium Bromide': 321,
-    Ketamine: 324,
-    'Magnesium Sulphate': 332,
-    Midazolam: 339,
-    Naloxone: 342,
-    Ondansetron: 347,
-    Paracetamol: 350,
-    Rocuronium: 357,
-    Salbutamol: 360,
-    TXA: 365
+    Adenosine: 281,
+    Adrenaline: 284,
+    Amiodarone: 288,
+    Atropine: 293,
+    Dexamethasone: 302,
+    'Dextrose 10%': 305,
+    Diphenhydramine: 310,
+    Droperidol: 313,
+    Fentanyl: 316,
+    Glucagon: 322,
+    Hydrocortison: 327,
+    'Ipratropium Bromide': 333,
+    Ketamine: 336,
+    'Magnesium Sulphate': 344,
+    Midazolam: 351,
+    Naloxone: 354,
+    Ondansetron: 359,
+    Paracetamol: 362,
+    Rocuronium: 369,
+    Salbutamol: 372,
+    TXA: 377
   };
 
   /* ====== MODE ====== */
