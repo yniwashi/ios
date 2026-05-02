@@ -1,10 +1,13 @@
 // /tools/cpg_wizard.js
+// CHANGELOG (2026-05-02):
+// - Show CPG version badge beside the module title.
 // CHANGELOG (2026-05-01):
 // - Accept both urlIndex and urlindexJson config keys for CPG index helper URL.
+// - Only restore query hash state when the active tool is cpg_wizard.
+// - Dismiss the keyboard from Enter and result-list scrolling.
 // CHANGELOG (2026-01-15):
 // - Make PDF modal back close without extra blank layer; keep hash/state stable.
 // - Preserve hash updates with full URL while editing search state.
-
 // CPG Wizard:
 // - Smart search over cpg_index.json (ported from your Shortcuts JS)
 // - Shows per-result "accuracy" as a % with color
@@ -53,7 +56,14 @@ export async function run(root) {
   ${CSS_TOKENS}
 
   .cw-wrap{padding:var(--pad);max-width:980px;margin:0 auto;-webkit-text-size-adjust:100%}
-  .cw-title{margin:0 0 10px;font-size:var(--title-size);text-align:center;font-weight:var(--title-weight);letter-spacing:.2px}
+  .cw-title-row{position:relative;display:flex;align-items:center;justify-content:center;margin:0 0 10px;min-height:28px}
+  .cw-title{margin:0;font-size:var(--title-size);text-align:center;font-weight:var(--title-weight);letter-spacing:.2px}
+  .cw-version{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:950;color:var(--muted);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 8px;white-space:nowrap}
+  @media (max-width:420px){
+    .cw-title-row{justify-content:space-between;gap:8px}
+    .cw-title{text-align:left}
+    .cw-version{position:static;transform:none;flex:none}
+  }
 
   .cw-panel{
     border:1px solid var(--border);
@@ -438,7 +448,10 @@ export async function run(root) {
   // =========================
   root.insertAdjacentHTML("afterbegin", `
     <div class="cw-wrap">
-      <h2 class="cw-title">CPG Wizard</h2>
+      <div class="cw-title-row">
+        <h2 class="cw-title">CPG Wizard</h2>
+        <div class="cw-version">CPG v2.5 2026</div>
+      </div>
 
       <div class="cw-panel">
         <div class="cw-row">
@@ -497,6 +510,7 @@ export async function run(root) {
   }
   function getHashState() {
     const p = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    if (p.get("tool") !== "cpg_wizard") return { q: "" };
     return { q: p.get("q") || "" };
   }
 
@@ -1473,6 +1487,7 @@ export async function run(root) {
   $query.addEventListener("keydown", async (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      $query.blur();
       safeVibrate(6);
       try { await doSmartSearch(); }
       catch (err) {
@@ -1481,6 +1496,8 @@ export async function run(root) {
       }
     }
   });
+  $list.addEventListener("touchstart", () => $query.blur(), { passive: true });
+  $list.addEventListener("wheel", () => $query.blur(), { passive: true });
 
   $clear.addEventListener("click", () => {
     safeVibrate(6);
