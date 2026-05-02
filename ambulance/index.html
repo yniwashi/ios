@@ -1,4 +1,19 @@
 <!--
+  CHANGELOG (2026-05-02):
+  - Update What's New modal copy for CPG v2.5, SOP v4.4, and Global Search.
+  - Add APP_VERSION placeholder for release updates.
+  - Show APP_VERSION beside the app title.
+
+  CHANGELOG (2026-05-01):
+  - Add home-screen global search below Updates.
+  - Search app tools, CPG index, flowcharts, and formulary helper JSONs.
+  - Open CPG/formulary/flowchart results directly in an in-app PDF modal.
+  - Keep search results active behind opened tools/PDFs so Back returns to results.
+  - Include every home-screen button in global search results.
+  - Hide global search while Shortcuts Mode is enabled.
+  - Make Enter and result scrolling dismiss the keyboard instead of opening a result.
+  - Add SOP module and include SOP index results in global search.
+
   CHANGELOG (2026-01-15):
   - Fix tool history to ensure home -> tool uses a real history entry.
   - Remove stray modal flag text accidentally rendered after </html>.
@@ -94,7 +109,9 @@
     .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .brand{display:flex; align-items:center; gap:2px}
     .logo{ width:50px; height:50px; object-fit:contain; border-radius:6px; transform:scaleX(-1) }
+    .brand-title{display:flex; align-items:baseline; gap:7px; min-width:0}
     .title{ margin:0; font-size:clamp(20px,3.8vw,26px); font-weight:800; letter-spacing:.25px }
+    .app-version{font-size:11px;font-weight:850;color:var(--muted);letter-spacing:.02em;white-space:nowrap}
     .theme-toggle{background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text)}
     .theme-toggle select{appearance:none; background:transparent; border:none; color:inherit; font:inherit; outline:none; cursor:pointer}
 
@@ -188,6 +205,52 @@
     .toggle input:checked + .rail{background:linear-gradient(180deg,var(--accent-2),#0ea76a); border-color:color-mix(in oklab, var(--accent-2) 60%, var(--border))}
     .toggle input:checked + .rail .knob{transform:translateX(26px)}
 
+    /* Global search */
+    .global-search{position:relative; display:flex; flex-direction:column; gap:6px}
+    .global-search-box{
+      background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      display:flex; align-items:center; gap:8px; padding:9px 11px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+    }
+    .global-search-box .material-symbols-rounded{font-size:21px; color:var(--muted); flex:none}
+    .global-search-box input{
+      min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--text);
+      font:600 16px/1.25 system-ui; appearance:none;
+    }
+    .global-search-box input::placeholder{color:var(--muted); font-weight:500}
+    .global-search-clear{
+      appearance:none; border:0; background:var(--surface-2); color:var(--muted);
+      width:28px; height:28px; border-radius:999px; font:900 16px/1 system-ui;
+      display:none; align-items:center; justify-content:center; cursor:pointer;
+    }
+    .global-search-clear.show{display:flex}
+    .global-results{
+      display:none; background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      overflow:hidden; box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+    .global-results.show{display:block}
+    .gs-result{
+      width:100%; appearance:none; border:0; border-bottom:1px solid var(--border);
+      background:transparent; color:var(--text); padding:10px 12px; text-align:left;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer;
+    }
+    .gs-result:last-child{border-bottom:0}
+    .gs-result:active{background:var(--surface-2)}
+    .gs-main{min-width:0; display:flex; flex-direction:column; gap:3px}
+    .gs-title{font-size:14px; font-weight:850; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .gs-sub{font-size:12px; color:var(--muted); line-height:1.25}
+    .gs-badge{
+      flex:none; color:var(--accent); background:color-mix(in oklab,var(--accent) 12%,var(--surface));
+      border:1px solid color-mix(in oklab,var(--accent) 30%,transparent);
+      border-radius:999px; padding:4px 8px; font-size:11px; font-weight:850;
+    }
+    body.global-search-active #news,
+    body.global-search-active .row,
+    body.global-search-active .updates-cta,
+    body.global-search-active #scBanner,
+    body.global-search-active #sections{display:none!important}
+    body.shortcuts-mode-on #globalSearch{display:none!important}
+
     /* Sections */
     .sections{display:flex; flex-direction:column; gap:8px}
     .section{display:flex; flex-direction:column; gap:4px}
@@ -204,7 +267,7 @@
     .community-icon{ width:64px; height:64px; display:block; object-fit:contain }
 
     /* Per-button fg overrides */
-    #cpr,#rsi-checklist,#bwaafelss,#pediatric,#pediatrics,#estimated-weight,#gcs-score,#apgar-score,#flowcharts,#cpg-wizard,#hos,#websites{ --btn-fg:#fff }
+    #cpr,#rsi-checklist,#bwaafelss,#pediatric,#pediatrics,#estimated-weight,#gcs-score,#apgar-score,#flowcharts,#cpg-wizard,#sop-wizard,#hos,#websites{ --btn-fg:#fff }
     #care-tools,#rbs-converter,#map-calculator,#as-call{ --btn-fg:#000 }
 
     /* Button gradients */
@@ -221,6 +284,7 @@
     .btn-flowcharts{background:linear-gradient(180deg,#66D9FF,#00B3FF)}
     .btn-rbs{background:linear-gradient(180deg,#FFF9A6,#FFF200)}
     .btn-cpg{background:linear-gradient(180deg,#7AEB7A,#02C202)}
+    .btn-sop{background:#FF4040}
     .btn-map{background:linear-gradient(180deg,#FFAC75,#FF6600)}
     .btn-ascall{background:linear-gradient(180deg,#FFEA94,#FFDB00)}
     .btn-hos{background:linear-gradient(180deg,#577CE6,#003DEB)}
@@ -326,7 +390,10 @@
   <div class="topbar">
     <div class="brand">
       <img class="logo" src="images/logo.png" alt="Ambulance Logo">
-      <h1 class="title">Ambulance</h1>
+      <div class="brand-title">
+        <h1 class="title">Ambulance</h1>
+        <span id="appVersionLabel" class="app-version"></span>
+      </div>
     </div>
     <div class="theme-toggle">
       <span style="font-weight:600">Theme</span>
@@ -355,6 +422,16 @@
 
   <div class="updates-cta">
     <button id="wnShowAgain" class="updates-btn" type="button">Updates</button>
+  </div>
+
+  <!-- Global Search -->
+  <div class="global-search" id="globalSearch">
+    <div class="global-search-box">
+      <span class="material-symbols-rounded" aria-hidden="true">search</span>
+      <input id="globalSearchInput" type="search" inputmode="search" placeholder="Search app" autocomplete="off" />
+      <button id="globalSearchClear" class="global-search-clear" type="button" aria-label="Clear search">x</button>
+    </div>
+    <div id="globalSearchResults" class="global-results" role="listbox" aria-label="Search results"></div>
   </div>
 
   <!-- Shortcuts banner -->
@@ -396,7 +473,7 @@
 <section id="whatsNewOverlay" class="wn-overlay" hidden aria-modal="true" role="dialog">
   <article class="wn-card" role="document">
     <div class="wn-header">
-      <p class="wn-pill">🚑 v0.2 released</p>
+      <p class="wn-pill" id="wnVersionPill">🚑 New update</p>
       <button id="wnClose" class="wn-close" aria-label="Dismiss What's New">Close</button>
     </div>
     <h2 class="wn-title">What’s New</h2>
@@ -418,6 +495,13 @@
   const SEPARATOR     = "::";
   const USE_RETURN_URL = false;
   const RETURN_URL    = "https://yourdomain.com/done.html";
+
+  // =========================
+  // APP VERSION
+  // Bump this on each release, then also bump WHATS_NEW_KEY so users see the new modal once.
+  // Example: "v0.4"
+  // =========================
+  const APP_VERSION = "v0.3";
 
   /* =========================
        Messaging config hub
@@ -465,15 +549,13 @@
 
     // -- What's New modal --
     WHATS_NEW_ENABLED: true,
-    WHATS_NEW_KEY: "amb_whats_new_v02",
+    WHATS_NEW_KEY: "amb_whats_new_v03",
     WHATS_NEW_TARGET: "default", // "default", "shortcuts", "both"
     WHATS_NEW_MESSAGE: `
-  <p class="wn-intro">Updates install remotely - just reopen the app (or relaunch if needed) to see the latest build.</p>
   <ul>
-    <li><strong>CPR Timer.</strong> Logs save automatically, can be recovered if the app closes, export as PDF, manage history, and accidental back presses are blocked.</li>
-    <li><strong>CCP Pediatrics.</strong> New “View Formulary” button jumps straight to the medication inside the CPG.</li>
-    <li><strong>Formulary & Flowcharts.</strong> Browse medications and clinical flowcharts directly inside the CPG.</li>
-    <li><strong>CPG Wizard.</strong> Smart search surfaces the right protocol from any symptom, abbreviation, or keyword.</li>
+    <li><strong>CPG updated to v2.5.</strong> The CPG has been updated to the latest version, including the new flowcharts and medications.</li>
+    <li><strong>SOP v4.4 added.</strong> Added SOP access with search, browsing, SOP numbers, and sections.</li>
+    <li><strong>Global Search added.</strong> Search the app, CPG, SOP, Formulary, and Flowcharts from one place.</li>
   </ul>
   <p><strong>Stay in the loop:</strong> hop into Ambulance app channels for real-time alerts, feature drops, and pro tips.</p>
   <div class="wn-links">
@@ -551,6 +633,9 @@
     { text:"CPG Wizard",       iconType:"material", icon:"wand_stars",    color:"btn-cpg",
       href:"#", showDefault:true, showShortcuts:true, actionId:"cpg_wizard" },
 
+    { text:"SOP",              iconType:"material", icon:"manage_search", color:"btn-sop",
+      href:"#", showDefault:true, showShortcuts:false, actionId:"sop" },
+
     { text:"MAP Calculator",   iconType:"material", icon:"calculate",     color:"btn-map",
       href:"#", showDefault:true, showShortcuts:true, actionId:"map" },
 
@@ -590,11 +675,376 @@
       href:"#", showDefault:true, showShortcuts:true, actionId:"formulary" },
   ];
 
+  const GLOBAL_SEARCH_CONFIG = {
+    urlIndex: "https://docs.niwashibase.com/helpers/cpg_index.json",
+    urlSopIndex: "https://docs.niwashibase.com/helpers/sop_index.json",
+    urlFlowcharts: "https://docs.niwashibase.com/helpers/flowcharts.json",
+    urlFormulary: "https://docs.niwashibase.com/helpers/formulary.json",
+    urlPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpg-81w9d1f.pdf#page=",
+    urlSopPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/sop-101qq9f2w.pdf#page="
+  };
+
   /* =========================
        CORE
      ========================= */
   const THEME_KEY = "amb_theme";
   const themeMeta = document.getElementById("theme-color");
+  let globalSearchItemsPromise = null;
+
+  function gsNorm(value){
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9+%/ .:-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function gsPage(value){
+    const n = Number(String(value || "").replace(/[^\d]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  function gsEscape(value){
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  async function gsFetchJson(url){
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
+    return res.json();
+  }
+
+  function gsMapToItems(data, type){
+    const out = [];
+    if (Array.isArray(data)) {
+      data.forEach((x) => {
+        if (!x) return;
+        const title = x.title || x.name || x.label;
+        const page = gsPage(x.page || x.p || x.pageNumber || x.page_start);
+        if (!title || !page) return;
+        out.push({
+          title: String(title),
+          type,
+          page,
+          sop_number: x.sop_number,
+          sop_section: x.sop_section,
+          terms: [title, x.sop_number, x.sop_section, x.type, ...(x.aliases || []), ...(x.keywords || []), ...(x.domains || []), ...(x.age_groups || [])]
+        });
+      });
+      return out;
+    }
+
+    if (data && typeof data === "object") {
+      const items =
+        (Array.isArray(data.items) && data.items) ||
+        (Array.isArray(data[type]) && data[type]) ||
+        null;
+
+      if (items) return gsMapToItems(items, type);
+
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (typeof value === "number" || typeof value === "string") {
+          const page = gsPage(value);
+          if (page) out.push({ title: String(key), type, page, terms: [key] });
+          return;
+        }
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          Object.keys(value).forEach((childKey) => {
+            const page = gsPage(value[childKey]);
+            if (page) out.push({ title: String(childKey), type, page, terms: [key, childKey] });
+          });
+        }
+      });
+    }
+    return out;
+  }
+
+  function gsToolItems(){
+    const extra = {
+      "CPR": ["cardiac arrest", "resuscitation", "timer", "compressions"],
+      "RSI Checklist": ["rapid sequence induction", "intubation", "airway"],
+      "WAAFELSS": ["paediatric arrest", "pediatric arrest", "defibrillation", "energy"],
+      "CCP Pediatrics": ["paediatric", "pediatric", "drug dose", "medication", "formulary"],
+      "AP Pediatrics": ["paediatric", "pediatric"],
+      "Care Tools": ["tools", "checklists"],
+      "Estimated Weight": ["weight", "paediatric weight", "pediatric weight"],
+      "GCS Score": ["glasgow coma scale", "consciousness", "neuro"],
+      "APGAR Score": ["newborn", "neonate", "delivery"],
+      "SAT Score": ["sedation", "agitation"],
+      "Flowcharts": ["protocol", "algorithm", "cpg"],
+      "RBS Converter": ["blood sugar", "glucose", "mmol", "mg dl"],
+      "CPG Wizard": ["cpg", "guideline", "protocol", "smart search"],
+      "SOP": ["sop", "standard operating procedure", "policy", "procedure", "operations"],
+      "MAP Calculator": ["mean arterial pressure", "blood pressure"],
+      "Meds Calculator": ["medication", "drug", "dose"],
+      "Ventilator Settings": ["vent", "respiratory", "airway"],
+      "Formulary": ["drug", "medication", "medicine"],
+      "Westley Score": ["croup"],
+      "Overtime Calculator": ["pay", "hours", "shift"],
+      "Websites": ["links", "resources"],
+      "Stay Connected": ["community", "discord", "telegram", "whatsapp"]
+    };
+    return BUTTONS
+      .map((btn) => ({
+        title: btn.text,
+        type: "tool",
+        actionId: btn.actionId,
+        href: btn.href,
+        terms: [btn.text, ...(extra[btn.text] || [])]
+      }));
+  }
+
+  async function loadGlobalSearchItems(){
+    if (globalSearchItemsPromise) return globalSearchItemsPromise;
+    globalSearchItemsPromise = (async () => {
+      const [cpgData, sopData, flowData, formData] = await Promise.all([
+        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlIndex).catch(() => []),
+        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlSopIndex).catch(() => ({ items: [] })),
+        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlFlowcharts).catch(() => ({})),
+        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlFormulary).catch(() => ({}))
+      ]);
+      return [
+        ...gsToolItems(),
+        ...gsMapToItems(cpgData, "cpg"),
+        ...gsMapToItems(sopData, "sop"),
+        ...gsMapToItems(flowData, "flowchart"),
+        ...gsMapToItems(formData, "formulary")
+      ].map((item) => ({
+        ...item,
+        searchText: gsNorm([item.title, ...(item.terms || [])].join(" "))
+      }));
+    })();
+    return globalSearchItemsPromise;
+  }
+
+  function searchGlobalItems(items, query){
+    const q = gsNorm(query);
+    if (!q) return [];
+    const tokens = q.split(" ").filter(Boolean);
+    return items
+      .map((item) => {
+        const title = gsNorm(item.title);
+        let score = 0;
+        if (title === q) score += 120;
+        else if (title.startsWith(q)) score += 95;
+        else if (title.includes(q)) score += 75;
+        if (item.searchText.includes(q)) score += 45;
+        tokens.forEach((token) => {
+          if (title.startsWith(token)) score += 18;
+          else if (item.searchText.includes(token)) score += 10;
+        });
+        if (item.type === "tool") score += 6;
+        if (!score) return null;
+        return { ...item, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score || String(a.title).localeCompare(String(b.title)))
+      .slice(0, 8);
+  }
+
+  function ensureGlobalPdfModal(){
+    let modal = document.getElementById("gsPvModal");
+    if (modal) return modal;
+
+    modal = document.createElement("div");
+    modal.id = "gsPvModal";
+    modal.className = "pv-modal";
+    modal.innerHTML = `
+      <div class="pv-sheet" role="dialog" aria-modal="true">
+        <div class="pv-bar">
+          <button class="pv-back" id="gsPvBack" type="button">Back</button>
+          <div class="pv-title" id="gsPvTitle">CPG</div>
+        </div>
+        <iframe class="pv-iframe" id="gsPvFrame" src="about:blank"></iframe>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    if (!document.getElementById("gsPvModalStyle")) {
+      const st = document.createElement("style");
+      st.id = "gsPvModalStyle";
+      st.textContent = `
+        .pv-modal{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.55);display:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+        .pv-modal.show{display:block}
+        .pv-sheet{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+        .pv-bar{position:relative;flex:none;height:48px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 12px}
+        .pv-back{z-index:2;border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:12px;padding:10px 14px;font-weight:950;cursor:pointer}
+        .pv-title{position:absolute;left:50%;transform:translateX(-50%);font-weight:950;font-size:14px;color:var(--text);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
+        .pv-iframe{flex:1;width:100%;border:none;background:#fff}
+      `;
+      document.head.appendChild(st);
+    }
+
+    const frame = modal.querySelector("#gsPvFrame");
+    const titleEl = modal.querySelector("#gsPvTitle");
+    const backBtn = modal.querySelector("#gsPvBack");
+
+    function closeModal(fromPop = false){
+      modal.classList.remove("show");
+      modal.style.display = "none";
+      frame.src = "about:blank";
+      if (modal.__popHandler) {
+        window.removeEventListener("popstate", modal.__popHandler);
+        modal.__popHandler = null;
+      }
+      if (fromPop) window.__modalPopHandled = true;
+    }
+
+    backBtn.addEventListener("click", () => {
+      closeModal();
+      if (modal.__baseUrl) history.replaceState(modal.__baseState || null, "", modal.__baseUrl);
+    });
+
+    modal.__open = (url, title, overlayToken) => {
+      titleEl.textContent = title || "CPG";
+      frame.src = url;
+      modal.style.display = "block";
+      modal.__baseUrl = `${location.pathname}${location.search}${location.hash || ""}`;
+      modal.__baseState = history.state;
+      if (!modal.__popHandler) {
+        modal.__popHandler = () => closeModal(true);
+        window.addEventListener("popstate", modal.__popHandler);
+      }
+      const hash = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+      hash.set("overlay", "global_search_pdf");
+      if (overlayToken) hash.set("pv", overlayToken);
+      history.pushState({ overlay: "global_search_pdf", overlayToken }, "", `${location.pathname}${location.search}#${hash.toString()}`);
+      requestAnimationFrame(() => modal.classList.add("show"));
+    };
+
+    return modal;
+  }
+
+  function openGlobalPdf(page, title, type){
+    const modal = ensureGlobalPdfModal();
+    const pageBase = type === "sop" ? GLOBAL_SEARCH_CONFIG.urlSopPageBase : GLOBAL_SEARCH_CONFIG.urlPageBase;
+    const defaultTitle = type === "sop" ? "SOP" : "CPG";
+    modal.__open(pageBase + String(page), title || defaultTitle, `${type || "cpg"}:${page}`);
+  }
+
+  function initGlobalSearch(){
+    const input = document.getElementById("globalSearchInput");
+    const resultsEl = document.getElementById("globalSearchResults");
+    const clearBtn = document.getElementById("globalSearchClear");
+    if (!input || !resultsEl || !clearBtn) return;
+
+    function setSearchActive(active){
+      document.body.classList.toggle("global-search-active", active);
+    }
+
+    function hideResults(){
+      resultsEl.classList.remove("show");
+      resultsEl.innerHTML = "";
+      resultsEl.__items = [];
+      setSearchActive(false);
+    }
+
+    function renderResults(results){
+      setSearchActive(true);
+      if (!results.length) {
+        resultsEl.__items = [];
+        resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">No results</div><div class="gs-sub">Try a drug, flowchart, protocol, SOP, or feature name.</div></div></div>`;
+        resultsEl.classList.add("show");
+        return;
+      }
+      resultsEl.innerHTML = results.map((item, index) => {
+        const label = item.type === "tool" ? "Feature" : item.type === "cpg" ? "CPG" : item.type === "sop" ? "SOP" : item.type === "flowchart" ? "Flowchart" : "Formulary";
+        const docName = item.type === "sop" ? "SOP" : "CPG";
+        const sub = item.type === "tool"
+          ? "Open feature"
+          : item.type === "sop" && item.sop_number
+            ? `SOP ${item.sop_number}`
+            : `Open ${docName} page ${item.page}`;
+        return `
+          <button class="gs-result" type="button" data-index="${index}" role="option">
+            <div class="gs-main">
+              <div class="gs-title">${gsEscape(item.title)}</div>
+              <div class="gs-sub">${gsEscape(sub)}</div>
+            </div>
+            <span class="gs-badge">${label}</span>
+          </button>
+        `;
+      }).join("");
+      resultsEl.__items = results;
+      resultsEl.classList.add("show");
+    }
+
+    async function updateResults(){
+      const q = input.value.trim();
+      clearBtn.classList.toggle("show", !!q);
+      if (!q) {
+        hideResults();
+        return;
+      }
+      setSearchActive(true);
+      resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">Searching...</div><div class="gs-sub">Loading app and CPG index.</div></div></div>`;
+      resultsEl.__items = [];
+      resultsEl.classList.add("show");
+      const items = await loadGlobalSearchItems();
+      renderResults(searchGlobalItems(items, q));
+    }
+
+    async function openResult(item){
+      if (!item) return;
+      input.blur();
+      setSearchActive(true);
+      if (item.type === "tool") {
+        if (item.actionId) {
+          runAction(item.actionId, { title: item.title }, { pushState: true });
+        } else if (item.href && item.href !== "#") {
+          location.href = item.href;
+        } else {
+          alert("Coming Soon...");
+        }
+      } else {
+        openGlobalPdf(item.page, item.title, item.type);
+      }
+    }
+
+    input.addEventListener("input", updateResults);
+    input.addEventListener("focus", () => {
+      if (input.value.trim()) updateResults();
+      else loadGlobalSearchItems().catch(() => {});
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      } else if (e.key === "Escape") {
+        input.value = "";
+        clearBtn.classList.remove("show");
+        hideResults();
+      }
+    });
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      clearBtn.classList.remove("show");
+      hideResults();
+      input.focus();
+    });
+    resultsEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".gs-result[data-index]");
+      if (!btn) return;
+      const index = Number(btn.dataset.index);
+      openResult(resultsEl.__items && resultsEl.__items[index]);
+    });
+    resultsEl.addEventListener("touchstart", () => input.blur(), { passive: true });
+    resultsEl.addEventListener("wheel", () => input.blur(), { passive: true });
+
+    return {
+      clear(){
+        input.value = "";
+        clearBtn.classList.remove("show");
+        hideResults();
+      }
+    };
+  }
 
   function setThemeColorFromCSS(){
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
@@ -682,6 +1132,9 @@
 
   function mount(){
     initTheme();
+    const appVersionLabel = document.getElementById("appVersionLabel");
+    if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
+    const globalSearch = initGlobalSearch();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
     const newsEl = document.getElementById("news");
@@ -738,6 +1191,8 @@ document.querySelector('.copy .t')?.addEventListener('click', () => {
 
 function render(){
   const useShortcuts = toggle.checked;
+  document.body.classList.toggle("shortcuts-mode-on", useShortcuts);
+  if (useShortcuts) globalSearch?.clear();
 
   // --- News card tied to Shortcuts Mode ---
   const newsEl = document.getElementById("news");
@@ -846,7 +1301,9 @@ function render(){
 function handleWhatsNew(useShortcuts){
   const overlay = document.getElementById("whatsNewOverlay");
   const body = document.getElementById("whatsNewBody");
+  const versionPill = document.getElementById("wnVersionPill");
   if (!overlay || !body) return;
+  if (versionPill) versionPill.textContent = `🚑 ${APP_VERSION} released`;
   const dismissed = localStorage.getItem(WHATS_NEW_KEY) === "1";
   const message = WHATS_NEW_MESSAGE.trim();
   const matchesMode =
@@ -907,7 +1364,7 @@ function wireWhatsNewControls(){
   // Sections layout
   const SECTIONS = [
     { title: "Resuscitation & Timers", items: ["CPR","WAAFELSS","RSI Checklist","Ventilator Settings"] },
-    { title: "Calculators · Reference", items: ["CPG Wizard","Flowcharts","Formulary","RBS Converter","MAP Calculator","Overtime Calculator","Meds Calculator"] },
+    { title: "Calculators · Reference", items: ["CPG Wizard","SOP","Flowcharts","Formulary","RBS Converter","MAP Calculator","Overtime Calculator","Meds Calculator"] },
     { title: "Pediatric Care",         items: ["CCP Pediatrics","AP Pediatrics","Care Tools","Estimated Weight"] },
     { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score","Westley Score"] },
     { title: "Ops / Links",            items: ["HOS","Websites","AS-Call","HMC Address Book","Shifts","Stay Connected"] }
