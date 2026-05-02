@@ -1,6 +1,6 @@
 // tools/ccp_peds.js
 // Changelog (2026-05-01):
-// - Update hardcoded formulary page links for the new CPG v2.5 page numbering.
+// - Update hardcoded formulary page links for the new CPG page numbering.
 // Changelog (2026-01-15):
 // - Fix PDF modal back to avoid blank viewer layer; preserve hash/state.
 // - Align age/weight logic, cap Dexamethasone at 12 mg, and clear invalid weight outputs.
