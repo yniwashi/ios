@@ -3,6 +3,7 @@
   - Update What's New modal copy for CPG v2.5, SOP v4.4, and Global Search.
   - Add APP_VERSION placeholder for release updates.
   - Show APP_VERSION beside the app title.
+  - Warm helper JSON, document modules, and CPG/SOP PDF viewers after startup.
 
   CHANGELOG (2026-05-01):
   - Add home-screen global search below Updates.
@@ -502,6 +503,7 @@
   // Example: "v0.4"
   // =========================
   const APP_VERSION = "v0.3";
+  const TOOL_MODULE_VERSION = APP_VERSION;
 
   /* =========================
        Messaging config hub
@@ -690,6 +692,7 @@
   const THEME_KEY = "amb_theme";
   const themeMeta = document.getElementById("theme-color");
   let globalSearchItemsPromise = null;
+  let appWarmupStarted = false;
 
   function gsNorm(value){
     return String(value || "")
@@ -1046,6 +1049,51 @@
     };
   }
 
+  function preloadModule(path) {
+    const href = `${HOST}/tools/${path}.js?ver=${encodeURIComponent(TOOL_MODULE_VERSION)}`;
+    if (document.querySelector(`link[rel="modulepreload"][href="${href}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "modulepreload";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
+  function warmViewer(url) {
+    const frame = document.createElement("iframe");
+    frame.tabIndex = -1;
+    frame.setAttribute("aria-hidden", "true");
+    frame.src = url;
+    frame.style.cssText = "position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;border:0;opacity:0;pointer-events:none;";
+    document.body.appendChild(frame);
+    setTimeout(() => {
+      try { frame.remove(); } catch (_) {}
+    }, 15000);
+  }
+
+  function scheduleAppWarmup() {
+    if (appWarmupStarted) return;
+    appWarmupStarted = true;
+
+    const runWhenIdle = (fn, delay = 0) => {
+      const start = () => setTimeout(fn, delay);
+      if ("requestIdleCallback" in window) window.requestIdleCallback(start, { timeout: 3000 });
+      else setTimeout(start, 800);
+    };
+
+    runWhenIdle(() => {
+      loadGlobalSearchItems().catch(() => {});
+      ["cpg_wizard", "sop", "formulary", "flowcharts"].forEach(preloadModule);
+    }, 400);
+
+    runWhenIdle(() => {
+      warmViewer(GLOBAL_SEARCH_CONFIG.urlPageBase + "1");
+    }, 1800);
+
+    runWhenIdle(() => {
+      warmViewer(GLOBAL_SEARCH_CONFIG.urlSopPageBase + "1");
+    }, 6500);
+  }
+
   function setThemeColorFromCSS(){
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0f1115";
     themeMeta.setAttribute("content", bg);
@@ -1135,6 +1183,7 @@
     const appVersionLabel = document.getElementById("appVersionLabel");
     if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
     const globalSearch = initGlobalSearch();
+    scheduleAppWarmup();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
     const newsEl = document.getElementById("news");
@@ -1438,8 +1487,8 @@ function wireWhatsNewControls(){
         return;
       }
 
-      // Default: load tool module
-      const ver = Date.now();
+      // Default: load tool module. APP_VERSION controls cache refresh between releases.
+      const ver = encodeURIComponent(TOOL_MODULE_VERSION);
       const mod = await import(`./tools/${actionId}.js?ver=${ver}`);
       await mod.run(mountEl, params);
       if (options.fromHistory) {
