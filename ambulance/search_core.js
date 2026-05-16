@@ -1,3 +1,7 @@
+// /ambulance/search_core.js
+// CHANGELOG (2026-05-16):
+// - Add shared weighted search engine for document and feature search.
+// - Add document-number intent, primary/secondary term scoring, query expansion, and fuzzy matching.
 // Shared weighted search engine for Ambulance document and feature search.
 // Keep this file dependency-free so CPG, SOP, CPM, and global search can reuse it.
 
