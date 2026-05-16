@@ -1,4 +1,9 @@
 // /tools/cpg_wizard.js
+// CHANGELOG (2026-05-16):
+// - Reuse shared warmed CPG helper data when available.
+// - Use the shared weighted document searcher for CPG Wizard matching.
+import { getDocumentItems } from "../search_data.js";
+import { buildDocumentSearcher } from "../search_core.js";
 // CHANGELOG (2026-05-02):
 // - Show CPG version badge beside the module title.
 // CHANGELOG (2026-05-01):
@@ -1450,8 +1455,9 @@ export async function run(root) {
   async function ensureIndexLoaded() {
     if (INDEX_ITEMS.length && SEARCHER) return;
     setStatus("Loading…");
-    INDEX_ITEMS = await loadIndex();
-    SEARCHER = buildSearcher(INDEX_ITEMS);
+    INDEX_ITEMS = await getDocumentItems("cpg", { urlIndex: CFG.urlIndex });
+    if (!INDEX_ITEMS.length) INDEX_ITEMS = await loadIndex();
+    SEARCHER = buildDocumentSearcher("cpg", INDEX_ITEMS);
     setStatus(`${INDEX_ITEMS.length} items`);
   }
 
