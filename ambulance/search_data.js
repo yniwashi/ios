@@ -1,3 +1,7 @@
+// /ambulance/search_data.js
+// CHANGELOG (2026-05-16):
+// - Add shared helper-data preload and local cache for CPG, SOP, CPM, flowcharts, and formulary.
+// - Provide reusable document item and global target access for the app and tool modules.
 import { buildDocumentTargets, buildSimplePageTargets, extractItems } from "./search_core.js";
 
 const DEFAULT_CONFIG = {
