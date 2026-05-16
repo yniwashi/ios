@@ -1,4 +1,9 @@
 // /tools/sop.js
+// CHANGELOG (2026-05-16):
+// - Reuse shared warmed SOP helper data when available.
+// - Use the shared weighted document searcher for SOP matching.
+import { getDocumentItems } from "../search_data.js";
+import { buildDocumentSearcher } from "../search_core.js";
 // CHANGELOG (2026-05-02):
 // - Show SOP version badge beside the module title.
 // CHANGELOG (2026-05-01):
@@ -1393,8 +1398,9 @@ export async function run(root) {
   async function ensureIndexLoaded() {
     if (INDEX_ITEMS.length && SEARCHER) return;
     setStatus("Loading…");
-    INDEX_ITEMS = await loadIndex();
-    SEARCHER = buildSearcher(INDEX_ITEMS);
+    INDEX_ITEMS = await getDocumentItems("sop", { urlSopIndex: CFG.urlIndex });
+    if (!INDEX_ITEMS.length) INDEX_ITEMS = await loadIndex();
+    SEARCHER = buildDocumentSearcher("sop", INDEX_ITEMS);
     setStatus(`${INDEX_ITEMS.length} items`);
   }
 
