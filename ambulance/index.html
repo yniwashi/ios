@@ -3,6 +3,7 @@
   - Add shared weighted search modules for global, CPG, and SOP search.
   - Add CPM index and CPM PDF support to main/global search.
   - Preload and cache CPG/SOP/CPM/formulary/flowchart helper data when the app opens.
+  - Update main search placeholder copy and keep placeholder text compact.
 
   CHANGELOG (2026-05-02):
   - Update What's New modal copy for CPG v2.5, SOP v4.4, and Global Search.
@@ -224,7 +225,7 @@
       min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--text);
       font:600 16px/1.25 system-ui; appearance:none;
     }
-    .global-search-box input::placeholder{color:var(--muted); font-weight:500}
+    .global-search-box input::placeholder{color:var(--muted); font-weight:500; font-size:13px}
     .global-search-clear{
       appearance:none; border:0; background:var(--surface-2); color:var(--muted);
       width:28px; height:28px; border-radius:999px; font:900 16px/1 system-ui;
@@ -435,7 +436,7 @@
   <div class="global-search" id="globalSearch">
     <div class="global-search-box">
       <span class="material-symbols-rounded" aria-hidden="true">search</span>
-      <input id="globalSearchInput" type="search" inputmode="search" placeholder="Search app" autocomplete="off" />
+      <input id="globalSearchInput" type="search" inputmode="search" placeholder="Search symptoms, medications, guidelines and tools" autocomplete="off" />
       <button id="globalSearchClear" class="global-search-clear" type="button" aria-label="Clear search">x</button>
     </div>
     <div id="globalSearchResults" class="global-results" role="listbox" aria-label="Search results"></div>
