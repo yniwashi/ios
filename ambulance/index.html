@@ -1,4 +1,9 @@
 <!--
+  CHANGELOG (2026-05-16):
+  - Add shared weighted search modules for global, CPG, and SOP search.
+  - Add CPM index and CPM PDF support to main/global search.
+  - Preload and cache CPG/SOP/CPM/formulary/flowchart helper data when the app opens.
+
   CHANGELOG (2026-05-02):
   - Update What's New modal copy for CPG v2.5, SOP v4.4, and Global Search.
   - Add APP_VERSION placeholder for release updates.
@@ -484,6 +489,8 @@
 </section>
 
 <script type="module">
+  import { buildFeatureTargets, searchTargets } from "./search_core.js";
+  import { getGlobalDocumentTargets, preloadSearchData } from "./search_data.js";
   /* =========================
        CONFIG (production)
        - HOST/theme + feature toggles
@@ -682,10 +689,12 @@
   const GLOBAL_SEARCH_CONFIG = {
     urlIndex: "https://docs.niwashibase.com/helpers/cpg_index.json",
     urlSopIndex: "https://docs.niwashibase.com/helpers/sop_index.json",
+    urlCpmIndex: "https://docs.niwashibase.com/helpers/cpm_index.json",
     urlFlowcharts: "https://docs.niwashibase.com/helpers/flowcharts.json",
     urlFormulary: "https://docs.niwashibase.com/helpers/formulary.json",
     urlPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpg-81w9d1f.pdf#page=",
-    urlSopPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/sop-101qq9f2w.pdf#page="
+    urlSopPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/sop-101qq9f2w.pdf#page=",
+    urlCpmPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpm-202e9d33q.pdf#page="
   };
 
   /* =========================
@@ -795,62 +804,26 @@
       "Websites": ["links", "resources"],
       "Stay Connected": ["community", "discord", "telegram", "whatsapp"]
     };
-    return BUTTONS
-      .map((btn) => ({
-        title: btn.text,
-        type: "tool",
-        actionId: btn.actionId,
-        href: btn.href,
-        terms: [btn.text, ...(extra[btn.text] || [])]
-      }));
+    return buildFeatureTargets(BUTTONS.map((btn) => ({
+      ...btn,
+      terms: [btn.text, ...(extra[btn.text] || [])]
+    })), Object.fromEntries(BUTTONS.map((btn) => [btn.text, extra[btn.text] || []])));
   }
 
   async function loadGlobalSearchItems(){
     if (globalSearchItemsPromise) return globalSearchItemsPromise;
     globalSearchItemsPromise = (async () => {
-      const [cpgData, sopData, flowData, formData] = await Promise.all([
-        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlIndex).catch(() => []),
-        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlSopIndex).catch(() => ({ items: [] })),
-        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlFlowcharts).catch(() => ({})),
-        gsFetchJson(GLOBAL_SEARCH_CONFIG.urlFormulary).catch(() => ({}))
-      ]);
+      const documentTargets = await getGlobalDocumentTargets(GLOBAL_SEARCH_CONFIG);
       return [
         ...gsToolItems(),
-        ...gsMapToItems(cpgData, "cpg"),
-        ...gsMapToItems(sopData, "sop"),
-        ...gsMapToItems(flowData, "flowchart"),
-        ...gsMapToItems(formData, "formulary")
-      ].map((item) => ({
-        ...item,
-        searchText: gsNorm([item.title, ...(item.terms || [])].join(" "))
-      }));
+        ...documentTargets
+      ];
     })();
     return globalSearchItemsPromise;
   }
 
   function searchGlobalItems(items, query){
-    const q = gsNorm(query);
-    if (!q) return [];
-    const tokens = q.split(" ").filter(Boolean);
-    return items
-      .map((item) => {
-        const title = gsNorm(item.title);
-        let score = 0;
-        if (title === q) score += 120;
-        else if (title.startsWith(q)) score += 95;
-        else if (title.includes(q)) score += 75;
-        if (item.searchText.includes(q)) score += 45;
-        tokens.forEach((token) => {
-          if (title.startsWith(token)) score += 18;
-          else if (item.searchText.includes(token)) score += 10;
-        });
-        if (item.type === "tool") score += 6;
-        if (!score) return null;
-        return { ...item, score };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.score - a.score || String(a.title).localeCompare(String(b.title)))
-      .slice(0, 8);
+    return searchTargets(items, query, { maxResults: 8 });
   }
 
   function ensureGlobalPdfModal(){
@@ -928,8 +901,8 @@
 
   function openGlobalPdf(page, title, type){
     const modal = ensureGlobalPdfModal();
-    const pageBase = type === "sop" ? GLOBAL_SEARCH_CONFIG.urlSopPageBase : GLOBAL_SEARCH_CONFIG.urlPageBase;
-    const defaultTitle = type === "sop" ? "SOP" : "CPG";
+    const pageBase = type === "sop" ? GLOBAL_SEARCH_CONFIG.urlSopPageBase : type === "cpm" ? GLOBAL_SEARCH_CONFIG.urlCpmPageBase : GLOBAL_SEARCH_CONFIG.urlPageBase;
+    const defaultTitle = type === "sop" ? "SOP" : type === "cpm" ? "CPM" : "CPG";
     modal.__open(pageBase + String(page), title || defaultTitle, `${type || "cpg"}:${page}`);
   }
 
@@ -959,13 +932,11 @@
         return;
       }
       resultsEl.innerHTML = results.map((item, index) => {
-        const label = item.type === "tool" ? "Feature" : item.type === "cpg" ? "CPG" : item.type === "sop" ? "SOP" : item.type === "flowchart" ? "Flowchart" : "Formulary";
-        const docName = item.type === "sop" ? "SOP" : "CPG";
+        const label = item.pillLabel || (item.type === "tool" ? "Feature" : item.type === "cpg" ? "CPG" : item.type === "sop" ? "SOP" : item.type === "cpm" ? "CPM" : item.type === "flowchart" ? "Flowchart" : "Formulary");
+        const docName = item.type === "sop" ? "SOP" : item.type === "cpm" ? "CPM" : "CPG";
         const sub = item.type === "tool"
-          ? "Open feature"
-          : item.type === "sop" && item.sop_number
-            ? `SOP ${item.sop_number}`
-            : `Open ${docName} page ${item.page}`;
+          ? (item.subtitle || "Open feature")
+          : item.subtitle || `Open ${docName} page ${item.page || item.pageStart}`;
         return `
           <button class="gs-result" type="button" data-index="${index}" role="option">
             <div class="gs-main">
@@ -988,7 +959,7 @@
         return;
       }
       setSearchActive(true);
-      resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">Searching...</div><div class="gs-sub">Loading app and CPG index.</div></div></div>`;
+      resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">Searching...</div><div class="gs-sub">Loading app and document indexes.</div></div></div>`;
       resultsEl.__items = [];
       resultsEl.classList.add("show");
       const items = await loadGlobalSearchItems();
@@ -1008,7 +979,7 @@
           alert("Coming Soon...");
         }
       } else {
-        openGlobalPdf(item.page, item.title, item.type);
+        openGlobalPdf(item.page || item.pageStart, item.title, item.type);
       }
     }
 
@@ -1083,6 +1054,7 @@
     };
 
     runWhenIdle(() => {
+      preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
       loadGlobalSearchItems().catch(() => {});
       ["cpg_wizard", "sop", "formulary", "flowcharts"].forEach(preloadModule);
     }, 400);
@@ -1094,6 +1066,10 @@
     runWhenIdle(() => {
       warmViewer(GLOBAL_SEARCH_CONFIG.urlSopPageBase + "1");
     }, 6500);
+
+    runWhenIdle(() => {
+      warmViewer(GLOBAL_SEARCH_CONFIG.urlCpmPageBase + "1");
+    }, 9500);
   }
 
   function setThemeColorFromCSS(){
@@ -1185,6 +1161,7 @@
     const appVersionLabel = document.getElementById("appVersionLabel");
     if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
     const globalSearch = initGlobalSearch();
+    preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
     scheduleAppWarmup();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
