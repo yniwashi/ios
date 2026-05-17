@@ -1,9 +1,9 @@
 // /tools/cpg_wizard.js
+// CHANGELOG (2026-05-17):
+// - Load shared search modules through the app ASSET_VERSION cache key.
 // CHANGELOG (2026-05-16):
 // - Reuse shared warmed CPG helper data when available.
 // - Use the shared weighted document searcher for CPG Wizard matching.
-import { getDocumentItems } from "../search_data.js";
-import { buildDocumentSearcher } from "../search_core.js";
 // CHANGELOG (2026-05-02):
 // - Show CPG version badge beside the module title.
 // CHANGELOG (2026-05-01):
@@ -20,9 +20,26 @@ import { buildDocumentSearcher } from "../search_core.js";
 //   1) Open CPG (page 12)
 //   2) Search CPG (open PDF viewer with #search=<term>)
 //   3) Open CPG at page (user enters page number)
-// - WebClip-safe: opens viewer inside a modal (Back + centered title), attached to document.body
+// - Ambulance App-safe: opens viewer inside a modal (Back + centered title), attached to document.body
+
+function assetQuery() {
+  const version = window.__AMBULANCE_ASSET_VERSION || "";
+  return version ? `?ver=${encodeURIComponent(version)}` : "";
+}
+
+async function loadSharedSearchModules() {
+  const shared = window.__AMBULANCE_SHARED_MODULES || {};
+  const [searchData, searchCore] = await Promise.all([
+    shared.searchData || import(`../search_data.js${assetQuery()}`),
+    shared.searchCore || import(`../search_core.js${assetQuery()}`)
+  ]);
+  return { searchData, searchCore };
+}
 
 export async function run(root) {
+  const { searchData, searchCore } = await loadSharedSearchModules();
+  const { getDocumentItems } = searchData;
+  const { buildDocumentSearcher } = searchCore;
   root.innerHTML = "";
 
   // =========================
