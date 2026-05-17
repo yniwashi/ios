@@ -1,8 +1,9 @@
 // /ambulance/search_data.js
+// CHANGELOG (2026-05-17):
+// - Load search_core through the app ASSET_VERSION cache key instead of a static import.
 // CHANGELOG (2026-05-16):
 // - Add shared helper-data preload and local cache for CPG, SOP, CPM, flowcharts, and formulary.
 // - Provide reusable document item and global target access for the app and tool modules.
-import { buildDocumentTargets, buildSimplePageTargets, extractItems } from "./search_core.js";
 
 const DEFAULT_CONFIG = {
   urlIndex: "https://docs.niwashibase.com/helpers/cpg_index.json",
@@ -19,14 +20,37 @@ let config = { ...DEFAULT_CONFIG };
 let rawData = null;
 let targets = null;
 let freshPromise = null;
+let searchCorePromise = null;
+let searchCoreModule = null;
 
-function readCache() {
+function assetQuery() {
+  const version = window.__AMBULANCE_ASSET_VERSION || "";
+  return version ? `?ver=${encodeURIComponent(version)}` : "";
+}
+
+async function getSearchCore() {
+  if (searchCoreModule) return searchCoreModule;
+  const shared = window.__AMBULANCE_SHARED_MODULES || {};
+  if (shared.searchCore) {
+    searchCoreModule = shared.searchCore;
+    return searchCoreModule;
+  }
+  if (!searchCorePromise) {
+    searchCorePromise = import(`./search_core.js${assetQuery()}`).then((mod) => {
+      searchCoreModule = mod;
+      return mod;
+    }).finally(() => { searchCorePromise = null; });
+  }
+  return searchCorePromise;
+}
+
+async function readCache() {
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
     if (!cached || !cached.rawData || !cached.savedAt) return null;
     if (Date.now() - cached.savedAt > MAX_CACHE_AGE_MS) return null;
     rawData = cached.rawData;
-    targets = buildTargets(rawData);
+    targets = buildTargets(rawData, await getSearchCore());
     return rawData;
   } catch (_) {
     return null;
@@ -46,7 +70,8 @@ async function fetchJson(url) {
 }
 
 async function fetchFresh() {
-  const [cpg, sop, cpm, flowcharts, formulary] = await Promise.all([
+  const [core, cpg, sop, cpm, flowcharts, formulary] = await Promise.all([
+    getSearchCore(),
     fetchJson(config.urlIndex).catch(() => []),
     fetchJson(config.urlSopIndex).catch(() => ({ items: [] })),
     fetchJson(config.urlCpmIndex).catch(() => ({ items: [] })),
@@ -54,12 +79,13 @@ async function fetchFresh() {
     fetchJson(config.urlFormulary).catch(() => ({}))
   ]);
   rawData = { cpg, sop, cpm, flowcharts, formulary };
-  targets = buildTargets(rawData);
+  targets = buildTargets(rawData, core);
   writeCache(rawData);
   return rawData;
 }
 
-function buildTargets(data) {
+function buildTargets(data, core) {
+  const { buildDocumentTargets, buildSimplePageTargets } = core;
   return [
     ...buildDocumentTargets(data.cpg || [], "cpg"),
     ...buildDocumentTargets(data.sop || { items: [] }, "sop"),
@@ -73,17 +99,17 @@ export function configureSearchData(nextConfig = {}) {
   config = { ...config, ...nextConfig };
 }
 
-export function preloadSearchData(nextConfig = {}) {
+export async function preloadSearchData(nextConfig = {}) {
   configureSearchData(nextConfig);
-  if (!rawData) readCache();
+  if (!rawData) await readCache();
   if (!freshPromise) freshPromise = fetchFresh().finally(() => { freshPromise = null; });
-  return rawData ? Promise.resolve(rawData) : freshPromise;
+  return rawData || freshPromise;
 }
 
 export async function getSearchData(nextConfig = {}) {
   configureSearchData(nextConfig);
   if (rawData) return rawData;
-  const cached = readCache();
+  const cached = await readCache();
   if (cached) {
     preloadSearchData().catch(() => {});
     return cached;
@@ -100,5 +126,6 @@ export async function getGlobalDocumentTargets(nextConfig = {}) {
 export async function getDocumentItems(type, nextConfig = {}) {
   await getSearchData(nextConfig);
   const data = rawData && rawData[type];
+  const { extractItems } = await getSearchCore();
   return extractItems(data || []);
 }
