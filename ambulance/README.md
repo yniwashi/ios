@@ -2,6 +2,7 @@
 
 <!--
 CHANGELOG (2026-05-17):
+- Add ASSET_VERSION cache refresh workflow for app-owned JavaScript updates.
 - Create Ambulance package README draft for `yniwashi/ios/ambulance`.
 - Document app shell, routing, tools, search/helper cache modules, and manual testing notes.
 -->
@@ -68,6 +69,33 @@ ambulance/websites_data.js
 ```
 
 Shared helper loader/cache for remote Websites data and website icon warmup.
+
+## App Code Cache Refresh
+
+`ambulance/index.html` owns two version keys:
+
+```js
+const APP_VERSION = "v0.3";
+const ASSET_VERSION = "asset-YYYYMMDD-N";
+```
+
+`APP_VERSION` is visible to users. `ASSET_VERSION` is hidden and should be bumped whenever app-owned JavaScript changes are uploaded.
+
+Covered app-owned JavaScript:
+
+```text
+ambulance/search_core.js
+ambulance/search_data.js
+ambulance/websites_data.js
+ambulance/tools/*.js
+```
+
+Release checklist:
+
+1. Update changed files and their dated changelog headers.
+2. Bump `ASSET_VERSION` in `ambulance/index.html`.
+3. Upload `ambulance/index.html` and every changed JavaScript file.
+4. Fully close and reopen the Ambulance App before testing.
 
 ## Tools
 
