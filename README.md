@@ -2,6 +2,8 @@
 
 <!--
 CHANGELOG (2026-05-17):
+- Point ASSET_VERSION details to the Ambulance package README instead of a standalone guide.
+- Add iOS app ASSET_VERSION deployment guidance.
 - Create iOS repo README draft for `yniwashi/ios`.
 - Document package structure, deployment paths, helper dependencies, and local testing workflow.
 -->
@@ -19,6 +21,31 @@ https://github.com/yniwashi/ios
 ```
 
 The app is a static HTML/CSS/JavaScript site. There is no build step.
+
+## App Update Rule
+
+The Ambulance package separates the visible app version from the hidden asset cache key:
+
+```js
+const APP_VERSION = "v0.3";
+const ASSET_VERSION = "asset-YYYYMMDD-N";
+```
+
+`APP_VERSION` is user-facing. `ASSET_VERSION` is the cache refresh key for app-owned JavaScript.
+
+When changing app JavaScript, bump `ASSET_VERSION` in:
+
+```text
+ambulance/index.html
+```
+
+Then upload `ambulance/index.html` plus the changed JavaScript files. This lets the installed Ambulance App fetch fresh code without changing the visible app version.
+
+Detailed guide is in the Ambulance package README:
+
+```text
+README Files/iOS/ambulance_readme.md
+```
 
 ## Repository Structure
 
