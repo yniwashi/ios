@@ -1,5 +1,6 @@
 <!--
   CHANGELOG (2026-05-18):
+  - Add a home-screen pull-down refresh gesture for the Ambulance App.
   - Use the SOP manage_search icon for the CPG home button.
   - Use the same home button icon for SOP and CPG.
   - Rename the home CPG Wizard button to CPG while keeping CPG Wizard as a search alias.
@@ -390,9 +391,27 @@
     .tac-btn{ appearance:none; cursor:pointer; padding:10px 12px; border-radius:10px; font-weight:800; font-size:14px; border:1px solid var(--border); background:var(--surface-2); color:var(--text) }
     .tac-btn.primary{ background:linear-gradient(180deg,var(--accent),#0D5BB5); color:#fff; border:1px solid color-mix(in oklab,var(--accent) 60%,transparent) }
     .tac-link{ color:var(--accent); font-weight:800; text-decoration:none }
+
+    /* Pull refresh */
+    .pull-refresh{
+      position:fixed; left:50%; top:calc(env(safe-area-inset-top) + 8px);
+      z-index:99997; display:flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+      background:color-mix(in oklab,var(--surface) 94%,transparent);
+      color:var(--text); box-shadow:var(--shadow); font:800 12px/1 system-ui;
+      opacity:0; pointer-events:none; transform:translate(-50%,-18px) scale(.96);
+      transition:opacity .16s ease, transform .16s ease;
+    }
+    .pull-refresh.show{opacity:1; transform:translate(-50%,0) scale(1)}
+    .pull-refresh .material-symbols-rounded{font-size:18px;color:var(--accent)}
   </style>
 </head>
 <body>
+
+<div id="pullRefresh" class="pull-refresh" aria-hidden="true">
+  <span class="material-symbols-rounded" aria-hidden="true">refresh</span>
+  <span id="pullRefreshText">Pull to refresh</span>
+</div>
 
 <!-- Terms & Conditions Gate -->
 <section id="tacGate" aria-modal="true" role="dialog">
@@ -515,7 +534,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.3";
-  const ASSET_VERSION = "asset-20260518-1";
+  const ASSET_VERSION = "asset-20260518-2";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -1241,6 +1260,82 @@
     });
   }
 
+  function initPullRefresh(){
+    const indicator = document.getElementById("pullRefresh");
+    const label = document.getElementById("pullRefreshText");
+    if (!indicator || !label) return;
+
+    const THRESHOLD = 84;
+    let startY = 0;
+    let active = false;
+    let ready = false;
+    let refreshing = false;
+
+    function blocked(target){
+      if (refreshing) return true;
+      if (window.scrollY > 2) return true;
+      if (document.body.classList.contains("panel-open")) return true;
+      if (document.body.classList.contains("wn-open")) return true;
+      if (document.body.classList.contains("global-search-active")) return true;
+      if (document.getElementById("tacGate")?.style.display === "block") return true;
+      if (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return true;
+      return !!target.closest("input,textarea,select,button,a,#globalSearch,#panel,#tacGate,.wn-overlay");
+    }
+
+    function hide(){
+      active = false;
+      ready = false;
+      startY = 0;
+      indicator.classList.remove("show");
+      indicator.style.transform = "";
+      label.textContent = "Pull to refresh";
+    }
+
+    document.addEventListener("touchstart", (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t || blocked(e.target)) return;
+      startY = t.clientY;
+      active = true;
+      ready = false;
+    }, { passive: true });
+
+    document.addEventListener("touchmove", (e) => {
+      if (!active) return;
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      const dy = t.clientY - startY;
+      if (dy <= 0) {
+        hide();
+        return;
+      }
+      if (window.scrollY > 2) {
+        hide();
+        return;
+      }
+      if (dy > 12) e.preventDefault();
+      const distance = Math.min(dy, 120);
+      ready = distance >= THRESHOLD;
+      label.textContent = ready ? "Release to refresh" : "Pull to refresh";
+      indicator.classList.add("show");
+      indicator.style.transform = `translate(-50%,${Math.min(28, distance / 4)}px) scale(1)`;
+    }, { passive: false });
+
+    document.addEventListener("touchend", () => {
+      if (!active) return;
+      if (ready) {
+        refreshing = true;
+        label.textContent = "Refreshing...";
+        indicator.classList.add("show");
+        indicator.style.transform = "translate(-50%,28px) scale(1)";
+        setTimeout(() => location.reload(), 120);
+        return;
+      }
+      hide();
+    }, { passive: true });
+
+    document.addEventListener("touchcancel", hide, { passive: true });
+  }
+
   function initTacOrApp(){
     const consent = localStorage.getItem(TAC_KEY) === "1";
     if (consent) mount(); else { wireTacGate(); showTacGate(); }
@@ -1250,6 +1345,7 @@
 
   function mount(){
     initTheme();
+    initPullRefresh();
     const appVersionLabel = document.getElementById("appVersionLabel");
     if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
     const globalSearch = initGlobalSearch();
