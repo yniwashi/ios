@@ -1,5 +1,10 @@
 // /tools/sop.js
+// CHANGELOG (2026-05-18):
+// - Add the search icon inside the SOP search box.
+// - Move the Clear button below the search hint.
+// - Place the old descriptive search hint directly below the search box and match version pill to the SOP button color.
 // CHANGELOG (2026-05-17):
+// - Shorten search placeholder and restyle version pill with a theme-aware SOP color.
 // - Load shared search modules through the app ASSET_VERSION cache key.
 // CHANGELOG (2026-05-16):
 // - Reuse shared warmed SOP helper data when available.
@@ -84,7 +89,7 @@ export async function run(root) {
   .cw-wrap{padding:var(--pad);max-width:980px;margin:0 auto;-webkit-text-size-adjust:100%}
   .cw-title-row{position:relative;display:flex;align-items:center;justify-content:center;margin:0 0 10px;min-height:28px}
   .cw-title{margin:0;font-size:var(--title-size);text-align:center;font-weight:var(--title-weight);letter-spacing:.2px}
-  .cw-version{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:950;color:var(--muted);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 8px;white-space:nowrap}
+  .cw-version{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:950;color:#991b1b;border:1px solid rgba(255,64,64,.30);background:linear-gradient(180deg,rgba(255,64,64,.22),rgba(255,64,64,.13));border-radius:999px;padding:4px 8px;white-space:nowrap}
   @media (max-width:420px){
     .cw-title-row{justify-content:space-between;gap:8px}
     .cw-title{text-align:left}
@@ -117,6 +122,11 @@ export async function run(root) {
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
   }
   .cw-btn:active{ transform: translateY(1px) scale(.99) }
+  .cw-clear-btn{
+    align-self:flex-start;
+    min-width:96px;
+    margin-top:2px;
+  }
   .cw-btn-primary{
     background: linear-gradient(180deg,#2563eb,#1d4ed8);
     color:#fff;
@@ -133,9 +143,9 @@ export async function run(root) {
   }
 
   .cw-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .cw-search-wrap{flex:2 1 320px;display:flex;flex-direction:column;gap:4px;min-width:0}
 
   .cw-input{
-    flex: 1 1 220px;
     display:flex; align-items:center; gap:10px;
     border:1px solid var(--border);
     background:var(--surface);
@@ -143,8 +153,15 @@ export async function run(root) {
     padding: 0 12px;
     min-height: var(--inp-h);
   }
+  .cw-input .cw-search-icon{
+    flex:none;
+    color:var(--muted);
+    font-size:22px;
+    line-height:1;
+  }
   .cw-input input{
     width:100%;
+    min-width:0;
     border:none; outline:none; background:transparent;
     color:var(--text); font-weight:800; font-size:16px;
   }
@@ -157,10 +174,11 @@ export async function run(root) {
   }
 
   .cw-hint{
-    font-size: 9px;
+    font-size: 11px;
     color: var(--muted);
-    font-weight: 800;
+    font-weight: 750;
     margin-top: 2px;
+    line-height: 1.35;
   }
 
   .cw-results-hd{
@@ -273,6 +291,9 @@ export async function run(root) {
       box-shadow: 0 10px 24px rgba(37,99,235,.35);
     }
     .cw-input{ background:#ffffff; }
+  }
+  @media (prefers-color-scheme: dark){
+    .cw-version{color:#fecaca;border-color:rgba(255,64,64,.36);background:linear-gradient(180deg,rgba(255,64,64,.22),rgba(255,64,64,.15))}
   }
   `;
   root.appendChild(style);
@@ -479,11 +500,15 @@ export async function run(root) {
 
       <div class="cw-panel">
         <div class="cw-row">
-          <div class="cw-input" style="flex: 2 1 320px;">
-            <input id="cwQuery" type="search" inputmode="search" placeholder="Search SOP, section, policy, keyword..." autocomplete="off" />
-            <div class="meta" id="cwStatus">—</div>
+          <div class="cw-search-wrap">
+            <div class="cw-input">
+              <span class="material-symbols-rounded cw-search-icon" aria-hidden="true">search</span>
+              <input id="cwQuery" type="search" inputmode="search" placeholder="Search SOP" autocomplete="off" />
+              <div class="meta" id="cwStatus">—</div>
+            </div>
+            <div class="cw-hint" id="cwHint">Search SOP, section, policy, keyword</div>
+            <button class="cw-btn cw-clear-btn" id="cwClear" type="button">Clear</button>
           </div>
-          <button class="cw-btn" id="cwClear" type="button">Clear</button>
         </div>
 
         <div class="cw-actions">
@@ -491,8 +516,6 @@ export async function run(root) {
           <button class="cw-btn" id="cwSearchCpg" type="button">Search SOP</button>
           <button class="cw-btn" id="cwOpenPage" type="button">Open Page</button>
         </div>
-
-        <div class="cw-hint" id="cwHint"></div>
       </div>
 
       <div class="cw-results-hd">
@@ -518,6 +541,7 @@ export async function run(root) {
   const $resTitle = root.querySelector("#cwResTitle");
   const $resMeta = root.querySelector("#cwResMeta");
   const $list = root.querySelector("#cwList");
+  const SEARCH_HINT = "Search SOP, section, policy, keyword";
 
   // =========================
   // HASH STATE
@@ -1479,7 +1503,7 @@ export async function run(root) {
     $query.value = "";
     setHashState({ q: "" });
     setStatus("—");
-    $hint.textContent = "";
+    $hint.textContent = SEARCH_HINT;
     renderResults({ results: [], suggestion: null });
     $query.focus();
   });
