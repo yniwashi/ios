@@ -1,5 +1,16 @@
 <!--
+  CHANGELOG (2026-05-18):
+  - Use the SOP manage_search icon for the CPG home button.
+  - Use the same home button icon for SOP and CPG.
+  - Rename the home CPG Wizard button to CPG while keeping CPG Wizard as a search alias.
+  - Fix main search keyboard dismissal so typing does not blur the input.
+  - Enlarge main search icon/text, dismiss the keyboard on page scroll, and bump assets for CPG/SOP search icons.
+  - Bump ASSET_VERSION for CPG/SOP Clear button placement update.
+  - Set main search placeholder to "Search..." and move the longer search hint below the box.
+  - Bump ASSET_VERSION for CPG/SOP hint placement and version-pill color updates.
+
   CHANGELOG (2026-05-17):
+  - Bump ASSET_VERSION for CPG Wizard and SOP search UI updates.
   - Make ASSET_VERSION shared-module loading lazy so the home tool grid renders even if helper modules are slow or unavailable.
   - Add hidden ASSET_VERSION cache key for app-owned JavaScript updates.
   - Load shared search/websites modules with ASSET_VERSION and expose them to tools.
@@ -223,15 +234,16 @@
     .global-search{position:relative; display:flex; flex-direction:column; gap:6px}
     .global-search-box{
       background:var(--surface); border:1px solid var(--border); border-radius:12px;
-      display:flex; align-items:center; gap:8px; padding:9px 11px;
+      display:flex; align-items:center; gap:10px; padding:11px 12px;
       box-shadow:0 4px 12px rgba(0,0,0,.08);
     }
-    .global-search-box .material-symbols-rounded{font-size:21px; color:var(--muted); flex:none}
+    .global-search-box .material-symbols-rounded{font-size:26px; color:var(--muted); flex:none}
     .global-search-box input{
       min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--text);
-      font:600 16px/1.25 system-ui; appearance:none;
+      font:700 17px/1.25 system-ui; appearance:none;
     }
-    .global-search-box input::placeholder{color:var(--muted); font-weight:500; font-size:13px}
+    .global-search-box input::placeholder{color:var(--muted); font-weight:650; font-size:16px}
+    .global-search-hint{font-size:11px;color:var(--muted);font-weight:750;line-height:1.35;padding:0 4px}
     .global-search-clear{
       appearance:none; border:0; background:var(--surface-2); color:var(--muted);
       width:28px; height:28px; border-radius:999px; font:900 16px/1 system-ui;
@@ -442,9 +454,10 @@
   <div class="global-search" id="globalSearch">
     <div class="global-search-box">
       <span class="material-symbols-rounded" aria-hidden="true">search</span>
-      <input id="globalSearchInput" type="search" inputmode="search" placeholder="Search symptoms, medications, guidelines and tools" autocomplete="off" />
+      <input id="globalSearchInput" type="search" inputmode="search" placeholder="Search..." autocomplete="off" />
       <button id="globalSearchClear" class="global-search-clear" type="button" aria-label="Clear search">x</button>
     </div>
+    <div class="global-search-hint">Search symptoms, medications, guidelines and tools</div>
     <div id="globalSearchResults" class="global-results" role="listbox" aria-label="Search results"></div>
   </div>
 
@@ -502,7 +515,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.3";
-  const ASSET_VERSION = "asset-20260517-2";
+  const ASSET_VERSION = "asset-20260518-1";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -679,7 +692,7 @@
     { text:"RBS Converter",    iconType:"material", icon:"glucose",       color:"btn-rbs",
       href:"#", showDefault:true, showShortcuts:true, actionId:"rbs" },
 
-    { text:"CPG Wizard",       iconType:"material", icon:"wand_stars",    color:"btn-cpg",
+    { text:"CPG",              iconType:"material", icon:"manage_search", color:"btn-cpg",
       href:"#", showDefault:true, showShortcuts:true, actionId:"cpg_wizard" },
 
     { text:"SOP",              iconType:"material", icon:"manage_search", color:"btn-sop",
@@ -833,7 +846,7 @@
       "SAT Score": ["sedation", "agitation"],
       "Flowcharts": ["protocol", "algorithm", "cpg"],
       "RBS Converter": ["blood sugar", "glucose", "mmol", "mg dl"],
-      "CPG Wizard": ["cpg", "guideline", "protocol", "smart search"],
+      "CPG": ["cpg wizard", "guideline", "protocol", "smart search"],
       "SOP": ["sop", "standard operating procedure", "policy", "procedure", "operations"],
       "MAP Calculator": ["mean arterial pressure", "blood pressure"],
       "Meds Calculator": ["medication", "drug", "dose"],
@@ -956,9 +969,15 @@
     const resultsEl = document.getElementById("globalSearchResults");
     const clearBtn = document.getElementById("globalSearchClear");
     if (!input || !resultsEl || !clearBtn) return;
+    let searchTouchStartY = 0;
+    let searchTouchCanDismiss = false;
 
     function setSearchActive(active){
       document.body.classList.toggle("global-search-active", active);
+    }
+
+    function dismissSearchKeyboard(){
+      if (document.activeElement === input) input.blur();
     }
 
     function hideResults(){
@@ -1062,6 +1081,28 @@
     });
     resultsEl.addEventListener("touchstart", () => input.blur(), { passive: true });
     resultsEl.addEventListener("wheel", () => input.blur(), { passive: true });
+    document.addEventListener("wheel", (e) => {
+      if (!e.target.closest("#globalSearch")) dismissSearchKeyboard();
+    }, { passive: true });
+    document.addEventListener("touchstart", (e) => {
+      const t = e.touches && e.touches[0];
+      searchTouchStartY = t ? t.clientY : 0;
+      searchTouchCanDismiss = !e.target.closest("#globalSearch");
+    }, { passive: true });
+    document.addEventListener("touchmove", (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t || !searchTouchStartY || !searchTouchCanDismiss) return;
+      if (Math.abs(t.clientY - searchTouchStartY) > 18) {
+        dismissSearchKeyboard();
+        searchTouchCanDismiss = false;
+      }
+    }, { passive: true });
+    document.addEventListener("touchend", () => {
+      searchTouchCanDismiss = false;
+    }, { passive: true });
+    document.addEventListener("touchcancel", () => {
+      searchTouchCanDismiss = false;
+    }, { passive: true });
 
     return {
       clear(){
@@ -1444,7 +1485,7 @@ function wireWhatsNewControls(){
   // Sections layout
   const SECTIONS = [
     { title: "Resuscitation & Timers", items: ["CPR","WAAFELSS","RSI Checklist","Ventilator Settings"] },
-    { title: "Calculators · Reference", items: ["CPG Wizard","SOP","Flowcharts","Formulary","RBS Converter","MAP Calculator","Overtime Calculator","Meds Calculator"] },
+    { title: "Calculators · Reference", items: ["CPG","SOP","Flowcharts","Formulary","RBS Converter","MAP Calculator","Overtime Calculator","Meds Calculator"] },
     { title: "Pediatric Care",         items: ["CCP Pediatrics","AP Pediatrics","Care Tools","Estimated Weight"] },
     { title: "Assessment Scores",      items: ["GCS Score","APGAR Score","SAT Score","Westley Score"] },
     { title: "Ops / Links",            items: ["HOS","Websites","AS-Call","HMC Address Book","Shifts","Stay Connected"] }
