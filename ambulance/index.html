@@ -1,5 +1,6 @@
 <!--
   CHANGELOG (2026-05-18):
+  - Make Stay Connected App-mode only and keep CPG sending CPG Wizard to Shortcuts.
   - Add AS-Call to App mode using the shared docs helper and preload it when the app opens.
   - Add a home-screen pull-down refresh gesture for the Ambulance App.
   - Use the SOP manage_search icon for the CPG home button.
@@ -535,7 +536,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.3";
-  const ASSET_VERSION = "asset-20260518-3";
+  const ASSET_VERSION = "asset-20260518-4";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -718,7 +719,7 @@
       href:"#", showDefault:true, showShortcuts:true, actionId:"rbs" },
 
     { text:"CPG",              iconType:"material", icon:"manage_search", color:"btn-cpg",
-      href:"#", showDefault:true, showShortcuts:true, actionId:"cpg_wizard" },
+      href:"#", showDefault:true, showShortcuts:true, actionId:"cpg_wizard", shortcutLabel:"CPG Wizard" },
 
     { text:"SOP",              iconType:"material", icon:"manage_search", color:"btn-sop",
       href:"#", showDefault:true, showShortcuts:false, actionId:"sop" },
@@ -737,7 +738,7 @@
       href:"https://example.com", showDefault:true, showShortcuts:true, actionId:"websites" },
 
     { text:"Stay Connected",   iconType:"material", icon:"maps_ugc",      color:"btn-community",
-      href:"#", showDefault:true, showShortcuts:true, actionId:"community" },
+      href:"#", showDefault:true, showShortcuts:false, actionId:"community" },
 
     // Shortcuts-mode only
     { text:"Westley Score",    iconType:"material", icon:"stethoscope",   color:"btn-westley",
@@ -1484,7 +1485,7 @@ function render(){
 
     items.forEach((btn, i) => {
       const id  = (btn.id || btn.text.toLowerCase().replace(/\s+/g,"-")).replace(/[^a-z0-9\-]/gi,"-");
-      const href = useShortcuts ? buildShortcutsUrl(btn.text) : (btn.href || "#");
+      const href = useShortcuts ? buildShortcutsUrl(btn.shortcutLabel || btn.text) : (btn.href || "#");
 
       const a = document.createElement("a");
       a.className = `btn ${btn.color || "c-blue"}`;
