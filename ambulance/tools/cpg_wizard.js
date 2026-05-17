@@ -1,5 +1,10 @@
 // /tools/cpg_wizard.js
+// CHANGELOG (2026-05-18):
+// - Add the search icon inside the CPG search box.
+// - Move the Clear button below the search hint.
+// - Place the old descriptive search hint directly below the search box and match version pill to the CPG Wizard button color.
 // CHANGELOG (2026-05-17):
+// - Shorten search placeholder, remove Smart Search button, show live results, remove accuracy score pill, and restyle version pill.
 // - Load shared search modules through the app ASSET_VERSION cache key.
 // CHANGELOG (2026-05-16):
 // - Reuse shared warmed CPG helper data when available.
@@ -14,8 +19,7 @@
 // - Make PDF modal back close without extra blank layer; keep hash/state stable.
 // - Preserve hash updates with full URL while editing search state.
 // CPG Wizard:
-// - Smart search over cpg_index.json (ported from your Shortcuts JS)
-// - Shows per-result "accuracy" as a % with color
+// - Live search over cpg_index.json.
 // - Buttons:
 //   1) Open CPG (page 12)
 //   2) Search CPG (open PDF viewer with #search=<term>)
@@ -80,7 +84,7 @@ export async function run(root) {
   .cw-wrap{padding:var(--pad);max-width:980px;margin:0 auto;-webkit-text-size-adjust:100%}
   .cw-title-row{position:relative;display:flex;align-items:center;justify-content:center;margin:0 0 10px;min-height:28px}
   .cw-title{margin:0;font-size:var(--title-size);text-align:center;font-weight:var(--title-weight);letter-spacing:.2px}
-  .cw-version{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:950;color:var(--muted);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 8px;white-space:nowrap}
+  .cw-version{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;font-weight:950;color:#026802;border:1px solid rgba(2,194,2,.28);background:linear-gradient(180deg,rgba(122,235,122,.26),rgba(2,194,2,.16));border-radius:999px;padding:4px 8px;white-space:nowrap}
   @media (max-width:420px){
     .cw-title-row{justify-content:space-between;gap:8px}
     .cw-title{text-align:left}
@@ -113,6 +117,11 @@ export async function run(root) {
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
   }
   .cw-btn:active{ transform: translateY(1px) scale(.99) }
+  .cw-clear-btn{
+    align-self:flex-start;
+    min-width:96px;
+    margin-top:2px;
+  }
   .cw-btn-primary{
     background: linear-gradient(180deg,#2563eb,#1d4ed8);
     color:#fff;
@@ -129,9 +138,9 @@ export async function run(root) {
   }
 
   .cw-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .cw-search-wrap{flex:2 1 320px;display:flex;flex-direction:column;gap:4px;min-width:0}
 
   .cw-input{
-    flex: 1 1 220px;
     display:flex; align-items:center; gap:10px;
     border:1px solid var(--border);
     background:var(--surface);
@@ -139,8 +148,15 @@ export async function run(root) {
     padding: 0 12px;
     min-height: var(--inp-h);
   }
+  .cw-input .cw-search-icon{
+    flex:none;
+    color:var(--muted);
+    font-size:22px;
+    line-height:1;
+  }
   .cw-input input{
     width:100%;
+    min-width:0;
     border:none; outline:none; background:transparent;
     color:var(--text); font-weight:800; font-size:16px;
   }
@@ -153,10 +169,11 @@ export async function run(root) {
   }
 
   .cw-hint{
-    font-size: 9px;
+    font-size: 11px;
     color: var(--muted);
-    font-weight: 800;
+    font-weight: 750;
     margin-top: 2px;
+    line-height: 1.35;
   }
 
   .cw-results-hd{
@@ -213,7 +230,7 @@ export async function run(root) {
     white-space:nowrap;
   }
 
-  /* Right-side stack: Accuracy % + Page range */
+  /* Right-side stack: Page range */
   .cw-right{
     flex:none;
     display:flex;
@@ -232,21 +249,6 @@ export async function run(root) {
     color: var(--text);
     white-space:nowrap;
   }
-
-  .cw-acc{
-    border-radius: var(--badge-radius);
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 950;
-    color: #fff;
-    border: 1px solid rgba(0,0,0,.08);
-    line-height: 1;
-    white-space:nowrap;
-  }
-  .cw-acc.ok{   background: linear-gradient(180deg,#16a34a,#0e7a34); }
-  .cw-acc.warn{ background: linear-gradient(180deg,#f59e0b,#c67b06); }
-  .cw-acc.bad{  background: linear-gradient(180deg,#ef4444,#c03030); }
-  .cw-acc.neutral{ background: linear-gradient(180deg,#64748b,#475569); }
 
   .cw-empty{
     border:1px dashed var(--border);
@@ -271,6 +273,9 @@ export async function run(root) {
       box-shadow: 0 10px 24px rgba(37,99,235,.35);
     }
     .cw-input{ background:#ffffff; }
+  }
+  @media (prefers-color-scheme: dark){
+    .cw-version{color:#bbf7d0;border-color:rgba(122,235,122,.34);background:linear-gradient(180deg,rgba(122,235,122,.18),rgba(2,194,2,.14))}
   }
   `;
   root.appendChild(style);
@@ -477,12 +482,15 @@ export async function run(root) {
 
       <div class="cw-panel">
         <div class="cw-row">
-          <div class="cw-input" style="flex: 2 1 320px;">
-            <input id="cwQuery" type="search" inputmode="search" placeholder="Search symptoms, drugs, abbreviations…" autocomplete="off" />
-            <div class="meta" id="cwStatus">—</div>
+          <div class="cw-search-wrap">
+            <div class="cw-input">
+              <span class="material-symbols-rounded cw-search-icon" aria-hidden="true">search</span>
+              <input id="cwQuery" type="search" inputmode="search" placeholder="Search CPG" autocomplete="off" />
+              <div class="meta" id="cwStatus">—</div>
+            </div>
+            <div class="cw-hint" id="cwHint">Search symptoms, drugs, abbreviations</div>
+            <button class="cw-btn cw-clear-btn" id="cwClear" type="button">Clear</button>
           </div>
-          <button class="cw-btn cw-btn-primary" id="cwRun" type="button">Smart Search</button>
-          <button class="cw-btn" id="cwClear" type="button">Clear</button>
         </div>
 
         <div class="cw-actions">
@@ -490,8 +498,6 @@ export async function run(root) {
           <button class="cw-btn" id="cwSearchCpg" type="button">Search CPG</button>
           <button class="cw-btn" id="cwOpenPage" type="button">Open Page</button>
         </div>
-
-        <div class="cw-hint" id="cwHint"></div>
       </div>
 
       <div class="cw-results-hd">
@@ -507,7 +513,6 @@ export async function run(root) {
   const $status = root.querySelector("#cwStatus");
   const $hint = root.querySelector("#cwHint");
 
-  const $run = root.querySelector("#cwRun");
   const $clear = root.querySelector("#cwClear");
 
   const $openCpg = root.querySelector("#cwOpenCpg");
@@ -517,6 +522,7 @@ export async function run(root) {
   const $resTitle = root.querySelector("#cwResTitle");
   const $resMeta = root.querySelector("#cwResMeta");
   const $list = root.querySelector("#cwList");
+  const SEARCH_HINT = "Search symptoms, drugs, abbreviations";
 
   // =========================
   // HASH STATE
@@ -1377,10 +1383,6 @@ export async function run(root) {
           }
         }
 
-        const pctRaw = Number.isFinite(Number(x.score_pct)) ? Number(x.score_pct) : scoreToPercent(Number(x.score));
-        const pct = pctRaw != null ? Math.round(pctRaw) : null;
-        const pctCls = percentClass(x.score_color);
-
         card.innerHTML = `
           <div class="left">
             <div class="name">${escapeHtml(x.title || "")}</div>
@@ -1388,7 +1390,6 @@ export async function run(root) {
           </div>
 
           <div class="cw-right">
-            <div class="cw-acc ${pctCls}">${pct != null ? `${pct}%` : `—`}</div>
             <div class="cw-badge">${range ? `Page ${escapeHtml(range)}` : `Open`}</div>
           </div>
         `;
@@ -1433,7 +1434,6 @@ export async function run(root) {
         </div>
 
         <div class="cw-right">
-          <div class="cw-acc neutral">—</div>
           <div class="cw-badge">${range ? `Page ${escapeHtml(range)}` : `Open`}</div>
         </div>
       `;
@@ -1458,7 +1458,7 @@ export async function run(root) {
 
     $resTitle.textContent = "Results";
     $resMeta.textContent = "—";
-    $list.innerHTML = `<div class="cw-empty">Type a keyword and press Smart Search.</div>`;
+    $list.innerHTML = `<div class="cw-empty">Type to search CPG.</div>`;
   }
 
   // =========================
@@ -1497,26 +1497,25 @@ export async function run(root) {
     renderResults(out);
   }
 
-  // Wire UI
-  $run.addEventListener("click", async () => {
-    safeVibrate(6);
-    try { await doSmartSearch(); }
-    catch (e) {
-      setStatus("Error");
-      $list.innerHTML = `<div class="cw-empty">${escapeHtml(e && e.message ? e.message : "Search failed.")}</div>`;
-    }
-  });
+  let searchTimer = 0;
+  function scheduleSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(async () => {
+      try { await doSmartSearch(); }
+      catch (e) {
+        setStatus("Error");
+        $list.innerHTML = `<div class="cw-empty">${escapeHtml(e && e.message ? e.message : "Search failed.")}</div>`;
+      }
+    }, 120);
+  }
 
+  // Wire UI
+  $query.addEventListener("input", scheduleSearch);
   $query.addEventListener("keydown", async (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       $query.blur();
       safeVibrate(6);
-      try { await doSmartSearch(); }
-      catch (err) {
-        setStatus("Error");
-        $list.innerHTML = `<div class="cw-empty">${escapeHtml(err && err.message ? err.message : "Search failed.")}</div>`;
-      }
     }
   });
   $list.addEventListener("touchstart", () => $query.blur(), { passive: true });
@@ -1527,7 +1526,7 @@ export async function run(root) {
     $query.value = "";
     setHashState({ q: "" });
     setStatus("—");
-    $hint.textContent = "";
+    $hint.textContent = SEARCH_HINT;
     renderResults({ results: [], suggestion: null });
     $query.focus();
   });
@@ -1556,8 +1555,7 @@ export async function run(root) {
   const hs = getHashState();
   if (hs.q) {
     $query.value = hs.q;
-    $hint.textContent = `Ready to search: "${hs.q}"`;
-    renderResults({ results: [], suggestion: null });
+    scheduleSearch();
   } else {
     renderResults({ results: [], suggestion: null });
   }
