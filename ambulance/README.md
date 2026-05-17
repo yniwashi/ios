@@ -2,6 +2,7 @@
 
 <!--
 CHANGELOG (2026-05-17):
+- Merge the full iOS webapp update guide into this package README and remove the standalone guide dependency.
 - Add ASSET_VERSION cache refresh workflow for app-owned JavaScript updates.
 - Create Ambulance package README draft for `yniwashi/ios/ambulance`.
 - Document app shell, routing, tools, search/helper cache modules, and manual testing notes.
@@ -70,7 +71,7 @@ ambulance/websites_data.js
 
 Shared helper loader/cache for remote Websites data and website icon warmup.
 
-## App Code Cache Refresh
+## App Code Cache Refresh Guide
 
 `ambulance/index.html` owns two version keys:
 
@@ -80,6 +81,16 @@ const ASSET_VERSION = "asset-YYYYMMDD-N";
 ```
 
 `APP_VERSION` is visible to users. `ASSET_VERSION` is hidden and should be bumped whenever app-owned JavaScript changes are uploaded.
+
+Recommended `ASSET_VERSION` format:
+
+```text
+asset-20260517-1
+asset-20260517-2
+asset-20260518-1
+```
+
+Use the date plus a counter for multiple uploads on the same day.
 
 Covered app-owned JavaScript:
 
@@ -92,10 +103,41 @@ ambulance/tools/*.js
 
 Release checklist:
 
-1. Update changed files and their dated changelog headers.
-2. Bump `ASSET_VERSION` in `ambulance/index.html`.
-3. Upload `ambulance/index.html` and every changed JavaScript file.
-4. Fully close and reopen the Ambulance App before testing.
+1. Edit the app files.
+2. Update the dated changelog at the top of every changed file.
+3. Bump `ASSET_VERSION` in `ambulance/index.html`.
+4. Upload `ambulance/index.html`.
+5. Upload every changed JavaScript file.
+6. Open the Ambulance App, fully close it from the app switcher, then reopen it.
+7. Test the changed tool or search behavior.
+
+The app builds JavaScript URLs like:
+
+```text
+/ambulance/tools/websites.js?ver=asset-20260517-1
+```
+
+When `ASSET_VERSION` changes, the URL changes:
+
+```text
+/ambulance/tools/websites.js?ver=asset-20260518-1
+```
+
+The browser treats that as a different file and fetches the new JavaScript instead of reusing the old cached copy.
+
+`ASSET_VERSION` does not control:
+
+```text
+docs.niwashibase.com viewer files
+docs.niwashibase.com helper JSON cache inside the app
+PDF files
+website icon image cache
+audio/image files unless their URLs are versioned separately
+```
+
+For helper JSON such as `websites.json`, `cpg_index.json`, `sop_index.json`, or `cpm_index.json`, upload the helper to the docs host. The iOS app keeps helper data for up to 7 days and refreshes in the background when the app opens.
+
+Do not change the Cloudflare Worker gate for normal app code updates. The update fix is handled by `ASSET_VERSION`, not by changing the session cookie, `/session`, `/cookie-check`, or install redirect logic.
 
 ## Tools
 
@@ -125,10 +167,10 @@ westley.js
 The app shell dynamically imports tools from:
 
 ```js
-./tools/${actionId}.js?ver=${APP_VERSION}
+./tools/${actionId}.js?ver=${ASSET_VERSION}
 ```
 
-Bump `APP_VERSION` in `ambulance/index.html` when deployed app JavaScript needs a forced fresh module load.
+Bump `ASSET_VERSION` in `ambulance/index.html` when deployed app JavaScript needs a forced fresh module load.
 
 ## Routing
 
