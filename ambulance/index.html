@@ -1,4 +1,7 @@
 <!--
+  CHANGELOG (2026-05-17):
+  - Warm shared Websites helper and remote website icons when the app opens.
+
   CHANGELOG (2026-05-16):
   - Add shared weighted search modules for global, CPG, and SOP search.
   - Add CPM index and CPM PDF support to main/global search.
@@ -492,6 +495,7 @@
 <script type="module">
   import { buildFeatureTargets, searchTargets } from "./search_core.js";
   import { getGlobalDocumentTargets, preloadSearchData } from "./search_data.js";
+  import { preloadWebsitesData } from "./websites_data.js";
   /* =========================
        CONFIG (production)
        - HOST/theme + feature toggles
@@ -693,6 +697,7 @@
     urlCpmIndex: "https://docs.niwashibase.com/helpers/cpm_index.json",
     urlFlowcharts: "https://docs.niwashibase.com/helpers/flowcharts.json",
     urlFormulary: "https://docs.niwashibase.com/helpers/formulary.json",
+    urlWebsites: "https://docs.niwashibase.com/helpers/websites.json",
     urlPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpg-81w9d1f.pdf#page=",
     urlSopPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/sop-101qq9f2w.pdf#page=",
     urlCpmPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpm-202e9d33q.pdf#page="
@@ -1056,8 +1061,9 @@
 
     runWhenIdle(() => {
       preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
+      preloadWebsitesData(GLOBAL_SEARCH_CONFIG).catch(() => {});
       loadGlobalSearchItems().catch(() => {});
-      ["cpg_wizard", "sop", "formulary", "flowcharts"].forEach(preloadModule);
+      ["cpg_wizard", "sop", "formulary", "flowcharts", "websites"].forEach(preloadModule);
     }, 400);
 
     runWhenIdle(() => {
@@ -1163,6 +1169,7 @@
     if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
     const globalSearch = initGlobalSearch();
     preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
+    preloadWebsitesData(GLOBAL_SEARCH_CONFIG).catch(() => {});
     scheduleAppWarmup();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
