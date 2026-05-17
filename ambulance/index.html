@@ -1,5 +1,8 @@
 <!--
   CHANGELOG (2026-05-17):
+  - Make ASSET_VERSION shared-module loading lazy so the home tool grid renders even if helper modules are slow or unavailable.
+  - Add hidden ASSET_VERSION cache key for app-owned JavaScript updates.
+  - Load shared search/websites modules with ASSET_VERSION and expose them to tools.
   - Warm shared Websites helper and remote website icons when the app opens.
 
   CHANGELOG (2026-05-16):
@@ -493,9 +496,47 @@
 </section>
 
 <script type="module">
-  import { buildFeatureTargets, searchTargets } from "./search_core.js";
-  import { getGlobalDocumentTargets, preloadSearchData } from "./search_data.js";
-  import { preloadWebsitesData } from "./websites_data.js";
+  // =========================
+  // APP + ASSET VERSIONS
+  // APP_VERSION is visible to users. ASSET_VERSION is the hidden cache refresh key.
+  // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
+  // =========================
+  const APP_VERSION = "v0.3";
+  const ASSET_VERSION = "asset-20260517-2";
+  const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
+  const TOOL_MODULE_VERSION = ASSET_VERSION;
+  window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
+
+  let sharedModulesPromise = null;
+  function loadSharedModules() {
+    if (window.__AMBULANCE_SHARED_MODULES?.assetVersion === ASSET_VERSION) {
+      return Promise.resolve(window.__AMBULANCE_SHARED_MODULES);
+    }
+    if (!sharedModulesPromise) {
+      sharedModulesPromise = Promise.all([
+        import(`./search_core.js${ASSET_QUERY}`),
+        import(`./search_data.js${ASSET_QUERY}`),
+        import(`./websites_data.js${ASSET_QUERY}`)
+      ]).then(([searchCore, searchData, websitesData]) => {
+        const shared = { assetVersion: ASSET_VERSION, searchCore, searchData, websitesData };
+        window.__AMBULANCE_SHARED_MODULES = shared;
+        return shared;
+      }).finally(() => { sharedModulesPromise = null; });
+    }
+    return sharedModulesPromise;
+  }
+
+  async function getSearchCoreModule() {
+    return (await loadSharedModules()).searchCore;
+  }
+
+  async function getSearchDataModule() {
+    return (await loadSharedModules()).searchData;
+  }
+
+  async function getWebsitesDataModule() {
+    return (await loadSharedModules()).websitesData;
+  }
   /* =========================
        CONFIG (production)
        - HOST/theme + feature toggles
@@ -509,14 +550,6 @@
   const SEPARATOR     = "::";
   const USE_RETURN_URL = false;
   const RETURN_URL    = "https://yourdomain.com/done.html";
-
-  // =========================
-  // APP VERSION
-  // Bump this on each release, then also bump WHATS_NEW_KEY so users see the new modal once.
-  // Example: "v0.4"
-  // =========================
-  const APP_VERSION = "v0.3";
-  const TOOL_MODULE_VERSION = APP_VERSION;
 
   /* =========================
        Messaging config hub
@@ -785,7 +818,8 @@
     return out;
   }
 
-  function gsToolItems(){
+  async function gsToolItems(){
+    const { buildFeatureTargets } = await getSearchCoreModule();
     const extra = {
       "CPR": ["cardiac arrest", "resuscitation", "timer", "compressions"],
       "RSI Checklist": ["rapid sequence induction", "intubation", "airway"],
@@ -819,16 +853,21 @@
   async function loadGlobalSearchItems(){
     if (globalSearchItemsPromise) return globalSearchItemsPromise;
     globalSearchItemsPromise = (async () => {
+      const [{ getGlobalDocumentTargets }, toolItems] = await Promise.all([
+        getSearchDataModule(),
+        gsToolItems()
+      ]);
       const documentTargets = await getGlobalDocumentTargets(GLOBAL_SEARCH_CONFIG);
       return [
-        ...gsToolItems(),
+        ...toolItems,
         ...documentTargets
       ];
     })();
     return globalSearchItemsPromise;
   }
 
-  function searchGlobalItems(items, query){
+  async function searchGlobalItems(items, query){
+    const { searchTargets } = await getSearchCoreModule();
     return searchTargets(items, query, { maxResults: 8 });
   }
 
@@ -968,8 +1007,13 @@
       resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">Searching...</div><div class="gs-sub">Loading app and document indexes.</div></div></div>`;
       resultsEl.__items = [];
       resultsEl.classList.add("show");
-      const items = await loadGlobalSearchItems();
-      renderResults(searchGlobalItems(items, q));
+      try {
+        const items = await loadGlobalSearchItems();
+        renderResults(await searchGlobalItems(items, q));
+      } catch (err) {
+        console.error("Global search failed:", err);
+        resultsEl.innerHTML = `<div class="gs-result"><div class="gs-main"><div class="gs-title">Search is unavailable</div><div class="gs-sub">One of the search modules did not load. Try refreshing the app.</div></div></div>`;
+      }
     }
 
     async function openResult(item){
@@ -1060,8 +1104,8 @@
     };
 
     runWhenIdle(() => {
-      preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
-      preloadWebsitesData(GLOBAL_SEARCH_CONFIG).catch(() => {});
+      getSearchDataModule().then(({ preloadSearchData }) => preloadSearchData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
+      getWebsitesDataModule().then(({ preloadWebsitesData }) => preloadWebsitesData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
       loadGlobalSearchItems().catch(() => {});
       ["cpg_wizard", "sop", "formulary", "flowcharts", "websites"].forEach(preloadModule);
     }, 400);
@@ -1168,8 +1212,8 @@
     const appVersionLabel = document.getElementById("appVersionLabel");
     if (appVersionLabel) appVersionLabel.textContent = APP_VERSION;
     const globalSearch = initGlobalSearch();
-    preloadSearchData(GLOBAL_SEARCH_CONFIG).catch(() => {});
-    preloadWebsitesData(GLOBAL_SEARCH_CONFIG).catch(() => {});
+    getSearchDataModule().then(({ preloadSearchData }) => preloadSearchData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
+    getWebsitesDataModule().then(({ preloadWebsitesData }) => preloadWebsitesData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
     scheduleAppWarmup();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
