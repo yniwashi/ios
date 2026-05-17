@@ -5,11 +5,22 @@
 // - Fit website icons inside smaller artwork bounds and share/copy only the URL.
 // - Add website search field and category filter chips.
 // - Sort category filters alphabetically.
-// - Restore full WebClip navigation tip copy.
+// - Restore full Ambulance App navigation tip copy.
 // - Show a single alphabetical list while keeping category chips as filters.
-import { getWebsites } from "../websites_data.js";
+// - Load shared Websites module through the app ASSET_VERSION cache key.
+
+function assetQuery() {
+  const version = window.__AMBULANCE_ASSET_VERSION || "";
+  return version ? `?ver=${encodeURIComponent(version)}` : "";
+}
+
+async function loadWebsitesModule() {
+  const shared = window.__AMBULANCE_SHARED_MODULES || {};
+  return shared.websitesData || import(`../websites_data.js${assetQuery()}`);
+}
 
 export async function run(mountEl){
+  const { getWebsites } = await loadWebsitesModule();
   mountEl.innerHTML = `
     <style>
       .ws-wrap{padding:12px}
