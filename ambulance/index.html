@@ -1,5 +1,6 @@
 <!--
   CHANGELOG (2026-05-18):
+  - Add AS-Call to App mode using the shared docs helper and preload it when the app opens.
   - Add a home-screen pull-down refresh gesture for the Ambulance App.
   - Use the SOP manage_search icon for the CPG home button.
   - Use the same home button icon for SOP and CPG.
@@ -534,7 +535,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.3";
-  const ASSET_VERSION = "asset-20260518-2";
+  const ASSET_VERSION = "asset-20260518-3";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -548,9 +549,10 @@
       sharedModulesPromise = Promise.all([
         import(`./search_core.js${ASSET_QUERY}`),
         import(`./search_data.js${ASSET_QUERY}`),
-        import(`./websites_data.js${ASSET_QUERY}`)
-      ]).then(([searchCore, searchData, websitesData]) => {
-        const shared = { assetVersion: ASSET_VERSION, searchCore, searchData, websitesData };
+        import(`./websites_data.js${ASSET_QUERY}`),
+        import(`./as_call_data.js${ASSET_QUERY}`)
+      ]).then(([searchCore, searchData, websitesData, asCallData]) => {
+        const shared = { assetVersion: ASSET_VERSION, searchCore, searchData, websitesData, asCallData };
         window.__AMBULANCE_SHARED_MODULES = shared;
         return shared;
       }).finally(() => { sharedModulesPromise = null; });
@@ -568,6 +570,10 @@
 
   async function getWebsitesDataModule() {
     return (await loadSharedModules()).websitesData;
+  }
+
+  async function getAsCallDataModule() {
+    return (await loadSharedModules()).asCallData;
   }
   /* =========================
        CONFIG (production)
@@ -722,7 +728,7 @@
 
     // Ops / Links
     { text:"AS-Call",          iconType:"material", icon:"call",          color:"btn-ascall",
-      href:"#", showDefault:false, showShortcuts:true },
+      href:"#", showDefault:true, showShortcuts:true, actionId:"as_call" },
 
     { text:"HOS",              iconType:"material", icon:"local_airport", color:"btn-hos",
       href:"#", showDefault:false, showShortcuts:true },
@@ -763,6 +769,7 @@
     urlFlowcharts: "https://docs.niwashibase.com/helpers/flowcharts.json",
     urlFormulary: "https://docs.niwashibase.com/helpers/formulary.json",
     urlWebsites: "https://docs.niwashibase.com/helpers/websites.json",
+    urlAsCall: "https://docs.niwashibase.com/helpers/as_call.json",
     urlPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpg-81w9d1f.pdf#page=",
     urlSopPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/sop-101qq9f2w.pdf#page=",
     urlCpmPageBase: "https://docs.niwashibase.com/viewer/web/?file=/docs/cpm-202e9d33q.pdf#page="
@@ -874,6 +881,7 @@
       "Westley Score": ["croup"],
       "Overtime Calculator": ["pay", "hours", "shift"],
       "Websites": ["links", "resources"],
+      "AS-Call": ["phone", "call", "contacts", "directory", "numbers"],
       "Stay Connected": ["community", "discord", "telegram", "whatsapp"]
     };
     return buildFeatureTargets(BUTTONS.map((btn) => ({
@@ -1351,6 +1359,7 @@
     const globalSearch = initGlobalSearch();
     getSearchDataModule().then(({ preloadSearchData }) => preloadSearchData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
     getWebsitesDataModule().then(({ preloadWebsitesData }) => preloadWebsitesData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
+    getAsCallDataModule().then(({ preloadAsCallData }) => preloadAsCallData(GLOBAL_SEARCH_CONFIG)).catch(() => {});
     scheduleAppWarmup();
     document.getElementById("themeSelect").addEventListener("change",(e)=>applyTheme(e.target.value));
 
