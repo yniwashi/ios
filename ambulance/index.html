@@ -1,8 +1,7 @@
 <!--
-CHANGELOG (2026-06-07):
-- Use the production-routed /ambulance/gate session endpoint so Access Gate checks work without a root /gate/* Worker route.
-- Prepare the app for iOS production deployment with v0.4 asset naming and no hidden gate test controls.
-- Fail closed to limited access when the gate session is missing, invalid, or unavailable.
+  CHANGELOG (2026-06-07):
+  - Prepare the app for iOS production deployment with v0.4 asset naming and no hidden gate test controls.
+  - Fail closed to limited access when the gate session is missing, invalid, or unavailable.
   - Bump the testing asset key for the production App Config and access-policy switch.
   - Make App Back navigate directly to the recorded parent or Home instead of traversing Safari/PDF iframe history.
   - Bump the testing asset key for deterministic parent-route Back navigation.
@@ -885,7 +884,7 @@ CHANGELOG (2026-06-07):
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260607-ios-2";
+  const ASSET_VERSION = "asset-20260607-ios-1";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -998,7 +997,7 @@ CHANGELOG (2026-06-07):
 
   async function loadGateSession() {
     if (gateSessionPromise) return gateSessionPromise;
-    gateSessionPromise = fetch("/ambulance/gate/session-info", { credentials: "include", cache: "no-store" })
+    gateSessionPromise = fetch("/gate/session-info", { credentials: "include", cache: "no-store" })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         const activeAccessType = data?.status === "active" && data?.authenticated === true
