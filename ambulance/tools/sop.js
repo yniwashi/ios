@@ -1,9 +1,4 @@
 // /tools/sop.js
-// CHANGELOG (2026-06-07):
-// - Close the SOP viewer directly so PDF.js iframe history cannot consume the first Back press.
-// - Prevent repeated SOP result taps from stacking duplicate PDF overlay history entries.
-// - Consume the PDF overlay history entry on Back instead of duplicating the SOP parent screen.
-//
 // CHANGELOG (2026-05-18):
 // - Add the search icon inside the SOP search box.
 // - Move the Clear button below the search hint.
@@ -446,7 +441,7 @@ export async function run(root) {
       modal.style.display = "none";
       frame.src = "about:blank";
       if (modal.__popHandler) {
-        window.removeEventListener("popstate", modal.__popHandler, true);
+        window.removeEventListener("popstate", modal.__popHandler);
         modal.__popHandler = null;
       }
       if (modal.__historyActive) {
@@ -455,14 +450,33 @@ export async function run(root) {
       }
     }
 
-    backBtn.addEventListener("click", () => closeModal());
+    backBtn.addEventListener("click", () => {
+      if (modal.__historyActive) {
+        closeModal();
+        if (modal.__baseUrl) {
+          history.replaceState(modal.__baseState || history.state, "", modal.__baseUrl);
+        }
+        modal.__historyActive = false;
+      } else {
+        closeModal();
+      }
+    });
 
     modal.__open = (url, title, overlayToken) => {
       titleEl.textContent = title || "SOP";
       frame.src = url;
       modal.style.display = "block";
-      modal.__historyActive = false;
-      modal.__overlayToken = overlayToken || "";
+      if (!modal.__popHandler) {
+        modal.__popHandler = () => {
+          if (!modal.__historyActive) return;
+          closeModal(true);
+        };
+        window.addEventListener("popstate", modal.__popHandler);
+      }
+      modal.__baseUrl = `${location.pathname}${location.search}${location.hash || ""}`;
+      modal.__baseState = history.state;
+      modal.__historyActive = true;
+      history.pushState(buildOverlayState(overlayToken), "", buildOverlayUrl(overlayToken));
       modal.__openToken = (modal.__openToken || 0) + 1;
       const token = modal.__openToken;
       requestAnimationFrame(() => {

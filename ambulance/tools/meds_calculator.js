@@ -1,7 +1,5 @@
-// CHANGELOG (2026-06-05):
-// - Accept an initial Dose Volume/Infusion Rate mode from the Android-style Calculators menu.
 // tools/meds_calculator.js
-export async function run(mountEl, params = {}) {
+export async function run(mountEl) {
   mountEl.innerHTML = `
     <style>
       /* ========= Meds Calculator (scoped) ========= */
@@ -294,13 +292,11 @@ export async function run(mountEl, params = {}) {
   tabDose.addEventListener('click', () => setMode('dose'));
   tabInf .addEventListener('click', () => setMode('infusion'));
   (function initMode(){
-    const requestedMode = String(params.initialMode || "").toLowerCase();
     const url = new URL(window.location.href);
     const hashMode = (url.hash || '').replace('#','');
     const qMode = url.searchParams.get('mode');
     let saved = null; try { saved = localStorage.getItem('meds_calc_mode'); } catch {}
-    const mode = (requestedMode==='dose'||requestedMode==='infusion') ? requestedMode
-               : (hashMode==='dose'||hashMode==='infusion') ? hashMode
+    const mode = (hashMode==='dose'||hashMode==='infusion') ? hashMode
                : (qMode==='dose'||qMode==='infusion') ? qMode
                : (saved==='dose'||saved==='infusion') ? saved
                : 'dose';
