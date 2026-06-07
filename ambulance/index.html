@@ -1,6 +1,5 @@
 <!--
 CHANGELOG (2026-06-07):
-- Fail closed to the Access Gate when session-info does not confirm an active authenticated session, instead of falling back to Other User.
 - Use the exact production-routed /ambulance/?gate_api=session-info endpoint so Access Gate checks work without wildcard Worker routes.
 - Prepare the app for iOS production deployment with v0.4 asset naming and no hidden gate test controls.
 - Fail closed to limited access when the gate session is missing, invalid, or unavailable.
@@ -886,7 +885,7 @@ CHANGELOG (2026-06-07):
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260607-ios-4";
+  const ASSET_VERSION = "asset-20260607-ios-3";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -997,23 +996,12 @@ CHANGELOG (2026-06-07):
     return PROTECTED_SEARCH_TYPES.has(String(item.type || ""));
   }
 
-  function isActiveGateSession(data) {
-    return data?.status === "active"
-      && data?.authenticated === true
-      && (data.access_type === ACCESS_TYPES.AMBULANCE_STAFF || data.access_type === ACCESS_TYPES.NON_AMBULANCE_STAFF);
-  }
-
-  function redirectToAccessGate() {
-    if (location.pathname === "/ambulance/" && location.search.includes("gate=1")) return;
-    location.replace("/ambulance/?gate=1");
-  }
-
   async function loadGateSession() {
     if (gateSessionPromise) return gateSessionPromise;
     gateSessionPromise = fetch("/ambulance/?gate_api=session-info", { credentials: "include", cache: "no-store" })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        const activeAccessType = isActiveGateSession(data)
+        const activeAccessType = data?.status === "active" && data?.authenticated === true
           ? data.access_type
           : "";
         gateAccessType = activeAccessType === ACCESS_TYPES.AMBULANCE_STAFF
@@ -1024,9 +1012,9 @@ CHANGELOG (2026-06-07):
         return data;
       })
       .catch(() => {
-        gateAccessType = "";
-        document.body.dataset.accessType = "";
-        window.__AMBULANCE_ACCESS_TYPE = "";
+        gateAccessType = ACCESS_TYPES.NON_AMBULANCE_STAFF;
+        document.body.dataset.accessType = gateAccessType;
+        window.__AMBULANCE_ACCESS_TYPE = gateAccessType;
         return null;
       });
     return gateSessionPromise;
@@ -2369,11 +2357,7 @@ CHANGELOG (2026-06-07):
   document.addEventListener("DOMContentLoaded", initTacOrApp);
 
   async function mount(){
-    const gateSession = await loadGateSession();
-    if (!isActiveGateSession(gateSession)) {
-      redirectToAccessGate();
-      return;
-    }
+    await loadGateSession();
     initTheme();
     initPullRefresh();
     setDisplayedAppVersion(APP_VERSION);
