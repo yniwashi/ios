@@ -2,6 +2,7 @@
 
 <!--
 CHANGELOG (2026-05-17):
+- Refresh install page wording for Ambulance App v0.4 and remove old Shortcuts install instructions.
 - Create Install package README draft for `yniwashi/ios/install`.
 - Document install guide files, mobileconfig profile, media assets, and manual testing notes.
 -->
