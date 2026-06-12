@@ -1,4 +1,8 @@
 <!--
+  CHANGELOG (2026-06-12):
+  - Bump ASSET_VERSION for Admin Panel diagnostics/cache reporting updates.
+  - Improve Admin PIN validation with a placeholder, blank-entry prompt, and red incorrect-PIN message.
+
   CHANGELOG (2026-06-08):
   - Keep the bottom iOS safe area on the active page background while preserving the blue status-bar header.
   - Match the dark-mode iOS status-bar background to the solid Ambulance header blue.
@@ -598,7 +602,7 @@
     .admin-pin-head,.admin-panel-head{display:flex;align-items:center;gap:13px;padding:17px 18px;background:linear-gradient(135deg,#0d63b2,#084b8d);color:#fff}
     .admin-pin-icon{display:grid;place-items:center;width:50px;height:50px;flex:none;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34)}
     .admin-pin-icon .material-symbols-rounded{font-size:29px}.admin-pin-copy{min-width:0}.admin-pin-copy strong{display:block;font-size:21px;font-weight:950}.admin-pin-copy span{display:block;margin-top:4px;color:#e0f2fe;font-size:12px}
-    .admin-pin-body{padding:16px 18px 18px}.admin-pin-message{margin:0;padding:13px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;color:#374151;font-size:13px;line-height:1.45}
+    .admin-pin-body{padding:16px 18px 18px}.admin-pin-message{margin:0;padding:13px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;color:#374151;font-size:13px;line-height:1.45}.admin-pin-message.error{border-color:#fecaca;background:#fef2f2;color:#b91c1c}
     .admin-pin-input{box-sizing:border-box;width:100%;height:52px;margin-top:14px;border:1.5px solid #93c5fd;border-radius:8px;background:var(--surface);color:var(--text);font:900 20px/1 system-ui;text-align:center;outline:none}
     .admin-pin-actions,.admin-actions{display:flex;gap:9px;margin-top:14px}.admin-btn{appearance:none;min-height:46px;flex:1;border:1.5px solid #0d63b2;border-radius:8px;background:#0d63b2;color:#fff;font:900 13px/1 system-ui;padding:9px;cursor:pointer}
     .admin-btn.secondary{background:var(--surface);color:#0d63b2}.admin-btn.danger{border-color:#b83b31;background:#b83b31}.admin-btn.warning{border-color:#a06d00;background:#a06d00}
@@ -611,7 +615,7 @@
     .intro-title{margin:18px 0 0;text-align:center;color:var(--intro-color,#005fcb);font-size:25px;font-weight:950}.intro-message{margin:14px 0 0;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text);text-align:center;font-size:16px;font-weight:800;line-height:1.45}
     .intro-dots{margin:17px 0 0;color:#2563eb;text-align:center;font-size:20px;font-weight:900;letter-spacing:4px}.intro-actions{display:flex;gap:16px;margin-top:17px}.intro-actions .admin-btn{min-height:48px}.intro-back{background:#64748b;border-color:#64748b}
     .app-mini-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:100002;padding:10px 14px;border-radius:8px;background:#111827;color:#fff;font-size:12px;font-weight:850;opacity:0;transform:translate(-50%,10px);pointer-events:none;transition:.18s}.app-mini-toast.show{opacity:1;transform:translate(-50%,0)}
-    [data-theme="dark"] .admin-pin-message{border-color:#315878;background:#17283a;color:#d9e8f6}
+    [data-theme="dark"] .admin-pin-message{border-color:#315878;background:#17283a;color:#d9e8f6}[data-theme="dark"] .admin-pin-message.error{border-color:#7f1d1d;background:#2b1416;color:#fecaca}
     @media(max-width:520px){.admin-actions{display:grid;grid-template-columns:repeat(3,1fr)}.admin-actions .admin-btn{font-size:11px;padding-inline:4px}.intro-card{padding:18px}}
 
     /* What's New modal */
@@ -782,7 +786,7 @@
     </header>
     <div class="admin-pin-body">
       <p id="adminPinMessage" class="admin-pin-message">Enter the admin PIN to open diagnostics and app configuration status.</p>
-      <input id="adminPinInput" class="admin-pin-input" type="password" inputmode="numeric" maxlength="8" autocomplete="off" aria-label="Admin PIN">
+      <input id="adminPinInput" class="admin-pin-input" type="password" inputmode="numeric" maxlength="8" autocomplete="off" aria-label="Admin PIN" placeholder="Enter PIN">
       <div class="admin-pin-actions">
         <button id="adminPinCancel" class="admin-btn secondary" type="button">Cancel</button>
         <button id="adminPinOpen" class="admin-btn" type="button">Open</button>
@@ -893,7 +897,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260608-ios-1";
+  const ASSET_VERSION = "asset-20260612-ios-1";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -2069,6 +2073,7 @@
       pinInput.disabled = locked;
       pinOpen.disabled = locked;
       pinOpen.style.opacity = locked ? ".5" : "1";
+      pinMessage.classList.toggle("error", locked);
       pinMessage.textContent = locked
         ? `Too many incorrect attempts. Try again in ${Math.max(1, Math.ceil(remaining / 60000))} min.`
         : "Enter the admin PIN to open diagnostics and app configuration status.";
@@ -2127,7 +2132,14 @@
     document.getElementById("adminPinCancel")?.addEventListener("click", () => hide(pinOverlay));
     pinOpen?.addEventListener("click", async () => {
       if (applyLockState()) return;
-      const valid = await sha256(PIN_SALT + pinInput.value) === PIN_HASH;
+      const enteredPin = pinInput.value.trim();
+      if (!enteredPin) {
+        pinMessage.classList.add("error");
+        pinMessage.textContent = "Enter the admin PIN first.";
+        pinInput.focus();
+        return;
+      }
+      const valid = await sha256(PIN_SALT + enteredPin) === PIN_HASH;
       if (valid) {
         localStorage.removeItem(FAIL_KEY);
         localStorage.removeItem(LOCK_KEY);
@@ -2142,7 +2154,14 @@
         applyLockState();
       } else {
         localStorage.setItem(FAIL_KEY, String(failures));
+        pinMessage.classList.add("error");
         pinMessage.textContent = `Incorrect PIN. ${5 - failures} attempts remaining.`;
+      }
+    });
+    pinInput?.addEventListener("input", () => {
+      if (pinInput.value.trim() && !lockRemaining()) {
+        pinMessage.classList.remove("error");
+        pinMessage.textContent = "Enter the admin PIN to open diagnostics and app configuration status.";
       }
     });
     pinInput?.addEventListener("keydown", (event) => { if (event.key === "Enter") pinOpen.click(); });
