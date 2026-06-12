@@ -638,7 +638,10 @@
     .wn-link img{width:36px;height:36px;object-fit:contain;margin-bottom:4px}
     #whatsNewOverlay .wn-card{display:flex;flex-direction:column;max-height:min(78dvh,680px);overflow:hidden}
     #whatsNewOverlay .wn-header,#whatsNewOverlay .wn-title{flex:0 0 auto}
-    #whatsNewOverlay .wn-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:5px}
+    #whatsNewOverlay .wn-body{min-height:0;overflow-y:scroll;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable;padding-right:10px;scrollbar-width:auto;scrollbar-color:color-mix(in oklab,var(--accent) 72%,var(--muted)) color-mix(in oklab,var(--border) 72%,transparent)}
+    #whatsNewOverlay .wn-body::-webkit-scrollbar{width:8px}
+    #whatsNewOverlay .wn-body::-webkit-scrollbar-track{background:color-mix(in oklab,var(--border) 72%,transparent);border-radius:999px}
+    #whatsNewOverlay .wn-body::-webkit-scrollbar-thumb{background:color-mix(in oklab,var(--accent) 72%,var(--muted));border-radius:999px}
     body.wn-open{overflow:hidden}
     @keyframes wnpop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
     .notices-card{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:min(88dvh,760px)}
@@ -903,7 +906,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260612-ios-3";
+  const ASSET_VERSION = "asset-20260612-ios-4";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
