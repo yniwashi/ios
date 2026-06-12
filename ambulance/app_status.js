@@ -1,5 +1,6 @@
 // /ambulance/app_status.js
 // CHANGELOG (2026-06-12):
+// - Add privacy-safe CPR settings, active-state, saved-record count, and Wake Lock diagnostics.
 // - Expand Admin Panel diagnostics with gate timing, resource source status, search cache, document grouping, and web runtime details.
 // - Keep Report Issue sanitized while preserving useful cache/source state.
 //
@@ -21,6 +22,28 @@ const CACHE_KEYS = {
 const APP_CONFIG_ENDPOINTS = {
   production: "https://api.niwashibase.com/api/v1/ambulance/ios-app-config/production",
   backup: "https://api.niwashibase.com/api/v1/ambulance/ios-app-config/backup"
+};
+
+const CPR_KEYS = {
+  settings: "cpr_android_parity_settings_v1",
+  sessions: "cpr_android_parity_sessions_v1",
+  active: "cpr_android_parity_active_v1"
+};
+
+const CPR_DEFAULTS = {
+  interruptionSeconds: 5,
+  cycleSeconds: 120,
+  adrenalineSeconds: 240,
+  pauseResetThresholdSeconds: 30,
+  bpm: 120,
+  useWaafles: true,
+  playAudioCues: true,
+  playCycleNinetySecondCue: true,
+  audioCueVoice: "female",
+  confirmAdrenalineBeforeLogging: false,
+  adrenalineAutoLogDelaySeconds: 5,
+  adrenalineConfirmationDelaySeconds: 15,
+  resumeAlertSeconds: 10
 };
 
 let resourceStatusPromise = null;
@@ -347,6 +370,46 @@ function gateStatus(gate, includeAdmin) {
   };
 }
 
+function cprStatus(includeAdmin) {
+  const savedSettings = readJson(CPR_KEYS.settings) || {};
+  const sessions = readJson(CPR_KEYS.sessions);
+  const active = readJson(CPR_KEYS.active);
+  const snapshot = active?.activeTimerSnapshot;
+  const stopped = Array.isArray(active?.events)
+    && active.events.some(event => event?.type === "CPR_STOPPED");
+  const activeSessionExists = !!active
+    && !active.endedAtMillis
+    && !stopped
+    && !!snapshot?.sessionId
+    && (snapshot.isRunning === true || snapshot.isAwaitingSave === true);
+  const settings = Object.fromEntries(
+    Object.keys(CPR_DEFAULTS).map(key => [key, savedSettings[key] ?? CPR_DEFAULTS[key]])
+  );
+
+  return {
+    available: true,
+    route: includeAdmin ? "/cpr/" : "Hidden",
+    active_session_exists: activeSessionExists,
+    saved_record_count: Array.isArray(sessions) ? sessions.length : 0,
+    screen_wake_lock_supported: !!navigator.wakeLock?.request,
+    settings: {
+      interruption_seconds: Number(settings.interruptionSeconds),
+      cycle_seconds: Number(settings.cycleSeconds),
+      adrenaline_seconds: Number(settings.adrenalineSeconds),
+      pause_reset_threshold_seconds: Number(settings.pauseResetThresholdSeconds),
+      bpm: Number(settings.bpm),
+      use_waafels: settings.useWaafles === true,
+      audio_cues: settings.playAudioCues === true,
+      cycle_90_second_cue: settings.playCycleNinetySecondCue === true,
+      audio_cue_voice: String(settings.audioCueVoice),
+      confirm_adrenaline_before_logging: settings.confirmAdrenalineBeforeLogging === true,
+      adrenaline_auto_log_delay_seconds: Number(settings.adrenalineAutoLogDelaySeconds),
+      adrenaline_confirmation_delay_seconds: Number(settings.adrenalineConfirmationDelaySeconds),
+      return_alert_seconds: Number(settings.resumeAlertSeconds)
+    }
+  };
+}
+
 function webRuntimeStatus() {
   let localStorageAvailable = false;
   let sessionStorageAvailable = false;
@@ -468,11 +531,7 @@ export async function buildAppStatus(options = {}) {
     access_gate: gateStatus(gate, includeAdmin),
     pediatric_dosing: pediatricStatus(config, includeAdmin, resourceApi),
     notices: noticeStatus(config),
-    cpr: {
-      available: true,
-      route: includeAdmin ? "/cpr/" : "Hidden",
-      local_session_status: "Managed by the standalone CPR page"
-    },
+    cpr: cprStatus(includeAdmin),
     storage: storageSummary(),
     browser_cache: await cacheStorageStatus(includeAdmin)
   };

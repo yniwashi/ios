@@ -1,4 +1,7 @@
 // /ambulance/tools/issue_report.js
+// CHANGELOG (2026-06-12):
+// - Share the diagnostics file without a companion text attachment on iOS.
+//
 // CHANGELOG (2026-06-07):
 // - Keep one Share Diagnostics File action and replace native alerts with an App-styled email instruction dialog.
 // - Add the Android-aligned Report Issue form and user-safe diagnostic JSON sharing.
@@ -141,11 +144,7 @@ async function shareFile(root) {
   const { jsonFile, statusFilename } = await statusModule();
   const data = await reportData(root);
   const file = jsonFile(data, statusFilename("ambulance_issue_report"));
-  const shareData = {
-    title: "Ambulance App Issue Report",
-    text: `Please send this diagnostic file to ${SUPPORT_EMAIL}.`,
-    files: [file]
-  };
+  const shareData = { files: [file] };
   const emailCopied = await copyText(SUPPORT_EMAIL);
   if (!await showShareInstructions(root, emailCopied)) return;
   try {

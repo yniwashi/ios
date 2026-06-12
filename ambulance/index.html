@@ -1,5 +1,8 @@
 <!--
   CHANGELOG (2026-06-12):
+  - Release the redesigned CPR route, Active CPR home state, production cache key, and CPR What’s New message.
+  - Make the What’s New message body independently scrollable on small screens.
+  - Share Admin Panel JSON as a file-only payload to avoid an extra text attachment on iOS.
   - Bump ASSET_VERSION for Admin Panel diagnostics/cache reporting updates.
   - Improve Admin PIN validation with a placeholder, blank-entry prompt, and red incorrect-PIN message.
 
@@ -633,6 +636,9 @@
     .wn-links{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
     .wn-link{flex:1 1 120px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;font:700 12px/1 system-ui;padding:10px;border-radius:12px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.16)}
     .wn-link img{width:36px;height:36px;object-fit:contain;margin-bottom:4px}
+    #whatsNewOverlay .wn-card{display:flex;flex-direction:column;max-height:min(78dvh,680px);overflow:hidden}
+    #whatsNewOverlay .wn-header,#whatsNewOverlay .wn-title{flex:0 0 auto}
+    #whatsNewOverlay .wn-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:5px}
     body.wn-open{overflow:hidden}
     @keyframes wnpop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
     .notices-card{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:min(88dvh,760px)}
@@ -897,7 +903,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260612-ios-1";
+  const ASSET_VERSION = "asset-20260612-ios-2";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -1057,11 +1063,12 @@
 
     // -- What's New modal --
     WHATS_NEW_ENABLED: true,
-    WHATS_NEW_KEY: "amb_whats_new_v04_release",
+    WHATS_NEW_KEY: "amb_whats_new_v04_cpr_update",
     WHATS_NEW_MESSAGE: `
   <ul>
     <li><strong>Ambulance App v0.4 released.</strong> Redesigned home screen with grouped sections, notices, and clearer dashboard layout.</li>
     <li><strong>No more Shortcuts mode.</strong> The tools that were previously opened through Shortcuts are now being moved directly into the App experience. You can safely delete them.</li>
+    <li><strong>CPR Timer redesigned.</strong> Updated portrait and landscape layouts, improved audio reminders and recovery, timers and event logging, CPR Return Alert, WAAFELSS, customizable Settings, and new History with PDF, CSV, and JSON exports.</li>
     <li><strong>Guidelines, Pediatrics, Calculators, Scores, Visual Guides, HOS, AS-Call, Websites, Overtime, and Shift Schedule</strong> have been added/refreshed.</li>
     <li><strong>Access registration is ready.</strong> Ambulance staff and other users now get the correct App access for their account type.</li>
     <li><strong>Notices are now in the bell.</strong> Use the bell icon to read App notices. For the full What's New page, press the <strong>Updates</strong> button on the home screen.</li>
@@ -1096,6 +1103,19 @@
   let latestNotices = [];
   let noticesReady = false;
   let noticesLoadPromise = null;
+  const CPR_ACTIVE_KEY = "cpr_android_parity_active_v1";
+
+  function hasActiveCprSession() {
+    try {
+      const active = JSON.parse(localStorage.getItem(CPR_ACTIVE_KEY) || "null");
+      if (!active || active.endedAtMillis) return false;
+      if ((active.events || []).some(event => event?.type === "CPR_STOPPED")) return false;
+      const snapshot = active.activeTimerSnapshot || {};
+      return !!snapshot.sessionId && (snapshot.isRunning || snapshot.isAwaitingSave);
+    } catch (_) {
+      return false;
+    }
+  }
 
   const BUTTONS = [
     { text:"Search",           iconType:"material", icon:"search",        color:"btn-search",
@@ -1103,7 +1123,7 @@
 
     // Resuscitation & Timers
     { text:"CPR",              iconType:"material", icon:"monitor_heart", color:"btn-cpr",
-      href: `${HOST}/cpr/`, showDefault:true },
+      href: `${HOST}/cpr/?ver=${encodeURIComponent(ASSET_VERSION)}`, showDefault:true },
 
     { text:"RSI Checklist",    iconType:"material", icon:"checklist",     color:"btn-rsi",
       href: `${HOST}/helpers/rsi_checklist_js.html`, showDefault:true, appLabel:"RSI" },
@@ -2180,7 +2200,7 @@
       const { jsonFile, statusFilename } = await getAppStatusModule();
       const file = jsonFile(JSON.parse(jsonEl.textContent), statusFilename("ambulance_admin_panel"));
       if (navigator.canShare?.({ files:[file] }) && navigator.share) {
-        await navigator.share({ title:"Ambulance Admin Panel JSON", files:[file] }).catch(() => {});
+        await navigator.share({ files:[file] }).catch(() => {});
       } else {
         const url = URL.createObjectURL(file);
         const anchor = document.createElement("a");
@@ -2480,7 +2500,7 @@ function render(){
             ? `<img class="home-btn-icon" src="${btn.icon}" alt="" aria-hidden="true">`
           : "";
 
-      const displayLabel = btn.appLabel || btn.text;
+      const displayLabel = btn.text === "CPR" && hasActiveCprSession() ? "Active CPR" : (btn.appLabel || btn.text);
       if (displayLabel.length >= 17) {
         a.classList.add("label-long");
       } else if (displayLabel.length >= 13) {
@@ -2772,6 +2792,15 @@ function wireCharlieModal(){
 
     document.getElementById("panel-back").addEventListener("click", () => closePanel());
     render();
+
+    function refreshHomeCprTile() {
+      if (!document.body.classList.contains("panel-open")) render();
+    }
+    window.addEventListener("pageshow", refreshHomeCprTile);
+    window.addEventListener("focus", refreshHomeCprTile);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshHomeCprTile();
+    });
 
     const { tool, ...params } = parseHash();
     if (tool) {
