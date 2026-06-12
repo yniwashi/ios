@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>CPR History</title>
-<link rel="stylesheet" href="page-ui.css?ver=asset-20260612-ios-8">
+<script>if(new URLSearchParams(location.search).get("embedded")==="1"&&window.parent!==window)document.documentElement.classList.add("embedded-page")</script>
+<link rel="stylesheet" href="page-ui.css?ver=asset-20260613-ios-1">
 </head>
 <body class="portrait-only history-page">
 <header class="topbar">
@@ -106,9 +107,13 @@
     <button class="outline" id="cancelDeleteBtn">Cancel</button>
   </div>
 </section>
-<script src="cpr-storage.js?ver=asset-20260612-ios-8"></script>
+<script src="cpr-storage.js?ver=asset-20260613-ios-1"></script>
 <script>
 const embedded = new URLSearchParams(location.search).get("embedded") === "1" && window.parent !== window;
+if(embedded)document.body.classList.add("embedded");
+const cprTouchNoop=()=>{};
+document.addEventListener("touchstart",cprTouchNoop,{passive:true});
+window.addEventListener("touchstart",cprTouchNoop,{passive:true});
 cprTryPortraitLock();
 let filter = "All";
 let selectedIds = new Set();
@@ -119,6 +124,7 @@ let toastTimer;
 function sendParent(type) {
   if (embedded) window.parent.postMessage({ type }, "*");
 }
+if (embedded) window.parent.postMessage({ type: "cpr-subpage-title", title: "CPR History", reset: false }, "*");
 
 function closePage() {
   if (embedded) sendParent("cpr-close-subpage");
@@ -231,7 +237,7 @@ function bindRecords() {
   });
   document.querySelectorAll("[data-open]").forEach((item) => {
     item.onclick = () => {
-      location.href = `record.html?ver=asset-20260612-ios-8&id=${encodeURIComponent(item.dataset.open)}${embedded ? "&embedded=1" : ""}`;
+      location.href = `record.html?ver=asset-20260613-ios-1&id=${encodeURIComponent(item.dataset.open)}${embedded ? "&embedded=1" : ""}`;
     };
   });
 }
