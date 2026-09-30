@@ -1,4 +1,7 @@
 // /ambulance/pediatric_data.js
+// CHANGELOG (2026-10-01):
+// - Use the published AP/CCP dosing helper version when no iOS App Config is available.
+//
 // CHANGELOG (2026-06-12):
 // - Track pediatric helper source/error state for Admin Panel diagnostics.
 //
@@ -7,11 +10,11 @@
 
 const FALLBACK = {
   ap_pediatric_dosing: {
-    id:"ap_pediatric_dosing", schema_version:"0.1", version:"0.1",
+    id:"ap_pediatric_dosing", schema_version:"0.1", version:"0.2",
     url:"https://api.niwashibase.com/api/v1/ambulance/app-data/ap-pediatric-dosing"
   },
   ccp_pediatric_dosing: {
-    id:"ccp_pediatric_dosing", schema_version:"0.1", version:"0.1",
+    id:"ccp_pediatric_dosing", schema_version:"0.1", version:"0.2",
     url:"https://api.niwashibase.com/api/v1/ambulance/app-data/ccp-pediatric-dosing"
   }
 };

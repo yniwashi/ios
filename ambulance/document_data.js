@@ -1,11 +1,14 @@
 // /ambulance/document_data.js
+// CHANGELOG (2026-10-01):
+// - Use CPG v2.6 when no iOS App Config is available.
+//
 // CHANGELOG (2026-06-05):
 // - Add version-aware document config loading from iOS App config for Guidelines CPG/SOP/CPM/PAT.
 
 const DEFAULT_DOCUMENTS = [
   {
     type:"CPG",
-    version:"2.5",
+    version:"2.6",
     pdf_url:"https://docs.niwashibase.com/docs/cpg-81w9d1f.pdf",
     index_url:"https://api.niwashibase.com/api/v1/ambulance/app-data/cpg-index"
   },

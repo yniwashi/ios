@@ -1,4 +1,14 @@
 <!--
+  CHANGELOG (2026-10-01):
+  - Align CPG, reference, and pediatric helper defaults with the published v2.6 release.
+  - Refresh app-owned modules with the coordinated release asset key.
+
+  CHANGELOG (2026-09-29):
+  - Refresh the Websites script so Copy link confirmation uses its visible background.
+
+  CHANGELOG (2026-09-28):
+  - Prepare the Staff-only CPD screen, Admin Panel helper diagnostics, Websites link choices, CPG v2.6 notice, WAAFELSS updates, and RSI refresh for the coordinated release.
+
   CHANGELOG (2026-06-12):
   - Release the redesigned CPR route, Active CPR home state, production cache key, and CPR What’s New message.
   - Make the What’s New message body independently scrollable on small screens.
@@ -422,6 +432,7 @@
     .btn-ascall{background:linear-gradient(180deg,#FFED78,#FFD000)}
     .btn-hos{background:linear-gradient(180deg,#6B8BFF,#003DEB)}
     .btn-websites{background:linear-gradient(180deg,#64748b,#475569)}
+    .btn-cpd{background:linear-gradient(180deg,#2bbda9,#0f766e);--btn-fg:#fff}
     .btn-westley{background:linear-gradient(180deg,#FFE26D,#FFC107); --btn-fg:#000}
     .btn-overtime{background:linear-gradient(180deg,#75C0FF,#2F6FED); --btn-fg:#fff}
     .btn-address{background:linear-gradient(180deg,#2FD7A7,#12A085); --btn-fg:#fff}
@@ -454,6 +465,7 @@
     [data-theme="dark"] .btn-ascall{background:linear-gradient(180deg,#d9c65f,#c6a90d);--btn-fg:#111827}
     [data-theme="dark"] .btn-hos{background:linear-gradient(180deg,#5e78d7,#244fc0)}
     [data-theme="dark"] .btn-websites{background:linear-gradient(180deg,#5f6f82,#4b5968)}
+    [data-theme="dark"] .btn-cpd{background:linear-gradient(180deg,#249786,#116b64)}
     [data-theme="dark"] .btn-westley{background:linear-gradient(180deg,#d8bb55,#d19e16);--btn-fg:#111827}
     [data-theme="dark"] .btn-overtime{background:linear-gradient(180deg,#5da5df,#3864c6)}
     [data-theme="dark"] .btn-address{background:linear-gradient(180deg,#29ba92,#188873)}
@@ -474,6 +486,7 @@
       [data-theme="auto"] .btn-waafelss{background:linear-gradient(180deg,#d963c5,#b83aa6)}
       [data-theme="auto"] .btn-flowcharts{background:linear-gradient(180deg,#5fb963,#347e3d)}
       [data-theme="auto"] .btn-hos{background:linear-gradient(180deg,#5e78d7,#244fc0)}
+      [data-theme="auto"] .btn-cpd{background:linear-gradient(180deg,#249786,#116b64)}
       [data-theme="auto"] .btn-vent{background:linear-gradient(180deg,#68b7de,#3090c6)}
       [data-theme="auto"] .btn-community{background:linear-gradient(180deg,#58bf72,#38896f)}
       [data-theme="auto"] .btn-search{background:linear-gradient(180deg,#438edf,#2e62c0)}
@@ -844,10 +857,10 @@
 <section id="whatsNewOverlay" class="wn-overlay" hidden aria-modal="true" role="dialog">
   <article class="wn-card" role="document">
     <div class="wn-header">
-      <p class="wn-pill" id="wnVersionPill">🚑 New update</p>
+      <p class="wn-pill" id="wnVersionPill">📘 Guidelines update</p>
       <button id="wnClose" class="wn-close" aria-label="Dismiss What’s New">Close</button>
     </div>
-    <h2 class="wn-title">What’s New</h2>
+    <h2 class="wn-title">📘 CPG v2.6 Is Here</h2>
     <div id="whatsNewBody" class="wn-body"></div>
   </article>
 </section>
@@ -906,7 +919,7 @@
   // Bump ASSET_VERSION whenever deployed app-owned JS/HTML changes need a fresh load.
   // =========================
   const APP_VERSION = "v0.4";
-  const ASSET_VERSION = "asset-20260613-ios-1";
+  const ASSET_VERSION = "asset-20261001-ios-5";
   const ASSET_QUERY = `?ver=${encodeURIComponent(ASSET_VERSION)}`;
   const TOOL_MODULE_VERSION = ASSET_VERSION;
   window.__AMBULANCE_ASSET_VERSION = ASSET_VERSION;
@@ -990,15 +1003,13 @@
     if (appVersionLabel) appVersionLabel.textContent = displayedAppVersion;
     const appStatusCopy = document.getElementById("appStatusCopy");
     if (appStatusCopy) appStatusCopy.textContent = `Up to date · Ambulance ${displayedAppVersion}`;
-    const versionPill = document.getElementById("wnVersionPill");
-    if (versionPill) versionPill.textContent = `🚑 ${displayedAppVersion} released`;
   }
 
   const ACCESS_TYPES = {
     AMBULANCE_STAFF: "ambulance_staff",
     NON_AMBULANCE_STAFF: "non_ambulance_staff"
   };
-  const PROTECTED_ACTIONS = new Set(["category_guidelines", "cpg_wizard", "sop", "flowcharts", "formulary", "as_call", "hos"]);
+  const PROTECTED_ACTIONS = new Set(["category_guidelines", "cpg_wizard", "sop", "flowcharts", "formulary", "as_call", "hos", "cpd_opportunities"]);
   const PROTECTED_SEARCH_TYPES = new Set(["cpg", "sop", "cpm", "pat", "flowchart", "formulary"]);
   let gateSessionPromise = null;
   let gateAccessType = ACCESS_TYPES.NON_AMBULANCE_STAFF;
@@ -1066,16 +1077,10 @@
 
     // -- What's New modal --
     WHATS_NEW_ENABLED: true,
-    WHATS_NEW_KEY: "amb_whats_new_v04_cpr_update",
+    WHATS_NEW_KEY: "amb_whats_new_cpg_v26_cpd_20261001",
     WHATS_NEW_MESSAGE: `
-  <ul>
-    <li><strong>Ambulance App v0.4 released.</strong> Redesigned home screen with grouped sections, notices, and clearer dashboard layout.</li>
-    <li><strong>No more Shortcuts mode.</strong> The tools that were previously opened through Shortcuts are now being moved directly into the App experience. You can safely delete them.</li>
-    <li><strong>CPR Timer redesigned.</strong> Updated portrait and landscape layouts, improved audio reminders and recovery, timers and event logging, CPR Return Alert, WAAFELSS, customizable Settings, and new History with PDF, CSV, and JSON exports.</li>
-    <li><strong>Guidelines, Pediatrics, Calculators, Scores, Visual Guides, HOS, AS-Call, Websites, Overtime, and Shift Schedule</strong> have been added/refreshed.</li>
-    <li><strong>Access registration is ready.</strong> Ambulance staff and other users now get the correct App access for their account type.</li>
-    <li><strong>Notices are now in the bell.</strong> Use the bell icon to read App notices. For the full What's New page, press the <strong>Updates</strong> button on the home screen.</li>
-  </ul>
+  <p>The Ambulance App now includes CPG v2.6, effective 1 October 2026. Related sections and tools have also been updated where needed. Please review the new guidelines before use.</p>
+  <p><strong>New for Ambulance Staff on iOS:</strong> browse Qatar CPD Opportunities from the CPD button on the home screen.</p>
   <button id="wnMeetCharlie" type="button" style="width:100%;padding:13px 16px;margin:4px 0 10px;border-radius:12px;border:none;background:linear-gradient(180deg,#D4A574,#C8935A);color:#fff;font:800 15px/1 system-ui;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 16px rgba(200,147,90,.40)"><img src="images/charlie.png" alt="" style="width:32px;height:32px;border-radius:6px;object-fit:contain;flex:none"> Meet Charlie →</button>
   <p><strong>Stay connected:</strong> use these buttons for Charlie, community updates, and App support channels.</p>
   <div class="wn-links">
@@ -1092,7 +1097,6 @@
       <span>WhatsApp</span>
     </a>
   </div>
-  <p class="wn-footer">Thanks for the ongoing feedback - more upgrades are on the way.</p>
 `
   };
 
@@ -1129,7 +1133,7 @@
       href: `${HOST}/cpr/?ver=${encodeURIComponent(ASSET_VERSION)}`, showDefault:true },
 
     { text:"RSI Checklist",    iconType:"material", icon:"checklist",     color:"btn-rsi",
-      href: `${HOST}/helpers/rsi_checklist_js.html`, showDefault:true, appLabel:"RSI" },
+      href: `${HOST}/helpers/rsi_checklist_js.html?ver=${encodeURIComponent(ASSET_VERSION)}`, showDefault:true, appLabel:"RSI" },
 
     { text:"WAAFELSS",         iconType:"material", icon:"face",          color:"btn-waafelss",
       href:"#", showDefault:true, actionId:"waafels" },
@@ -1162,6 +1166,9 @@
 
     { text:"Websites",         iconType:"material", icon:"language",      color:"btn-websites",
       href:"https://example.com", showDefault:true, actionId:"websites" },
+
+    { text:"CPD",              iconType:"material", icon:"school",        color:"btn-cpd",
+      href:"#", showDefault:true, protectedHome:true, actionId:"cpd_opportunities" },
 
     { text:"Stay Connected",   iconType:"image", icon:"images/ic_main_stay_connected.svg", color:"btn-community",
       href:"#", showDefault:true, actionId:"community" },
@@ -1409,6 +1416,7 @@
       "Overtime": ["overtime calculator", "ot", "pay", "hours", "shift", "history", "logger"],
       "Shift Schedule": ["shifts", "roster", "team calendar", "date lookup", "coverage", "swap", "team a", "team b", "team c", "team d"],
       "Websites": ["links", "resources"],
+      "CPD": ["dhp", "continuing professional development", "education", "category 1", "category 2", "category 3", "events"],
       "AS-Call": ["phone", "call", "contacts", "directory", "numbers"],
       "Stay Connected": ["community", "discord", "telegram", "whatsapp"]
     };
@@ -2700,9 +2708,7 @@ function wireNoticesControls(){
 function handleWhatsNew(){
   const overlay = document.getElementById("whatsNewOverlay");
   const body = document.getElementById("whatsNewBody");
-  const versionPill = document.getElementById("wnVersionPill");
   if (!overlay || !body) return;
-  if (versionPill) versionPill.textContent = `🚑 ${displayedAppVersion} released`;
   const dismissed = localStorage.getItem(WHATS_NEW_KEY) === "1";
   const message = WHATS_NEW_MESSAGE.trim();
   const shouldShow = WHATS_NEW_ENABLED && !dismissed && message;
@@ -2831,7 +2837,7 @@ function wireCharlieModal(){
     { title: "Quick Actions", items: ["Search","Stay Connected"] },
     { title: "Resuscitation & Timers", items: ["CPR","WAAFELSS","RSI Checklist","Ventilator Settings"] },
     { title: "Clinical · Calculators", items: ["Pediatrics","Guidelines","Flowcharts","Calculators","Visual Guides","Scores"] },
-    { title: "Operations", items: ["Overtime","HOS","AS-Call","Websites","Shift Schedule"] }
+    { title: "Operations", items: ["Overtime","HOS","AS-Call","Websites","Shift Schedule","CPD"] }
   ];
 
   let currentTool = null;

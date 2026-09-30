@@ -1,4 +1,7 @@
 // /ambulance/reference_data.js
+// CHANGELOG (2026-10-01):
+// - Use v2.6 Flowcharts and Formulary versions when no iOS App Config is available.
+//
 // CHANGELOG (2026-06-12):
 // - Track Flowcharts/Formulary source/error state for Admin Panel diagnostics.
 //
@@ -9,13 +12,13 @@ const DEFAULTS = {
   flowcharts: {
     enabled:true,
     schema_version:"0.1",
-    version:"2.5",
+    version:"2.6",
     url:"https://api.niwashibase.com/api/v1/ambulance/app-data/flowcharts"
   },
   formulary: {
     enabled:true,
     schema_version:"0.1",
-    version:"2.5",
+    version:"2.6",
     url:"https://api.niwashibase.com/api/v1/ambulance/app-data/formulary"
   }
 };
